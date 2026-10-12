@@ -1,0 +1,3 @@
+Sabotage: appended test.skip to the staged dispatcher/test/scaffolding.test.ts to break check-no-skips.sh
+check-no-skips: FAIL dispatcher/test/scaffolding.test.ts contains a skip/todo:
+33:test.skip("sabotage skip", () => {});

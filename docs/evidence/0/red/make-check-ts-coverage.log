@@ -1,0 +1,3 @@
+Sabotage: staged workspace/stray.ts, a .ts file under the excluded workspace/ path, to break ts-coverage
+ts-coverage: 1 tracked TypeScript file(s) outside the typecheck:
+  workspace/stray.ts

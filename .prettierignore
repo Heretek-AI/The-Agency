@@ -1,0 +1,15 @@
+review/
+docs/prompts/v1/
+docs/audit/
+docs/evidence/
+docker-compose.yml
+experts/
+workspace/
+state/
+packs/installed/
+bun.lock
+*.log
+docs/prompts/*.md
+docs/research/
+LAUNCH_WAVE_SWARM.md
+swarm_prompts/

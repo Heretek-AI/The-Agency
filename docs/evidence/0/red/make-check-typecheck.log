@@ -1,0 +1,4 @@
+Sabotage: appended a string-to-number type error to dispatcher/test/scaffolding.test.ts to break tsc
+bunx tsc --noEmit
+dispatcher/test/scaffolding.test.ts(33,7): error TS2322: Type 'string' is not assignable to type 'number'.
+make: *** [Makefile:24: typecheck] Error 2
