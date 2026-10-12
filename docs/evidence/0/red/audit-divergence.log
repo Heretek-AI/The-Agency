@@ -1,0 +1,2 @@
+Sabotage: none - D-14 reproduced on unchanged salvaged journal.ts: resumeMission uses && so a same-length wholesale rewrite is not divergence
+snapshotDiverged after wholesale rewrite (want true): false

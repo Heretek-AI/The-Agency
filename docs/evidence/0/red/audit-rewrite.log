@@ -1,0 +1,3 @@
+Sabotage: none - D-15 reproduced on unchanged salvaged journal.ts: no lock file, and saveJournal truncates bytes written by others
+second writer refused (want true): false - no lock file mechanism exists
+earlier bytes survive a saveJournal rewrite (want true): false
