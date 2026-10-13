@@ -14,3 +14,4 @@ models.opencode.ai
 opencode.ai
 pypi.org
 registry.npmjs.org
+semgrep.dev

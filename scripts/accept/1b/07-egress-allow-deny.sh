@@ -26,9 +26,16 @@ check_expert agency-backend
 check_expert agency-scout
 log=$(docker logs agency-egress 2>&1) || fail "cannot read the proxy log"
 for expert in backend scout; do
-  echo "$log" | grep -q "TCP_TUNNEL.*opencode.ai.*$expert" \
-    || fail "proxy log lacks the allowed line for $expert"
-  echo "$log" | grep -q "TCP_DENIED.*denied.invalid.*$expert" \
-    || fail "proxy log lacks the denied line for $expert"
+  allowed_found=""
+  denied_found=""
+  for _ in $(seq 1 12); do
+    echo "$log" | grep -q "TCP_TUNNEL.*opencode.ai.*$expert" && allowed_found="yes"
+    echo "$log" | grep -q "TCP_DENIED.*denied.invalid.*$expert" && denied_found="yes"
+    [ -n "$allowed_found" ] && [ -n "$denied_found" ] && break
+    sleep 5
+    log=$(docker logs agency-egress 2>&1) || fail "cannot read the proxy log"
+  done
+  [ -n "$allowed_found" ] || fail "proxy log lacks the allowed line for $expert"
+  [ -n "$denied_found" ] || fail "proxy log lacks the denied line for $expert"
 done
 pass

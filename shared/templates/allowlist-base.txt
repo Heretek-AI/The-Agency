@@ -22,6 +22,11 @@ huggingface.co
 mcp.figma.com
 mcp.linear.app
 mcp.sentry.dev
+# Toolchain-required API endpoints (documented additions beyond the
+# registries: the security expert's semgrep MCP server contacts
+# semgrep.dev at startup and exits when denied; every request is logged
+# with the expert's name).
+semgrep.dev
 # Documented documentation hosts for webfetch/websearch research.
 docs.python.org
 developer.mozilla.org
