@@ -13,6 +13,30 @@ Stage reports in `docs/reports/` quote evidence; this file records context.
 - Salvage commit: `14f297a` (verified with `git -C "$SALVAGE_SRC" rev-parse --short HEAD`).
 - Working tree at branch-off held only the prompt series, `docs/research/`, `docs/audit/`, and untracked `review/`.
 
+### Stage 1a preflight
+
+- Date: 2026-10-13 (UTC), branch `stage-1a-spike`. `bash scripts/preflight.sh`
+  exits 1 while `.env.provider` is absent: the provider-file row is the
+  honest fail-closed state and the key is reported present/absent only,
+  never by value.
+- Chosen port: `AGENCY_HTTP_PORT=8081` (8080 is in use on the development
+  host; the same value is the suggested one in `.env.example`).
+- Exact table from the run recorded for verification finding F2
+  (`docs/evidence/1a/qa/f2-preflight-recorded.log`):
+
+```
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    FAIL   .env.provider absent (place OPENCODE_API_KEY there, mode 0600)
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 4 pass, 1 fail
+```
+
 ## Salvage
 
 Salvage commit for every row: `14f297a`
