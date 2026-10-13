@@ -1,0 +1,25 @@
+{
+  "_generated": "GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.",
+  "mcpServers": {
+    "semgrep": {
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": [
+          "semgrep",
+          "mcp"
+        ]
+      }
+    },
+    "trivy": {
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": [
+          "trivy",
+          "mcp"
+        ]
+      }
+    }
+  }
+}

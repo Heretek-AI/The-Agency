@@ -30,7 +30,7 @@ ts-coverage:
 	$(BUN) scripts/check-ts-coverage.ts
 
 render-check:
-	@echo "render-check: nothing to render yet (renderer arrives in stage 1b)"
+	$(BUN) scripts/render.ts --check
 
 test:
 	@bash -c 'files="$$(git ls-files "*.test.ts" ":!:*/test/live/*"; git ls-files --others --exclude-standard "*.test.ts" | grep -v "/test/live/" | sort -u)"; if [ -z "$$files" ]; then echo "test: no unit tests found" >&2; exit 1; fi; $(BUN) test $$files'
@@ -45,31 +45,31 @@ build-base:
 		-t $(BASE_IMAGE) images/base
 
 init:
-	@echo "not built until stage 1b: init" >&2; exit 1
+	bash scripts/init-env.sh
 
 render:
-	@echo "not built until stage 1b: render" >&2; exit 1
+	$(BUN) scripts/render.ts
 
 workspace:
-	@echo "not built until stage 1b: workspace" >&2; exit 1
+	bash scripts/workspace-init.sh $(ARGS)
 
 build:
-	@echo "not built until stage 1a: build" >&2; exit 1
+	docker compose build
 
 up:
-	@echo "not built until stage 1b: up" >&2; exit 1
+	docker compose up -d
 
 down:
-	@echo "not built until stage 1b: down" >&2; exit 1
+	docker compose down
 
 ps:
-	@echo "not built until stage 1d: ps" >&2; exit 1
+	docker compose ps
 
 logs:
-	@echo "not built until stage 1d: logs" >&2; exit 1
+	docker compose logs $(ARGS)
 
 smoke:
-	@echo "not built until stage 1d: smoke" >&2; exit 1
+	bash scripts/smoke.sh
 
 e2e:
 	@echo "not built until stage 4c: e2e" >&2; exit 1

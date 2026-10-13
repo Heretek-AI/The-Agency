@@ -1,0 +1,36 @@
+# GENERATED, do not edit. Source: shared/templates/squid.conf.tmpl
+# Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.
+# The allowlist file is mounted at @@ALLOWLIST_PATH@@; the password file is
+# created at container start by the egress entrypoint from PROXY_PW_<NAME>.
+http_port @@PORT@@
+visible_hostname egress
+forwarded_for delete
+via off
+cache deny all
+
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic children 5
+auth_param basic realm Agency egress proxy
+auth_param basic credentialsttl 1 hour
+
+acl SSL_ports port 443
+acl Safe_ports port 80
+acl CONNECT method CONNECT
+acl authed proxy_auth REQUIRED
+acl allowed dstdomain "@@ALLOWLIST_PATH@@"
+acl to_private dst 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 127.0.0.0/8 169.254.0.0/16 fc00::/7 fe80::/10 ::1/128
+acl to_localhost dst 127.0.0.0/8 ::1/128
+
+# One log line per request: time, elapsed, client, verdict/code, size,
+# method, URL, and the expert's proxy username.
+logformat agency %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un
+access_log stdio:/var/log/squid/access.log agency
+
+# Deny first: private, loopback, link-local, and metadata destinations are
+# denied whatever the allowlist says. Only then the allowlist, then deny.
+http_access deny to_private
+http_access deny to_localhost
+http_access deny CONNECT !SSL_ports
+http_access deny !Safe_ports
+http_access allow authed allowed
+http_access deny all

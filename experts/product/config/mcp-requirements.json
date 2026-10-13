@@ -1,0 +1,25 @@
+{
+  "_generated": "GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.",
+  "mcpServers": {
+    "github": {
+      "requires": [
+        "GITHUB_READ_TOKEN"
+      ],
+      "config": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": {
+          "Authorization": "Bearer {env:GITHUB_READ_TOKEN}"
+        }
+      }
+    },
+    "linear": {
+      "requires": [],
+      "config": {
+        "type": "remote",
+        "url": "https://mcp.linear.app/mcp",
+        "disabled": true
+      }
+    }
+  }
+}

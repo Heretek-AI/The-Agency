@@ -1,0 +1,22 @@
+{
+  "_generated": "GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.",
+  "mcpServers": {
+    "fleet": {
+      "requires": [
+        "FLEET_MCP_TOKEN"
+      ],
+      "config": {
+        "type": "remote",
+        "url": "http://dispatcher:8080/mcp",
+        "headers": {
+          "Authorization": "Bearer {env:FLEET_MCP_TOKEN}"
+        },
+        "oauth": false,
+        "codemode": false,
+        "timeout": {
+          "execution": 900000
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "_generated": "GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.",
+  "mcpServers": {
+    "terraform": {
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": [
+          "terraform-mcp-server"
+        ]
+      }
+    },
+    "kubernetes": {
+      "requires": [
+        "KUBECONFIG"
+      ],
+      "config": {
+        "type": "local",
+        "command": [
+          "kubernetes-mcp-server",
+          "--read-only"
+        ]
+      }
+    },
+    "github": {
+      "requires": [
+        "GITHUB_READ_TOKEN"
+      ],
+      "config": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": {
+          "Authorization": "Bearer {env:GITHUB_READ_TOKEN}"
+        }
+      }
+    }
+  }
+}
