@@ -1,0 +1,19 @@
+# Final authoritative accept re-run after all sabotages were restored — 2026-10-13T19:14:35Z
+CHECKS for stage 1a
+1a/01-preflight              FAIL   preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+1a/02-base-image-pinned      PASS   
+1a/03-entrypoint-fails-closed PASS   
+1a/04-healthy-nonroot        PASS   
+1a/05-spike-end-to-end       SKIP   .env.provider has no usable OPENCODE_API_KEY
+1a/06-spike-answers-complete FAIL   4 question(s) NOT PERFORMED (no provider key); stage incomplete
+1a/07-no-secret-leak         PASS   
+1a/08-no-containers-left     PASS   
+stage 1a: 5 pass, 1 skip, 2 fail (8 checks)
+log: docs/evidence/1a/verify/1a/accept-20261013T191500Z.log
+EXIT=1
+--- restoration proof ---
+(no agency-spike containers)
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  images/base/entrypoint.sh
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  /usr/local/bin/entrypoint.sh
+git diff: clean
+?? docs/evidence/1a/verify/

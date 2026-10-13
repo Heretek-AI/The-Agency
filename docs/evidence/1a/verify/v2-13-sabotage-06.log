@@ -1,0 +1,30 @@
+# Sabotage sample 3: check 06 — answers rewritten to 'yes' and q10.log stripped of 'negative' — 2026-10-13T19:08:53Z
+$ sed -i -E 's/^\| *([0-9]+) +\| NOT PERFORMED/| \1 | yes/' docs/build-notes.md
+$ sed -i 's/Negative case/positivity-not-observed/' docs/evidence/1a/spike/q10.log
+2
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/06-spike-answers-complete.sh bash scripts/accept/1a/06-spike-answers-complete.sh   (want FAIL at q10 negative)
+CHECK 1a/06-spike-answers-complete: FAIL q10.log shows no negative case
+sabotaged exit=1
+--- restore ---
+git diff -- docs/build-notes.md q10.log: clean
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh   (standing honest FAIL)
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+standing exit=1
+?? docs/evidence/1a/verify/
+
+## Note on the counts above
+sed rewrote all four table rows (1/9/10/11 -> 'yes'); 'grep -c NOT PERFORMED' returned 2 because
+it counted the two prose lines (build-notes:51 and :130), not answer rows. Scratch-copy check confirms.
+
+## Limitation probe: fabricated answers with negative words intact (temporary, restored)
+$ sed rows -> yes; keep q10 'Negative case' text; run check 06
+0
+CHECK 1a/06-spike-answers-complete: PASS
+fabricated-answers exit=0
+(That PASS documents that check 06 enforces documentary shape only: fabricated 'yes' rows and a
+'negative' word are indistinguishable from real answers; answer truthfulness is the verifier's job.)
+--- restore ---
+git diff -- docs/build-notes.md: clean
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+standing exit=1
+?? docs/evidence/1a/verify/

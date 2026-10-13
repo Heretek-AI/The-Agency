@@ -1,0 +1,22 @@
+# Transcript-parser verification (own synthetic transcripts) — 2026-10-13T19:05:15Z
+# Parser: scripts/spike-assert-messages.py
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/verify/v2-echo-only.json
+spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user; user-role messages are ignored, not run output]
+exit=1
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/verify/v2-user-echo-mixed.json
+spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 shell; user-role messages are ignored, not run output]
+exit=1
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/verify/v2-positive.json
+spike-assert-messages: PASS spike-shell-ok in shell output; ## RESULT block in assistant text
+exit=0
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/verify/v2-malformed.json
+spike-assert-messages: FAIL transcript is not valid JSON: Expecting value: line 1 column 1 (char 0)
+exit=2
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/invalid-key-transcript.json  (builder-captured real transcript: user echo carries both markers)
+spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 other; user-role messages are ignored, not run output]
+exit=1

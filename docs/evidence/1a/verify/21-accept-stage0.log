@@ -1,0 +1,13 @@
+CHECKS for stage 0
+0/01-make-check              PASS   
+0/02-ts-coverage             PASS   
+0/03-harness-selftest        PASS   
+0/04-defect-register         PASS   
+0/05-salvage-provenance      FAIL   expected branch stage-0-salvage, on stage-1a-spike
+0/06-no-donor-code           FAIL   docker run outside envrunner/ and lifecycle/: scripts/accept/1a/03-entrypoint-fails-closed.sh scripts/accept/1a/04-healthy-nonroot.sh scripts/spike.sh 
+0/07-no-skips                PASS   
+0/08-fake-matches-openapi    PASS   
+0/09-opencode-live           PASS   
+0/10-ci-runs-make-check      PASS   
+stage 0: 8 pass, 0 skip, 2 fail (10 checks)
+log: docs/evidence/0/accept-20261013T175814Z.log

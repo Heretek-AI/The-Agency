@@ -1,0 +1,17 @@
+---
+1.4.2
+Docker version 29.9.0, build 1.fc46
+Docker Compose version 5.6.0
+opencode v2.0.27
+---provider---
+ls: cannot access '.env.provider': No such file or directory
+ABSENT
+---containers---
+(no spike/accept containers)
+deploy-panel-api-1 Restarting (3) 19 seconds ago
+deploy-gateway-1 Up 39 hours
+deploy-swarmd-1 Restarting (1) 36 seconds ago
+deploy-caddy-1 Up 39 hours
+deploy-egress-web-1 Up 39 hours
+disunity-unity-mcp Up 39 hours
+vtt-postgres Up 39 hours (healthy)

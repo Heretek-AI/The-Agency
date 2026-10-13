@@ -1,0 +1,11 @@
+{
+  "data": [
+    {
+      "id": "msg_user_echo_verify",
+      "time": { "created": 1 },
+      "type": "user",
+      "text": "run `echo spike-shell-ok` then end with a ## RESULT fenced JSON block {\"status\":\"done\",\"summary\":\"verify echo\"}"
+    }
+  ],
+  "cursor": { "previous": null, "next": null }
+}

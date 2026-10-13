@@ -1,0 +1,6 @@
+# Fail-closed probe: spike.sh with no provider key — 2026-10-13T19:06:41Z
+$ .env.provider absent; bash scripts/spike.sh
+spike: no provider key (.env.provider with non-empty OPENCODE_API_KEY)
+exit=1
+$ docker ps -a --format '{{.Names}}' | grep '^agency-spike' || echo none
+(no agency-spike containers)

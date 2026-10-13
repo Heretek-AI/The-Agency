@@ -1,0 +1,48 @@
+# Stage 1a verification — starting state (fresh pass 2; supersedes the interrupted pass's 00-21 partials in this directory)
+# Recorded: 2026-10-13T19:02:27Z UTC
+# Verifier: DeepSeek V4.1 Flash (OpenCode), fresh session
+
+## branch/commit
+branch: stage-1a-spike
+commit: 8131dcdb985d854bb90e7f22c584428a01c407b8
+merge-base(main): 4721f11ad5932db4f72dc8a0fc35dd1d365350b4
+## git status --short
+?? docs/evidence/1a/verify/
+## versions
+bun: 1.4.2
+docker: Docker version 29.9.0, build 1.fc46
+docker compose: 5.6.0
+opencode (host PATH): opencode v2.0.28
+python3: Python 3.15.0
+## provider key (presence only)
+.env.provider ABSENT
+OPENCODE_API_KEY env: absent
+AGENCY_MODEL env: absent
+## agency containers/images
+(no agency-* containers)
+agency-base:2.0.26 00c892632cc4 2026-10-13 14:32:45 -0400 EDT
+## unrelated host containers (out of scope, untouched)
+deploy-panel-api-1
+deploy-gateway-1
+deploy-swarmd-1
+deploy-caddy-1
+deploy-egress-web-1
+disunity-unity-mcp
+vtt-postgres
+## interrupted pass partials present (not cited by this pass)
+00-starting-state.log
+01-make-check.log
+02-accept.log
+10-sabotage-02.log
+11-sabotage-03-build.log
+12-sabotage-03.log
+13-restore-03-build.log
+14-restore-03-pass.log
+15-sabotage-06.log
+16-sabotage-07.log
+17-sabotage-08.log
+18-final-rebuild.log
+19-reconfirm-02.log
+20-reconfirm-04.log
+21-accept-stage0.log
+v2-00-starting-state.log

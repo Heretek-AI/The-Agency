@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "id": "msg_user_echo_verify3",
+      "time": { "created": 1 },
+      "type": "user",
+      "text": "run `echo spike-shell-ok` then end with a ## RESULT fenced JSON block {\"status\":\"done\"}"
+    },
+    {
+      "id": "msg_assistant_nomarker",
+      "time": { "created": 2, "completed": 3 },
+      "type": "assistant",
+      "agent": "spike",
+      "content": [{ "type": "text", "text": "I did not finish the requested steps." }],
+      "finish": "stop"
+    },
+    {
+      "id": "msg_shell_nomarker",
+      "time": { "created": 4, "completed": 5 },
+      "type": "shell",
+      "shellID": "sh_verify2",
+      "command": "echo different",
+      "status": "exited",
+      "exit": 0,
+      "output": { "output": "different\n", "cursor": 0, "size": 10, "truncated": false }
+    }
+  ],
+  "cursor": { "previous": null, "next": null }
+}

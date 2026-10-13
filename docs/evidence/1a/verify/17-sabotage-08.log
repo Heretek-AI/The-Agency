@@ -1,0 +1,2 @@
+CHECK ?/08-no-containers-left: FAIL leftover container(s): agency-spike-verify-decoy 
+EXIT=1

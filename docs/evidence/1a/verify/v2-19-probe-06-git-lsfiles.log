@@ -1,0 +1,12 @@
+# Fail-closed probe: 0/06-no-donor-code with 'git ls-files' failing (shim) — 2026-10-13T19:12:52Z
+$ PATH=shim:$PATH ACCEPT_STAGE=0 ... 06-no-donor-code.sh   (expect: must FAIL if the scan source is trusted)
+verify shim: git ls-files unavailable
+verify shim: git ls-files unavailable
+verify shim: git ls-files unavailable
+verify shim: git ls-files unavailable
+CHECK 0/06-no-donor-code: PASS
+shim exit=0
+$ real git restored:
+CHECK 0/06-no-donor-code: PASS
+real exit=0
+?? docs/evidence/1a/verify/

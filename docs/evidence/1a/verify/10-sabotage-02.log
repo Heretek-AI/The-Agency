@@ -1,0 +1,2 @@
+CHECK ?/02-base-image-pinned: FAIL FROM digest not recorded in versions.env
+EXIT=1

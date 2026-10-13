@@ -1,0 +1,14 @@
+# Image metadata scan for credential names/values — 2026-10-13T19:13:24Z
+$ docker history --no-trunc agency-base:2.0.26 | grep -c 'OPENCODE_API_KEY\|OPENCODE_PASSWORD' || true
+1
+(0 = no credential name in any image layer/history line)
+$ docker inspect agency-base:2.0.26 | grep -o 'OPENCODE_PASSWORD' | wc -l
+1
+(count of NAME references in inspect; these are the HEALTHCHECK's runtime ${OPENCODE_PASSWORD} placeholder, not a value)
+$ docker inspect agency-base:2.0.26 | grep -n 'OPENCODE'
+20:                "OPENCODE_PORT=4096"
+36:                    "curl -fsS --noproxy '*' -u \"opencode:${OPENCODE_PASSWORD}\" \"http://127.0.0.1:4096/api/info\" > /dev/null"
+$ Dockerfile FROM / latest scan
+19:FROM ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55 AS base
+$ image runs as agent? (fresh short-lived probe)
+uid=1000(agent) gid=1000(agent) groups=1000(agent),4(adm),20(dialout),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev)

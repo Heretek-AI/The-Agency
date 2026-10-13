@@ -1,0 +1,49 @@
+# Sabotage sample 2: check 01 (preflight) — dummy-key counterfactual (green), mode 0644 (red), no file (standing red) — 2026-10-13T19:08:23Z
+$ printf 'OPENCODE_API_KEY=%s\n' "<dummy>" > .env.provider && chmod 600 .env.provider
+$ bash scripts/preflight.sh   # mode 0600, key present (want exit 0, provider-file PASS)
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    PASS   .env.provider present, mode 0600, OPENCODE_API_KEY present
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 5 pass, 0 fail
+preflight exit=0
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/01-preflight.sh bash scripts/accept/1a/01-preflight.sh
+CHECK 1a/01-preflight: PASS
+check exit=0
+
+$ chmod 644 .env.provider
+$ bash scripts/preflight.sh   # wrong mode (want exit 1, provider-file FAIL mode=644)
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    FAIL   .env.provider present but mode=644 key=present (need 0600 + non-empty key)
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 4 pass, 1 fail
+preflight exit=1
+CHECK 1a/01-preflight: FAIL preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+check exit=1
+
+--- restore: delete .env.provider ---
+$ bash scripts/preflight.sh   # standing no-key (want exit 1, provider-file FAIL absent)
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    FAIL   .env.provider absent (place OPENCODE_API_KEY there, mode 0600)
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 4 pass, 1 fail
+preflight exit=1
+.env.provider absent after restore
+?? docs/evidence/1a/verify/

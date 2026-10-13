@@ -1,0 +1,2 @@
+CHECK ?/03-entrypoint-fails-closed: FAIL no-key container still running
+EXIT=1
