@@ -9,16 +9,50 @@ root="$(git rev-parse --show-toplevel)"
 cd "$root" || fail "cannot cd to $root"
 self="scripts/accept/0/06-no-donor-code.sh"
 
-patches=$(git ls-files '*.patch')
+# Every tracked-path list below comes from `git ls-files`. If that command
+# fails, the guard has no list to judge, and an empty list is not evidence of
+# a clean tree, so a non-zero exit fails the check (it previously failed
+# open: the shim case left every list empty and the check passed). ls_files
+# runs in the current shell (no command substitution at the call site), so
+# fail() stops the whole check.
+LS_FILES_OUT=""
+ls_files() {
+  local rc
+  LS_FILES_OUT=$(git ls-files "$@")
+  rc=$?
+  [ "$rc" -eq 0 ] || fail "git ls-files $* failed (exit $rc); cannot enumerate tracked files"
+}
+
+# grep over a captured list: 0 is a match, 1 is no match, any other exit
+# means the list could not be filtered, so the guard must not pass.
+grep_list() {
+  local rc
+  GREP_LIST_OUT=$(printf '%s\n' "$1" | grep "${@:2}")
+  rc=$?
+  case "$rc" in
+    0 | 1) ;;
+    *) fail "cannot filter the tracked file list (grep exit $rc)" ;;
+  esac
+}
+
+ls_files '*.patch'
+patches="$LS_FILES_OUT"
 [ -z "$patches" ] || fail "tracked *.patch files: $(echo "$patches" | head -3 | tr '\n' ' ')"
 
-unlocks=$(git ls-files | grep -i "unlock" || true)
+ls_files
+all_files="$LS_FILES_OUT"
+
+grep_list "$all_files" -i "unlock"
+unlocks="$GREP_LIST_OUT"
 [ -z "$unlocks" ] || fail "paths containing unlock: $(echo "$unlocks" | head -3 | tr '\n' ' ')"
 
-launchers=$(git ls-files | grep "^launcher/" || true)
+grep_list "$all_files" "^launcher/"
+launchers="$GREP_LIST_OUT"
 [ -z "$launchers" ] || fail "launcher/ directory present"
 
-code=$(git ls-files 'dispatcher/**' 'verifier/**' 'scripts/**' 'Makefile')
+ls_files 'dispatcher/**' 'verifier/**' 'scripts/**' 'Makefile'
+code="$LS_FILES_OUT"
+[ -n "$code" ] || fail "git ls-files returned no dispatcher/verifier/scripts/Makefile files; cannot scan"
 
 # One fixed-string grep per scanned file, fail-closed: exit 0 is a match,
 # exit 1 is no match, and any other exit means the file could not be read,
