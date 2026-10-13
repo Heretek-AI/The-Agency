@@ -1,0 +1,1 @@
+CHECK 0/06-no-donor-code: FAIL bwrap in first-party source: dispatcher/src/sabotage-tmp.ts 
