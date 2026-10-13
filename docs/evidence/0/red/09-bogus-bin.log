@@ -1,0 +1,3 @@
+Sabotage: pointed OPENCODE_BIN at /nonexistent-xyz (binary IS on PATH, so no harness skip) to prove the check fails instead of passing vacuously
+CHECK 0/09-opencode-live: FAIL missing required command /nonexistent-xyz
+sabotage-check-exit=1
