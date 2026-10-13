@@ -1,0 +1,256 @@
+# Commit subjects vs diffs — verifier pass 2, 2026-10-13T20:08:45Z
+# Range: 4721f11ad5932db4f72dc8a0fc35dd1d365350b4..HEAD (30 commits)
+# Subject scan for overclaiming words (live|verified|complete|all|working|fixed):
+0715607 docs(stage-1a): stage report, acceptance logs, and red proofs (stage not complete, no provider key)
+
+===== 3d9ffec feat(stage-1a): preflight script with fail-closed provider check
+  M	.env.example
+  A	scripts/preflight.sh
+===== 6160d08 feat(stage-1a): base image, entrypoint, and build-base target
+  M	Makefile
+  A	images/base/Dockerfile
+  A	images/base/entrypoint.sh
+  M	versions.env
+===== 8acde3f fix(stage-1a): chown /etc/agency to agent, note Dispatcher-side fallbacks in entrypoint
+  M	images/base/Dockerfile
+  M	images/base/entrypoint.sh
+===== ec59321 feat(stage-1a): spike runner, spike config, acceptance checks, keyless evidence, build notes
+  M	docs/build-notes.md
+  A	docs/evidence/1a/spike/q01.log
+  A	docs/evidence/1a/spike/q02.log
+  A	docs/evidence/1a/spike/q03.log
+  A	docs/evidence/1a/spike/q04.log
+  A	docs/evidence/1a/spike/q05.log
+  A	docs/evidence/1a/spike/q06.log
+  A	docs/evidence/1a/spike/q07.log
+  A	docs/evidence/1a/spike/q08.log
+  A	docs/evidence/1a/spike/q09.log
+  A	docs/evidence/1a/spike/q10.log
+  A	docs/evidence/1a/spike/q11.log
+  A	docs/evidence/1a/spike/q12.log
+  A	docs/evidence/1a/spike/q13.log
+  A	docs/evidence/1a/spike/q14.log
+  A	docs/evidence/1a/spike/q15.log
+  A	scripts/accept/1a/01-preflight.sh
+  A	scripts/accept/1a/02-base-image-pinned.sh
+  A	scripts/accept/1a/03-entrypoint-fails-closed.sh
+  A	scripts/accept/1a/04-healthy-nonroot.sh
+  A	scripts/accept/1a/05-spike-end-to-end.sh
+  A	scripts/accept/1a/06-spike-answers-complete.sh
+  A	scripts/accept/1a/07-no-secret-leak.sh
+  A	scripts/accept/1a/08-no-containers-left.sh
+  A	scripts/spike.sh
+  A	spike/config/agents/spike.md
+  A	spike/config/mcp-requirements.json
+  A	spike/config/opencode.jsonc
+===== 0715607 docs(stage-1a): stage report, acceptance logs, and red proofs (stage not complete, no provider key)
+  A	docs/evidence/1a/accept-20261013T172945Z.log
+  A	docs/evidence/1a/accept-20261013T173136Z.log
+  A	docs/evidence/1a/red/01-preflight.log
+  A	docs/evidence/1a/red/02-base-image-pinned.log
+  A	docs/evidence/1a/red/03-entrypoint-fails-closed.log
+  A	docs/evidence/1a/red/04-healthy-nonroot.log
+  A	docs/evidence/1a/red/05-spike-end-to-end.log
+  A	docs/evidence/1a/red/06-spike-answers-complete.log
+  A	docs/evidence/1a/red/07-no-secret-leak.log
+  A	docs/evidence/1a/red/08-no-containers-left.log
+  A	docs/reports/stage-1a.md
+===== b16f76f fix(stage-1a): prettier formatting in build-notes.md (make check format-check)
+  M	docs/build-notes.md
+===== c9962dc test(evidence): stage 1a QA red proofs, accept log, and findings (01/06/07 fail, 05 skip)
+  A	docs/evidence/1a/accept-20261013T173413Z.log
+  A	docs/evidence/1a/red-proofs.log
+  A	docs/evidence/1a/red/qa-01-preflight.log
+  A	docs/evidence/1a/red/qa-02-base-image-pinned.log
+  A	docs/evidence/1a/red/qa-03-entrypoint-fails-closed.log
+  A	docs/evidence/1a/red/qa-04-healthy-nonroot.log
+  A	docs/evidence/1a/red/qa-05-spike-end-to-end.log
+  A	docs/evidence/1a/red/qa-06-spike-answers-complete.log
+  A	docs/evidence/1a/red/qa-07-no-secret-leak.log
+  A	docs/evidence/1a/red/qa-08-no-containers-left.log
+===== 29c5d18 fix(stage-1a): route check dummy keys via named var so 07 passes clean
+  M	docs/evidence/1a/accept-20261013T173413Z.log
+  M	docs/evidence/1a/red-proofs.log
+  M	docs/reports/stage-1a.md
+  M	scripts/accept/1a/03-entrypoint-fails-closed.sh
+  M	scripts/accept/1a/04-healthy-nonroot.sh
+===== dd6ed1e test(evidence): stage 1a focused re-run accept log showing 07 regression
+  A	docs/evidence/1a/accept-20261013T174327Z.log
+===== 65c891c fix(stage-1a): reword sentinel re-proof so 07 no-secret-leak passes clean
+  M	docs/evidence/1a/accept-20261013T174327Z.log
+  A	docs/evidence/1a/accept-20261013T175353Z.log
+  M	docs/reports/stage-1a.md
+===== ba64e84 fix(stage-1a): parse spike transcript markers by message role
+  A	docs/evidence/1a/spike-parse/echo-only.json
+  A	docs/evidence/1a/spike-parse/invalid-key-run.log
+  A	docs/evidence/1a/spike-parse/invalid-key-transcript.json
+  A	docs/evidence/1a/spike-parse/malformed.json
+  A	docs/evidence/1a/spike-parse/positive.json
+  A	docs/evidence/1a/spike-parse/run.log
+  A	scripts/spike-assert-messages.py
+  M	scripts/spike.sh
+===== 0501a09 fix(stage-0): scope donor-code scan to the stage-1a harness, fail closed
+  M	docs/audit/defects.md
+  A	docs/evidence/1a/red/06-no-donor-code-scope-proof.log
+  M	scripts/accept/0/06-no-donor-code.sh
+===== 382aa7e fix(stage-1a): fail closed on scan and docker errors in acceptance checks
+  A	docs/evidence/1a/red/07-keyed-branch-proof.log
+  A	docs/evidence/1a/red/08-docker-ps-failclosed.log
+  M	scripts/accept/1a/03-entrypoint-fails-closed.sh
+  M	scripts/accept/1a/04-healthy-nonroot.sh
+  M	scripts/accept/1a/05-spike-end-to-end.sh
+  M	scripts/accept/1a/07-no-secret-leak.sh
+  M	scripts/accept/1a/08-no-containers-left.sh
+===== 3ccfd64 fix(stage-1a): refuse to serve when MCP requirements cannot be read
+  A	docs/evidence/1a/entrypoint-mcp-requirements-failclosed.log
+  M	images/base/entrypoint.sh
+===== 7e572d1 chore(stage-1a): make preflight compose probe explicit about failure
+  M	scripts/preflight.sh
+===== 5d7ff60 docs(stage-1a): close-out report, build-notes correction, acceptance logs
+  M	docs/build-notes.md
+  A	docs/evidence/0/accept-20261013T175814Z.log
+  A	docs/evidence/0/accept-20261013T183818Z.log
+  A	docs/evidence/1a/accept-20261013T175533Z.log
+  A	docs/evidence/1a/accept-20261013T183757Z.log
+  M	docs/reports/stage-1a.md
+===== 3f05923 test(evidence): record how the invalid-key transcript was captured
+  M	docs/evidence/1a/spike-parse/run.log
+===== 8131dcd test(evidence): stage 1a QA red proofs refreshed on the frozen tree
+  A	docs/evidence/1a/accept-20261013T184814Z.log
+  A	docs/evidence/1a/accept-20261013T184844Z.log
+  A	docs/evidence/1a/accept-20261013T185638Z.log
+  A	docs/evidence/1a/qa/00-baseline.log
+  A	docs/evidence/1a/qa/01-make-check.log
+  A	docs/evidence/1a/qa/02-build-base.log
+  A	docs/evidence/1a/qa/03-accept.log
+  A	docs/evidence/1a/qa/04-make-accept.log
+  A	docs/evidence/1a/qa/06-final-accept.log
+  A	docs/evidence/1a/qa/07-make-check-final.log
+  M	docs/evidence/1a/red-proofs.log
+  A	docs/evidence/1a/red/0-06-no-donor-code-qa.log
+  M	docs/evidence/1a/red/01-preflight.log
+  M	docs/evidence/1a/red/02-base-image-pinned.log
+  M	docs/evidence/1a/red/03-entrypoint-fails-closed.log
+  M	docs/evidence/1a/red/04-healthy-nonroot.log
+  M	docs/evidence/1a/red/05-spike-end-to-end.log
+  M	docs/evidence/1a/red/06-spike-answers-complete.log
+  M	docs/evidence/1a/red/07-no-secret-leak.log
+  M	docs/evidence/1a/red/08-no-containers-left.log
+  M	docs/evidence/1a/red/qa-01-preflight.log
+  M	docs/evidence/1a/red/qa-02-base-image-pinned.log
+  M	docs/evidence/1a/red/qa-03-entrypoint-fails-closed.log
+  M	docs/evidence/1a/red/qa-04-healthy-nonroot.log
+  M	docs/evidence/1a/red/qa-05-spike-end-to-end.log
+  M	docs/evidence/1a/red/qa-06-spike-answers-complete.log
+  M	docs/evidence/1a/red/qa-07-no-secret-leak.log
+  M	docs/evidence/1a/red/qa-08-no-containers-left.log
+  M	docs/reports/stage-1a.md
+===== 6c58cb6 docs(verify): stage 1a verification pass 1 (FAIL: provider key absent; findings F2-F5)
+  A	docs/evidence/1a/verify/0/accept-20261013T190438Z.log
+  A	docs/evidence/1a/verify/00-starting-state.log
+  A	docs/evidence/1a/verify/01-make-check.log
+  A	docs/evidence/1a/verify/02-accept.log
+  A	docs/evidence/1a/verify/10-sabotage-02.log
+  A	docs/evidence/1a/verify/11-sabotage-03-build.log
+  A	docs/evidence/1a/verify/12-sabotage-03.log
+  A	docs/evidence/1a/verify/13-restore-03-build.log
+  A	docs/evidence/1a/verify/14-restore-03-pass.log
+  A	docs/evidence/1a/verify/15-sabotage-06.log
+  A	docs/evidence/1a/verify/16-sabotage-07.log
+  A	docs/evidence/1a/verify/17-sabotage-08.log
+  A	docs/evidence/1a/verify/18-final-rebuild.log
+  A	docs/evidence/1a/verify/19-reconfirm-02.log
+  A	docs/evidence/1a/verify/1a/accept-20261013T190339Z.log
+  A	docs/evidence/1a/verify/1a/accept-20261013T190410Z.log
+  A	docs/evidence/1a/verify/1a/accept-20261013T191500Z.log
+  A	docs/evidence/1a/verify/20-reconfirm-04.log
+  A	docs/evidence/1a/verify/21-accept-stage0.log
+  A	docs/evidence/1a/verify/v2-00-starting-state.log
+  A	docs/evidence/1a/verify/v2-01-make-check.log
+  A	docs/evidence/1a/verify/v2-02-build-base.log
+  A	docs/evidence/1a/verify/v2-03-accept-1a.log
+  A	docs/evidence/1a/verify/v2-04-make-accept-1a.log
+  A	docs/evidence/1a/verify/v2-05-make-down-up-stubs.log
+  A	docs/evidence/1a/verify/v2-06-accept-0.log
+  A	docs/evidence/1a/verify/v2-07-parser-own-synthetic.log
+  A	docs/evidence/1a/verify/v2-08-agent-uid-wiring.log
+  A	docs/evidence/1a/verify/v2-09-spike-keyless.log
+  A	docs/evidence/1a/verify/v2-10-entrypoint-bad-mcp.log
+  A	docs/evidence/1a/verify/v2-11-sabotage-02.log
+  A	docs/evidence/1a/verify/v2-12-sabotage-01.log
+  A	docs/evidence/1a/verify/v2-13-sabotage-06.log
+  A	docs/evidence/1a/verify/v2-14-sabotage-07.log
+  A	docs/evidence/1a/verify/v2-15-sabotage-08.log
+  A	docs/evidence/1a/verify/v2-16-sabotage-03.log
+  A	docs/evidence/1a/verify/v2-17-sabotage-05.log
+  A	docs/evidence/1a/verify/v2-18-failclosed-probes.log
+  A	docs/evidence/1a/verify/v2-19-probe-06-git-lsfiles.log
+  A	docs/evidence/1a/verify/v2-20-image-metadata.log
+  A	docs/evidence/1a/verify/v2-21-make-check-final.log
+  A	docs/evidence/1a/verify/v2-22-final-accept.log
+  A	docs/evidence/1a/verify/v2-echo-only.json
+  A	docs/evidence/1a/verify/v2-malformed.json
+  A	docs/evidence/1a/verify/v2-positive.json
+  A	docs/evidence/1a/verify/v2-user-echo-mixed.json
+  A	docs/reports/stage-1a-verification.md
+===== b6a05b0 fix(accept-0): fail closed when git ls-files fails in 06-no-donor-code
+  A	docs/evidence/1a/red/f4-no-donor-code-lsfiles.log
+  M	scripts/accept/0/06-no-donor-code.sh
+===== 815232e fix(accept-1a): require an observed negative-case marker in 06
+  A	docs/evidence/1a/red/f3-negative-marker.log
+  M	docs/evidence/1a/spike/q03.log
+  M	docs/evidence/1a/spike/q04.log
+  M	docs/evidence/1a/spike/q07.log
+  M	docs/evidence/1a/spike/q14.log
+  M	docs/evidence/1a/spike/q15.log
+  M	scripts/accept/1a/06-spike-answers-complete.sh
+===== ff3d593 docs(build-notes): record the stage 1a preflight table (finding F2)
+  M	docs/build-notes.md
+  A	docs/evidence/1a/qa/f2-preflight-recorded.log
+===== 0e6b2e3 docs(stage-1a): address verification findings F2-F5 in the report
+  A	docs/evidence/0/accept-20261013T192640Z.log
+  A	docs/evidence/1a/accept-20261013T192627Z.log
+  A	docs/evidence/1a/qa/f5-image-metadata-wording.log
+  M	docs/reports/stage-1a.md
+===== 123d3c0 test(evidence-1a): QA cycle-2 logs — F2-F5 rechecks, spot red proofs, final accept
+  A	docs/evidence/1a/accept-20261013T193002Z.log
+  A	docs/evidence/1a/accept-20261013T193033Z.log
+  A	docs/evidence/1a/accept-20261013T193539Z.log
+  A	docs/evidence/1a/qa/cycle2-accept-standalone.log
+  A	docs/evidence/1a/qa/cycle2-build-base.log
+  A	docs/evidence/1a/qa/cycle2-f2f5-recheck.log
+  A	docs/evidence/1a/qa/cycle2-f3-negative-probe.log
+  A	docs/evidence/1a/qa/cycle2-f4-lsfiles-probe.log
+  A	docs/evidence/1a/qa/cycle2-make-accept.log
+  A	docs/evidence/1a/qa/cycle2-make-check.log
+  A	docs/evidence/1a/qa/cycle2-qa-summary.log
+  A	docs/evidence/1a/qa/cycle2-spot-red-proofs.log
+===== 4e48766 fix(accept-1a): reject paraphrased denials in 06 negative-case filter
+  A	docs/evidence/1a/red/r1-negative-denial-filter.log
+  M	scripts/accept/1a/06-spike-answers-complete.sh
+===== 3fc5605 test(evidence-1a): QA R1 re-check — filter probes, gates, summary
+  A	docs/evidence/1a/accept-20261013T194434Z.log
+  A	docs/evidence/1a/qa/cycle2b-accept-standalone.log
+  A	docs/evidence/1a/qa/cycle2b-make-check.log
+  A	docs/evidence/1a/qa/cycle2b-qa-summary.log
+  A	docs/evidence/1a/qa/cycle2b-r1-recheck.log
+===== 50756ea fix(accept-1a): deny paraphrased failures and require a signal in 06
+  A	docs/evidence/1a/red/h1-negative-signal.log
+  M	docs/reports/stage-1a.md
+  M	scripts/accept/1a/06-spike-answers-complete.sh
+===== 0910053 test(evidence-1a): QA H1 re-check — denial+signal probes, gates, summary
+  A	docs/evidence/1a/accept-20261013T195433Z.log
+  A	docs/evidence/1a/qa/cycle2c-accept-standalone.log
+  A	docs/evidence/1a/qa/cycle2c-h1-recheck.log
+  A	docs/evidence/1a/qa/cycle2c-make-check.log
+  A	docs/evidence/1a/qa/cycle2c-qa-summary.log
+===== 1034740 fix(accept-1a): close the last two denial boundaries in 06 and freeze
+  A	docs/evidence/1a/red/h1b-boundary-tightening.log
+  M	docs/reports/stage-1a.md
+  M	scripts/accept/1a/06-spike-answers-complete.sh
+===== de88e01 test(evidence-1a): QA P1/P2 closure verification — probes, gates, summary
+  A	docs/evidence/1a/accept-20261013T195832Z.log
+  A	docs/evidence/1a/qa/cycle2d-accept-standalone.log
+  A	docs/evidence/1a/qa/cycle2d-h1b-recheck.log
+  A	docs/evidence/1a/qa/cycle2d-make-check.log
+  A	docs/evidence/1a/qa/cycle2d-qa-summary.log

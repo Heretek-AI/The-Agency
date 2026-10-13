@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "id": "v3_msg_user_echo_cmd",
+      "time": { "created": 1 },
+      "type": "user",
+      "text": "Run `echo spike-shell-ok` then end with a ## RESULT fenced JSON block {\"status\":\"done\"}."
+    },
+    {
+      "id": "v3_msg_assistant_plain",
+      "time": { "created": 2, "completed": 3 },
+      "type": "assistant",
+      "agent": "spike",
+      "content": [{ "type": "text", "text": "I stopped before producing the block." }],
+      "finish": "stop"
+    },
+    {
+      "id": "v3_msg_shell_command_only",
+      "time": { "created": 4, "completed": 5 },
+      "type": "shell",
+      "shellID": "sh_v3_cmd",
+      "command": "echo spike-shell-ok",
+      "status": "exited",
+      "exit": 0,
+      "output": { "output": "\n", "cursor": 0, "size": 1, "truncated": false }
+    }
+  ],
+  "cursor": { "previous": null, "next": null }
+}

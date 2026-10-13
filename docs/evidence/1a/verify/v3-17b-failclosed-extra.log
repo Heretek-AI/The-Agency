@@ -1,0 +1,17 @@
+# Extra fail-closed probes — verifier pass 2, 2026-10-13T20:09:36Z, HEAD de88e01
+
+## 07: git grep fails -> check exits 1 (never a vacuous pass)
+CHECK 1a/07-no-secret-leak: FAIL git grep failed (exit 128) while scanning tracked files for key assignments
+exit=1
+CHECK 1a/07-no-secret-leak: PASS
+exit=0 (real git)
+
+## 05: docker ps fails after a successful spike -> check exits 1 (path unreachable without a key)
+v3-shim: docker ps unavailable
+CHECK 1a/05-spike-end-to-end: FAIL docker ps -a failed; cannot prove no container is left behind
+exit=1
+
+## Restore / final state
+worktree diff clean
+(no agency-* containers)
+tree clean apart from this pass's evidence

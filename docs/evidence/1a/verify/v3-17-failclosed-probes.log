@@ -1,0 +1,24 @@
+# Fail-closed probes (rows this stage touches) — verifier pass 2, 2026-10-13T20:08:18Z
+
+## Entrypoint: OPENCODE_PASSWORD empty -> exit 64 naming it
+run exit=0
+exit-code=64 running=false
+entrypoint: refusing to start: OPENCODE_PASSWORD is empty
+
+## Entrypoint: OPENCODE_API_KEY empty -> exit 64 naming it
+run exit=0
+exit-code=64 running=false
+entrypoint: refusing to start: OPENCODE_API_KEY is empty
+
+## Entrypoint: malformed /etc/agency/mcp-requirements.json -> refuse, exit 64 naming the file
+run exit=0
+exit-code=64 running=false
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+entrypoint: refusing to start: cannot read MCP requirements from /etc/agency/mcp-requirements.json
+
+## spike.sh keyless -> exit 1 naming the missing key (already shown in v3-14); preflight keyless -> exit 1
+preflight exit=1
+
+## Final: no agency-* containers; tree state
+(no agency-* containers)
+tree clean apart from this pass's evidence

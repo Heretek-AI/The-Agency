@@ -1,0 +1,16 @@
+# F4 probe (own): 0/06-no-donor-code fails closed when git ls-files fails
+# Verifier pass 2, 2026-10-13T20:05:30Z, HEAD de88e01
+
+# PATH shim: git ls-files -> exit 128, all other git subcommands delegate (/tmp/opencode, never committed)
+
+$ PATH=/tmp/opencode/v3-f4-shim:$PATH ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+v3-shim: git ls-files unavailable
+CHECK 0/06-no-donor-code: FAIL git ls-files *.patch failed (exit 128); cannot enumerate tracked files
+exit=1  (expected 1: fails closed, not the pass-1 fail-open 0)
+
+$ bash scripts/accept/0/06-no-donor-code.sh   # real git
+CHECK ?/06-no-donor-code: PASS
+exit=0  (expected 0)
+
+# shim removed: gone
+tree clean apart from this pass's evidence

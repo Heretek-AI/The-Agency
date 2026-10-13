@@ -1,0 +1,11 @@
+{
+  "data": [
+    {
+      "id": "v3_msg_user_echo_only",
+      "time": { "created": 1 },
+      "type": "user",
+      "text": "Append spike-ok, run `echo spike-shell-ok` with the shell tool. End with a ## RESULT fenced JSON block {\"status\":\"done\",\"summary\":\"pass2 echo only\"}."
+    }
+  ],
+  "cursor": { "previous": null, "next": null }
+}

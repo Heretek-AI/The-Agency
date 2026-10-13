@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "id": "v3_msg_user_result",
+      "time": { "created": 1 },
+      "type": "user",
+      "text": "End with a ## RESULT fenced JSON block {\"status\":\"done\"}."
+    },
+    {
+      "id": "v3_msg_shell_ok_only",
+      "time": { "created": 4, "completed": 5 },
+      "type": "shell",
+      "shellID": "sh_v3_userres",
+      "command": "echo spike-shell-ok",
+      "status": "exited",
+      "exit": 0,
+      "output": { "output": "spike-shell-ok\n", "cursor": 0, "size": 15, "truncated": false }
+    }
+  ],
+  "cursor": { "previous": null, "next": null }
+}

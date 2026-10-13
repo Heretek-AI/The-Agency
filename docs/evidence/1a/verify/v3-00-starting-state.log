@@ -1,0 +1,69 @@
++ date -u +%Y-%m-%dT%H:%M:%SZ
+2026-10-13T20:00:48Z
++ git branch --show-current
+stage-1a-spike
++ git rev-parse HEAD
+de88e01a889091503c60ac6b9ddebff3ece52741
++ git status --short
+?? docs/evidence/1a/verify/v3-00-starting-state.log
++ git status --porcelain=v1 --untracked-files=all
++ wc -l
+1
++ echo '--- versions ---'
+--- versions ---
++ bun --version
+1.4.2
++ docker --version
+Docker version 29.9.0, build 1.fc46
++ docker compose version --short
+5.6.0
++ opencode --version
+opencode v2.0.28
++ echo '--- provider key ---'
+--- provider key ---
++ test -f .env.provider
++ echo '.env.provider absent'
+.env.provider absent
++ test -n ''
++ echo 'OPENCODE_API_KEY absent in env'
+OPENCODE_API_KEY absent in env
++ test -n ''
++ echo 'AGENCY_MODEL absent in env'
+AGENCY_MODEL absent in env
++ echo '--- containers ---'
+--- containers ---
++ docker ps -a --format '{{.Names}} {{.Image}} {{.Status}}'
+ai-sidecars-llama-server-1 ghcr.io/ggml-org/llama.cpp:server Exited (1) 4 hours ago
+deploy-panel-api-1 deploy-panel-api Restarting (3) 2 seconds ago
+deploy-gateway-1 deploy-gateway Up 41 hours
+deploy-swarmd-1 deploy-swarmd Restarting (1) 11 seconds ago
+deploy-caddy-1 caddy:2 Up 41 hours
+deploy-egress-web-1 scraper-swarm/egress-web:local Up 41 hours
+disunity-unity-mcp aigamedeveloper/mcp-server:latest Up 41 hours
+drop-verify-postgres-1 postgres:alpine Exited (1) 3 weeks ago
+drop-verify-drop-1 ghcr.io/heretek-games/drop:nightly Created
+vtt-postgres postgres:16-alpine Up 41 hours (healthy)
++ echo '--- agency image ---'
+--- agency image ---
++ docker image inspect agency-base:2.0.26 --format '{{.Id}} {{.Created}}'
+sha256:aa6f9c42901db6af079b0ce3681ee022193fa8ea2d00bac9751e12313e617bc3 2026-10-13T14:32:45.475742301-04:00
++ docker image inspect agency-base:2.0.26 --format '{{index .Config.Labels "org.agency.opencode-version"}}'
+2.0.26
++ echo '--- image entrypoint sha vs tree ---'
+--- image entrypoint sha vs tree ---
++ docker image inspect agency-base:2.0.26 --format '{{.Config.Entrypoint}}'
+[tini -- /usr/local/bin/entrypoint.sh]
++ docker run --rm --entrypoint sha256sum agency-base:2.0.26 /usr/local/bin/entrypoint.sh
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  /usr/local/bin/entrypoint.sh
++ sha256sum images/base/entrypoint.sh
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  images/base/entrypoint.sh
++ echo '--- review clone ---'
+--- review clone ---
++ git -C /home/john/Projects/The-Agency/review/opencode rev-parse HEAD
+4617210822bdbb31e5749751afbfb4584ccedac8
++ echo '--- worktree ---'
+--- worktree ---
++ git worktree list
+/home/john/Projects/The-Agency                         4721f11 [main]
+/home/john/Projects/The-Agency/worktrees/wave-1a-spike de88e01 [stage-1a-spike]
++ set +x

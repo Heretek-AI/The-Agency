@@ -1,0 +1,21 @@
+# FROM digest pin vs versions.env — verifier pass 2, 2026-10-13T20:05:16Z
+$ grep '^FROM' images/base/Dockerfile
+FROM ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55 AS base
+$ grep '^UBUNTU_DIGEST' versions.env
+UBUNTU_DIGEST=sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+extracted digest: sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+MATCH: FROM digest is recorded in versions.env
+
+# Registry-side manifest check for the pinned digest (network; informational)
+Name:      docker.io/library/ubuntu:24.04
+MediaType: application/vnd.oci.image.index.v1+json
+Digest:    sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+           
+Manifests: 
+  Name:        docker.io/library/ubuntu:24.04@sha256:f610ab94648195aa356059f5b41d6085c9d4d903c072430cdd1af7bdb646106b
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/amd64
+
+# Local ubuntu:24.04 image (if present) RepoDigests
+
+(ubuntu:24.04 not in local image store)

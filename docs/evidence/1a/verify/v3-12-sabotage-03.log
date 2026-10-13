@@ -1,0 +1,25 @@
+# Sabotage 03 — verifier pass 2, 2026-10-13T20:06:14Z, HEAD de88e01
+# Sabotage: the OPENCODE_PASSWORD refusal block's 'exit 64' changed to 'exit 0' (the script's second
+# 'exit 64' string; the first is the header comment), image rebuilt. Case 1 must catch it.
+# (Correction: an earlier version of this line said API key; the diff below and the failure reason
+# show the password block was the one mutated. OPENCODE_API_KEY block untouched in this run.)
+ 
+ if [ -z "${OPENCODE_PASSWORD:-}" ]; then
+   echo "entrypoint: refusing to start: OPENCODE_PASSWORD is empty" >&2
+-  exit 64
++  exit 0
+ fi
+ if [ -z "${OPENCODE_API_KEY:-}" ]; then
+   echo "entrypoint: refusing to start: OPENCODE_API_KEY is empty" >&2
+rebuild exit=0
+CHECK 1a/03-entrypoint-fails-closed: FAIL no-password container exited 0
+exit=1
+
+# Restore + rebuild + re-run
+git diff clean
+rebuild exit=0
+CHECK 1a/03-entrypoint-fails-closed: PASS
+exit=0
+# Image entrypoint sha vs tree after restore
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  /usr/local/bin/entrypoint.sh
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  images/base/entrypoint.sh

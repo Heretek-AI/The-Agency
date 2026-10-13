@@ -1,0 +1,41 @@
+# Own probes of check 06's frozen negative-case filter — verifier pass 2, 2026-10-13T20:05:44Z, HEAD de88e01
+# Each probe mutates the q03.log 'Negative case:' marker (lines 47-48), runs the check, restores with git checkout.
+# Markers q04/q07/q14/q15 untouched throughout.
+
+## Baseline (no mutation)
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+
+## Probe: enumerated denial: did not yield
+# replacement marker: Negative case: attempts to reproduce the failure did not yield a failure.
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restored: exact (git diff clean)
+
+## Probe: denial with curly apostrophe: couldn’t
+# replacement marker: Negative case: we couldn’t reproduce it at all.
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restored: exact (git diff clean)
+
+## Probe: signal-less genuine-looking sentence
+# replacement marker: Negative case: the container-side write behaviour was checked a second time yesterday.
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case shows no observed outcome (no signal in its paragraph)
+exit=1
+restored: exact (git diff clean)
+
+## Probe: genuine observed outcome (should pass filter; count still fails)
+# replacement marker: Negative case: the second container-side write to /work failed with EROFS (rc=1).
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+restored: exact (git diff clean)
+
+## Probe: acknowledged bound: denial phrased outside enumerated shapes, signal word present
+# replacement marker: Negative case: the error eluded our attempts.
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+restored: exact (git diff clean)
+
+## Final state
+worktree diff clean
+only this pass's evidence is untracked

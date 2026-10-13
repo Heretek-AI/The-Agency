@@ -1,0 +1,56 @@
+# Final acceptance re-run after all probes — verifier pass 2, 2026-10-13T20:09:49Z, HEAD de88e01
+# EVIDENCE_ROOT=docs/evidence/1a/verify
+CHECKS for stage 1a
+1a/01-preflight              FAIL   preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+1a/02-base-image-pinned      PASS   
+1a/03-entrypoint-fails-closed PASS   
+1a/04-healthy-nonroot        PASS   
+1a/05-spike-end-to-end       SKIP   .env.provider has no usable OPENCODE_API_KEY
+1a/06-spike-answers-complete FAIL   4 question(s) NOT PERFORMED (no provider key); stage incomplete
+1a/07-no-secret-leak         PASS   
+1a/08-no-containers-left     PASS   
+stage 1a: 5 pass, 1 skip, 2 fail (8 checks)
+log: docs/evidence/1a/verify/1a/accept-20261013T201015Z.log
+accept exit=1
+
+make accept exit=2 (GNU make normalizes 1 to 2)
+
+# Final tree state
+?? docs/evidence/1a/verify/0/accept-20261013T200223Z.log
+?? docs/evidence/1a/verify/1a/accept-20261013T200138Z.log
+?? docs/evidence/1a/verify/1a/accept-20261013T200206Z.log
+?? docs/evidence/1a/verify/1a/accept-20261013T201015Z.log
+?? docs/evidence/1a/verify/1a/accept-20261013T201041Z.log
+?? docs/evidence/1a/verify/v3-00-starting-state.log
+?? docs/evidence/1a/verify/v3-01-make-check.log
+?? docs/evidence/1a/verify/v3-02-build-base.log
+?? docs/evidence/1a/verify/v3-03-accept-1a.log
+?? docs/evidence/1a/verify/v3-04-make-accept-1a.log
+?? docs/evidence/1a/verify/v3-05-accept-0.log
+?? docs/evidence/1a/verify/v3-06-agent-uid-wiring.log
+?? docs/evidence/1a/verify/v3-07-from-digest.log
+?? docs/evidence/1a/verify/v3-08-parser-own-probe.log
+?? docs/evidence/1a/verify/v3-09-f4-lsfiles-probe.log
+?? docs/evidence/1a/verify/v3-10-check06-filter-probes.log
+?? docs/evidence/1a/verify/v3-11-sabotage-02.log
+?? docs/evidence/1a/verify/v3-12-sabotage-03.log
+?? docs/evidence/1a/verify/v3-13-sabotage-01.log
+?? docs/evidence/1a/verify/v3-14-sabotage-05.log
+?? docs/evidence/1a/verify/v3-15-sabotage-07.log
+?? docs/evidence/1a/verify/v3-16-sabotage-08.log
+?? docs/evidence/1a/verify/v3-17-failclosed-probes.log
+?? docs/evidence/1a/verify/v3-17b-failclosed-extra.log
+?? docs/evidence/1a/verify/v3-18-commit-compare.log
+?? docs/evidence/1a/verify/v3-19-patterns-scan.log
+?? docs/evidence/1a/verify/v3-20-image-metadata.log
+?? docs/evidence/1a/verify/v3-21-register-guard-names.log
+?? docs/evidence/1a/verify/v3-22-final-accept.log
+?? docs/evidence/1a/verify/v3-echo-only.json
+?? docs/evidence/1a/verify/v3-malformed.json
+?? docs/evidence/1a/verify/v3-positive.json
+?? docs/evidence/1a/verify/v3-result-in-user.json
+?? docs/evidence/1a/verify/v3-shell-command-echo.json
+git diff clean
+.env.provider absent
+(no agency-* containers)
+image agency-base:2.0.26 present

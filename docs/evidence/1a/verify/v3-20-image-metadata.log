@@ -1,0 +1,21 @@
+# Image metadata secret scan (F5 wording check) — verifier pass 2, 2026-10-13T20:05:22Z
+# Claim under test (docs/reports/stage-1a.md): history and inspect each show the HEALTHCHECK's
+# literal ${OPENCODE_PASSWORD} variable-name reference once; no value appears in either.
+
+$ docker history --no-trunc agency-base:2.0.26 | grep -c 'OPENCODE_PASSWORD'
+1
+$ docker history --no-trunc agency-base:2.0.26 | grep 'OPENCODE_PASSWORD'
+<missing>                                                                 2 hours ago   HEALTHCHECK {Test:[CMD-SHELL curl -fsS --noproxy '*' -u "opencode:${OPENCODE_PASSWORD}" "http://127.0.0.1:4096/api/info" > /dev/null] Interval:30s Timeout:5s StartPeriod:15s StartInterval:0s Retries:3}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                0B        buildkit.dockerfile.v0
+
+$ docker inspect agency-base:2.0.26 | grep -c 'OPENCODE_PASSWORD'
+1
+$ docker inspect agency-base:2.0.26 | grep -o 'OPENCODE_PASSWORD' | wc -l
+1
+
+# No credential value: scan history+inspect for a non-empty OPENCODE_API_KEY= / OPENCODE_PASSWORD= assignment
+history: no assignment with a value
+inspect: no assignment with a value
+
+# Count of plain 'OPENCODE_PASSWORD' occurrences in inspect JSON (same placeholder, multiple serializations:
+# Config.Healthcheck.Test and its single array element).
+1
