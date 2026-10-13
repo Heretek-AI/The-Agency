@@ -41,7 +41,9 @@ fi
 # --- compose >= 2.24 ---
 compose_version=""
 if [ -n "$runtime" ]; then
-  compose_version=$($runtime compose version --short 2>/dev/null || true)
+  # An unrunnable compose plugin yields an empty version and the row below
+  # FAILs; the probe's exit status is dropped explicitly, not tolerated.
+  compose_version=$($runtime compose version --short 2>/dev/null) || compose_version=""
 fi
 if [ -z "$compose_version" ]; then
   row "compose" "FAIL" "no compose plugin for $runtime"
