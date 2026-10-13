@@ -1,0 +1,22 @@
+== probe 3: malformed mcp-requirements.json ==
+running=false
+exit=64
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+  File "/usr/lib/python3.12/json/__init__.py", line 293, in load
+
+== final state ==
+?? docs/evidence/1a/verify/0/accept-20261013T213629Z.log
+?? docs/evidence/1a/verify/v4-01-make-check.log
+?? docs/evidence/1a/verify/v4-02-accept-1a-harness.log
+?? docs/evidence/1a/verify/v4-02-accept-1a.log
+?? docs/evidence/1a/verify/v4-03-accept-0.log
+?? docs/evidence/1a/verify/v4-04-failclosed-probes.log
+?? docs/evidence/1a/verify/v4-05-sabotage-05.log
+?? docs/evidence/1a/verify/v4-06-sabotage-06.log
+?? docs/evidence/1a/verify/v4-07-sabotage-04.log
+?? docs/evidence/1a/verify/v4-08-mcp-probe-final.log
+tracked diff: clean
+no spike containers left
+OPENCODE_VERSION=2.0.26
+1

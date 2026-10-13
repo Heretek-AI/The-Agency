@@ -1,0 +1,7 @@
+Sabotage A: versions.env OPENCODE_VERSION -> bogus (spike image missing; builder/QA used dummy-key instead)
+OPENCODE_VERSION=0.0.0-bogus
+CHECK 1a/05-spike-end-to-end: FAIL spike.sh failed: spike: missing image agency-base:0.0.0-bogus (run: make build-base) 
+exit=1
+restore: diff clean
+OPENCODE_VERSION=2.0.26
+no spike containers left

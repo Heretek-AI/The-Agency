@@ -240,3 +240,181 @@ inspect ubuntu:24.04` returned digest
   4.6 violation found.
 
 VERDICT: FAIL — `docs/reports/stage-1a-verification.md`
+
+# Stage 1a — verification (pass 3)
+
+Commit: `91c4151f5c5b7f4e3bf7e067fd7a9cb7fac61eba` Branch: `stage-1a-spike` Date: 2026-10-13 (UTC) Verifier: Muse Spark 1.3 Contributor (OpenCode), fresh session
+
+Pass-2 (`1d2b7ab`, VERDICT: FAIL with sole blocker F1 = missing provider
+key) and pass-1 (`6c58cb6`) are kept intact above. This pass's evidence is
+the `v4-*` files under `docs/evidence/1a/verify/` (plus the harness log
+moved there, see Notes). The F1 blocker is resolved: `.env.provider`
+(mode 0600, non-empty `OPENCODE_API_KEY` — present/absent only, value never
+shown) and `.env` (`AGENCY_MODEL=opencode-go/muse-spark-1.3-contributor`)
+exist, gitignored.
+
+VERDICT: PASS
+
+## Summary
+
+On a clean tree at `91c4151`, `make check` exits 0 (78 pass, 0 fail) and
+`bash scripts/accept.sh 1a` exits 0 with 8 pass / 0 skip / 0 fail —
+check 05 RAN and PASSED (no skip), so the stage is complete. The keyed
+spike claims hold: Q1 (partly) re-corroborated live (host 2.0.28 lists the
+id, container 2.0.26 `models --standalone` prints nothing), Q9/Q10/Q11
+evidence reads genuine with redacted hand-transcribed output, and the
+role-aware transcript parser accepts assistant shell tool parts while
+ignoring the user echo. My own sabotage sample (checks 05, 06, 04, each a
+different sabotage from the builder's and QA's) went red and came back
+green; fail-closed probes refuse with exit 64 naming the variable. No
+section-4.6 violation was found, and the report's claims match the tree.
+
+## Checks
+
+| Check                                   | Builder | Verifier                                                              | Evidence                                                     |
+| --------------------------------------- | ------- | --------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 1a/01-preflight                         | PASS    | PASS                                                                  | `v4-02-accept-1a-harness.log`                                |
+| 1a/02-base-image-pinned                 | PASS    | PASS (image rebuilt green in-run)                                     | `v4-02`, `v4-07` (rebuilds)                                  |
+| 1a/03-entrypoint-fails-closed           | PASS    | PASS; entrypoint probes exit 64 naming the variable                   | `v4-02`, `v4-04-failclosed-probes.log`                       |
+| 1a/04-healthy-nonroot                   | PASS    | PASS; red with broken HEALTHCHECK path, restored+rebuilt green        | `v4-07-sabotage-04.log`, `v4-02`                             |
+| 1a/05-spike-end-to-end                  | PASS    | PASS (RAN, `SPIKE PASS`, no skip); red with bogus image pin, restored | `v4-02`, `v4-05-sabotage-05.log`                             |
+| 1a/06-spike-answers-complete            | PASS    | PASS; red with q07 marker stripped, restored green                    | `v4-06-sabotage-06.log`, `v4-02`                             |
+| 1a/07-no-secret-leak                    | PASS    | PASS on the real key (value in no file)                               | `v4-02`                                                      |
+| 1a/08-no-containers-left                | PASS    | PASS; no `agency-spike*` container before, during checks, or after    | `v4-02`, final state in `v4-08`                              |
+| 0/06-no-donor-code (register D-06/D-27) | PASS    | PASS                                                                  | `verify/0/accept-20261013T213629Z.log`, `v4-03-accept-0.log` |
+
+Stage-0 accept re-run: 9 pass / 1 fail — the single failure is
+`0/05-salvage-provenance` on its branch-name gate (`stage-0-salvage` vs
+`stage-1a-spike`), the same expected pre-existing condition both prior
+passes recorded. `make check`: 78 pass, 0 fail (`v4-01-make-check.log`).
+Starting state: branch `stage-1a-spike`, commit `91c4151`, clean tree, Bun
+1.4.2, Docker 29.9.0, Compose 5.6.0, host opencode v2.0.28, provider key
+present (mode 0600), no `agency-*` containers, SELinux Enforcing.
+
+## Sabotage sample
+
+| Check | What I broke                                                                                                    | Result                                                                       | Restored                                                                                     |
+| ----- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 1a/05 | `versions.env` `OPENCODE_VERSION` → `0.0.0-bogus` (missing-image path; builder/QA used dummy-key auth failure)  | FAIL exit 1: `spike: missing image agency-base:0.0.0-bogus`                  | Yes; `git checkout`, diff clean, `OPENCODE_VERSION=2.0.26` back, no container left (`v4-05`) |
+| 1a/06 | `Negative case:` marker renamed away in `q07.log` (builder moved `q06.log`; QA renamed the `q10` marker)        | FAIL exit 1: `q07.log has no structured 'Negative case: <observation>' line` | Yes; `git checkout`, diff clean, direct re-run PASS (`v4-06`)                                |
+| 1a/04 | `HEALTHCHECK` CMD `/api/info` → `/api/nonexistent` + rebuild (builder flipped `USER`; QA deleted `HEALTHCHECK`) | FAIL exit 1: `container never healthy (status=unhealthy)`                    | Yes; exact checkout, rebuilt, direct re-run PASS, no container left (`v4-07`)                |
+
+Green re-confirmation for 05 without a second live run: the restored tree
+is byte-identical (`git diff --exit-code` clean) to the tree that passed
+05 minutes earlier in the full accept run, so no extra model spend was
+burned — the same no-spend convention QA used.
+
+## Findings
+
+No findings. Every claim below held; the observations that break no rule
+are under Notes.
+
+## Claims compared with the tree
+
+- **F1 (pass-2 verdict driver) — RESOLVED.** `.env.provider` exists at
+  mode 0600 with a non-empty key (presence only ever reported);
+  `AGENCY_MODEL=opencode-go/muse-spark-1.3-contributor` confirmed in
+  `.env`. Checks 01/05/06 pass; Q1/Q9/Q10/Q11 answered with keyed
+  evidence; accept exits 0.
+- **SPIKE PASS + Q1(partly)/Q9(partly)/Q10(yes)/Q11(yes).** My accept run
+  re-exercised the whole spike flow green (session create with
+  permissions, ask→list→reject round-trip, prompt, wait, role-aware
+  transcript assertion, diff with `notes.txt`). Q1 re-corroborated live by
+  me (`v4-09`: host 2.0.28 lists the id ×2, container 2.0.26 standalone
+  prints nothing). Q9/Q10/Q11 logs read genuine: exact error envelopes
+  (`GoUsageLimitError`/monthly, token counts in 1814/out 4/reasoning
+  26/cache.read 896, `CONNECT opencode.ai:443` / `CONNECT
+mcp.context7.com:443` with direct-DNS rc=6 negative case, SSE
+  `session.tool.called/success` frames with sessionID + shared call id +
+  `echo:hello-sse3` output). Parser (`scripts/spike-assert-messages.py`)
+  accepts the shell marker from assistant `tool` parts named `shell` as
+  well as `type: shell` messages and ignores the user echo — read in full,
+  no vacuous path. Transcripts redacted with raw DBs destroyed: teardown is
+  `docker rm -f` by name on `EXIT`, and check 07 passes on the real key.
+- **QA `make check` 0 + accept 0 (8/0/0) + 8 fresh red-proofs.** My runs
+  reproduce both exactly. All eight `red/qa-*.log` headers state sabotages
+  differing from the builder's (01 mode-vs-absent, 02 floating-FROM vs
+  zeroed-digest, 03 API_KEY-vs-PASSWORD block, 04 HEALTHCHECK-delete vs
+  USER-swap, 06 q10-marker vs q06-move, 07 unstaged-build-notes-append vs
+  staged-throwaway; 05/08 share the shape with a different value/name and
+  state, justified as the fail-fast form). HEAD is exactly `91c4151`; the
+  starting tree was clean (`git status` empty before my runs).
+- **Commit subjects vs diffs** (`4721f11..91c4151`): no subject claims
+  "live"/"verified"; the new keyed commits match their diffs —
+  `309d297` (cat-jam-free pin, same-path `-v WORK:WORK` mount, tool-part
+  parser case), `c88beb3` (q01/q09/q10/q11 + q03 supplement), `d25114b`
+  (report/build-notes keyed run), `91c4151` ("green accept, make check, 8
+  red-proofs" — all three re-observed this pass).
+- **Built items**: preflight, base image + entrypoint + `make build-base`,
+  spike runner/config/parser, checks 01–08 — all exist, wired
+  (Makefile/checks/spike), and exercised by my runs.
+- **Not performed / Not built**: both accurately empty — 05 ran (no
+  skip), all fifteen answers recorded, fallbacks complete. Nothing the
+  stage asked for is missing.
+- **Register guards due by this stage**: no defects.md row has Stage 1a;
+  every stage-0 guard re-passes (unit tests inside `make check`, `0/06`
+  PASS, `0/01`/`0/02`/`0/10`, `0/07`, harness self-test all PASS).
+- **Step-4 check-script review** (all eight read in full): each would exit
+  1 if its condition broke — no `|| true` on judged paths (only annotated
+  teardown `docker rm -f` and harness grep fallbacks with mismatch
+  handling), no `set +e` outside `accept.sh`'s exit-code classifier (which
+  re-tests the result line and fails mismatches closed), the sole SKIP
+  branch is the prompt-allowed keyless-05, no self-created assertions
+  (06's markers cite observed rc/signals; 05's markers must come from
+  server-produced messages), no source-only greps for behaviour rows, the
+  120 s per-check timeout turns hangs into FAIL, and 07/08 fail closed on
+  scan/`docker ps` errors.
+
+## Fail-closed probes
+
+| Situation                                     | Expected                       | Observed                                                                                 |
+| --------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `OPENCODE_PASSWORD` empty at start            | exit non-zero naming it        | exit 64, log names it (`v4-04`)                                                          |
+| `OPENCODE_API_KEY` empty at start             | exit non-zero naming it        | exit 64, log names it (`v4-04`)                                                          |
+| Malformed `/etc/agency/mcp-requirements.json` | refuse to start, name the file | exit 64, `cannot read MCP requirements from /etc/agency/mcp-requirements.json` (`v4-08`) |
+| Image pin wrong (`OPENCODE_VERSION` bogus)    | spike fails, check 05 red      | `missing image`, check FAIL (`v4-05`)                                                    |
+| Health endpoint broken                        | check 04 red, never vacuous    | `never healthy (status=unhealthy)` (`v4-07`)                                             |
+| Marker stripped from `q07.log`                | check 06 red                   | `no structured 'Negative case' line` (`v4-06`)                                           |
+
+4.2 rows this stage does not touch (empty check list, missing judge,
+unreachable expert/proxy, `no-block`, landed-SHA `done`, task-command
+placement, process-group kill, `ask` rejection at the Dispatcher) belong
+to Stages 1b/1c and later; the permission ask→reject path is covered by
+every green spike run. No `make down/up`: no compose file exists in this
+stage (explicitly Stage 1b work).
+
+## Not verified
+
+- Q10/Q11 server-side internals (proxy CONNECT lines, SSE frame capture)
+  and Q9 token fill-in beyond what the checks assert: read as
+  hand-transcribed redacted logs, not re-run — re-running them would cost
+  extra live model runs, and only the one authorized live run (the accept
+  spike) was spent. Internal consistency plus my Q1 live corroboration and
+  the green structural assertions carry them.
+- Builder/QA red-proofs for 01/02/03/07/08: reviewed on paper (all headers
+  state real sabotages with exit-1 output quoted); re-run with distinct
+  variants only for 04/05/06.
+- Check 06's frozen keyword-filter bound stands as pass 2 judged it: an
+  unenumerated denial with a signal word could pass the filter. I read all
+  six cited marker paragraphs — each carries a checkable observed outcome
+  (EROFS rc=1 ×2, deny effect, DNS rc=6, ConnectionRefused / SQLiteError
+  rc=1, UNSET) — so no standing evidence rests on the bound.
+
+## Notes
+
+- The accept harness writes its log to `docs/evidence/1a/` by default; I
+  moved that one file into `docs/evidence/1a/verify/` (as
+  `v4-02-accept-1a-harness.log`, recorded name differs from the printed
+  path) and ran stage-0 accept with `EVIDENCE_ROOT` pointed at `verify/`,
+  so every file I created lives in my write scope.
+- `.env`/`.env.provider` are gitignored, mode 0600; the key value appears
+  in no file, no log, and no output of mine. `AGENCY_MODEL` is not secret
+  and is quoted from the builder report only.
+- Dev-harness containers without CPU/memory/PID limits (`spike.sh`,
+  checks 03/04, my probes): same justified exception as passes 1–2 — the
+  stage prompt mandates these direct named starts with teardown traps, the
+  limits contract binds the Stage-1b generated compose (D-07), and none
+  was left running.
+- This report and the `v4-*` evidence were left uncommitted by the
+  verifier; the master committed them unchanged apart from the mechanical
+  reorder notes above.

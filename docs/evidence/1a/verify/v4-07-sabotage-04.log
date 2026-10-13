@@ -1,0 +1,11 @@
+Sabotage C: HEALTHCHECK CMD /api/info -> /api/nonexistent (builder swapped USER; QA deleted HEALTHCHECK)
+119:HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+120-  CMD curl -fsS --noproxy '*' -u "opencode:${OPENCODE_PASSWORD}" "http://127.0.0.1:4096/api/nonexistent" > /dev/null
+build-exit=0
+CHECK 1a/04-healthy-nonroot: FAIL container never healthy (status=unhealthy)
+exit=1
+restore: diff clean
+rebuild-exit=0
+CHECK 1a/04-healthy-nonroot: PASS
+reconfirm-exit=0
+no spike containers left
