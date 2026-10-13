@@ -1,0 +1,91 @@
+# QA cycle-2 summary — Stage 1a rework re-verification (F2–F5), final tree
+# Date: 2026-10-13 (UTC). Branch: stage-1a-spike. Re-verified HEAD: 0e6b2e35be599ee12d4b6bd954a7b65566cd13f4
+# Role: QA Agent (Triad role 2), cycle 2. No check was weakened; nothing was fixed.
+
+## Gate results on the final tree
+- make check                          -> exit 0 (78 pass, 0 fail)   [cycle2-make-check.log]
+- make build-base                     -> exit 0 (image rebuilt)     [cycle2-build-base.log]
+- bash scripts/accept.sh 1a           -> exit 1; 5 pass / 1 skip / 2 fail   [cycle2-accept-standalone.log;
+  log docs/evidence/1a/accept-20261013T193002Z.log]
+- make accept STAGE=1a                -> exit 2 (GNU make normalization of recipe exit 1)  [cycle2-make-accept.log]
+- final bash scripts/accept.sh 1a     -> exit 1; identical table [docs/evidence/1a/accept-20261013T193539Z.log]
+
+Standing split reproduced exactly, no difference:
+  01-preflight FAIL (no .env.provider), 02 PASS, 03 PASS, 04 PASS,
+  05-spike-end-to-end SKIP (no usable OPENCODE_API_KEY),
+  06-spike-answers-complete FAIL (4 question(s) NOT PERFORMED), 07 PASS, 08 PASS.
+
+## F4 — 0/06-no-donor-code fails closed on git ls-files (verified)
+- shim: `git ls-files` exits 128, `git rev-parse` works -> check exit 1,
+  "FAIL git ls-files *.patch failed (exit 128); cannot enumerate tracked files".
+- variant: shim prints a bogus line then exits 1 -> check exit 1.
+- variant: git absent from PATH entirely -> check exit 1 ("cannot cd to").
+- shim removed -> check exit 0 (PASS). docker-run sabotage in scripts/preflight.sh
+  still -> exit 1; restored exactly; PASS again.
+Evidence: cycle2-f4-lsfiles-probe.log
+
+## F3 — 1a/06 requires an observed negative case (verified; one residual hole, R1)
+- baseline -> FAIL "4 question(s) NOT PERFORMED", exit 1.
+- q03 scratch, observed marker stripped -> FAIL "no structured 'Negative case:' line", exit 1.
+- q03 scratch, observation replaced with "none obtainable" -> FAIL "negative case is a denial", exit 1.
+- q03 scratch, observation replaced with "nothing observed" -> FAIL "negative case is a denial", exit 1.
+- q03 scratch, observation replaced with "could not be reproduced" -> FAIL "negative case is a denial", exit 1.
+- q10 with a fake answered row (row 10 -> "partly"), q10.log keeps its
+  "Negative case: none obtainable..." denial -> FAIL "q10.log: negative case is
+  a denial, not an observation", exit 1.
+- q10.log unchanged by the rework (git diff 6c58cb6..HEAD empty); its only
+  "Negative case:" line is that pre-existing denial; it does not count
+  (proven by the fake-row probe). Check 06 still fails on NOT PERFORMED.
+- All sabotage restores byte-identical; final baseline FAIL exit 1.
+Evidence: cycle2-f3-negative-probe.log
+
+R1 (residual finding, reported, NOT fixed): the denial filter is a regex
+allowlist (`^(none|no|not|never|nothing)\b|not\s+obtainable|unobtainable|could\s+not\s+be`).
+Paraphrased denials are accepted as observations; proven with a scratch q03:
+  "Negative case: couldn't be reproduced"     -> accepted (failure came only from the count)
+  "Negative case: unable to reproduce it"     -> accepted
+  "Negative case: does not reproduce"         -> accepted
+Impact: once a shape-deciding question is answered, a denial phrased outside
+the allowlist satisfies the marker requirement. Currently masked by the four
+NOT PERFORMED rows, so it flips nothing today; it is a real gap in the fix as
+stated. Suggested direction (not applied): invert to require a positive
+observation shape (command/exit/observed markers) instead of enumerating denials.
+
+## F2 — preflight table recorded (verified)
+- docs/build-notes.md "### Stage 1a preflight" exists (line 16) with the table
+  and chosen port AGENCY_HTTP_PORT=8081.
+- Fresh `bash scripts/preflight.sh` (exit 1, provider-file FAIL, no value
+  printed) is line-for-line identical to the recorded fenced block.
+  (First comparison flagged only a trailing-newline artifact of $(...) capture;
+  corrected file-to-file comparison: IDENTICAL, 10 lines.)
+Evidence: cycle2-f2f5-recheck.log
+
+## F5 — report wording matches image metadata (verified)
+- Report no longer claims "docker history clean"; it says history and inspect
+  each show the HEALTHCHECK's literal ${OPENCODE_PASSWORD} once, no value.
+- `docker history --no-trunc` : 1 match (HEALTHCHECK placeholder).
+  `docker inspect` : 1 match (same); Config.Env holds no secret-bearing var.
+Evidence: cycle2-f2f5-recheck.log
+
+## Spot red proofs on the final tree (no regression; restored clean each time)
+- 02: UBUNTU_DIGEST zeroed -> FAIL exit 1; restored byte-identical; git diff
+  clean; PASS exit 0 (rebuilds image).
+- 07: staged sentinel with a non-empty OPENCODE_API_KEY assignment -> FAIL
+  exit 1 naming the file; unstaged + deleted; PASS exit 0.
+  (Sentinel value redacted in the log to keep 07's own scan clean.)
+- 08: decoy container agency-spike-qa-decoy -> FAIL exit 1; removed; PASS
+  exit 0; no agency-spike container left.
+Evidence: cycle2-spot-red-proofs.log
+
+## Final state
+- .env.provider: absent (no provider key exists; F1 stands — stage incomplete).
+- agency-spike* containers: none.
+- docs/evidence/1a/verify/: untouched.
+- Only additions are this pass's evidence logs; no tracked file modified.
+
+## Conclusion
+F2, F3 (named cases), F4 and F5 fixes hold under independent adversarial
+re-testing; quality gate re-run on the final tree is green (make check 0) with
+the same honest acceptance split (exit 1: 01 FAIL, 05 SKIP, 06 FAIL). One
+residual defect (R1, paraphrased denials) is recorded, not fixed. The stage
+remains incomplete solely because of F1: the user's provider key is absent.
