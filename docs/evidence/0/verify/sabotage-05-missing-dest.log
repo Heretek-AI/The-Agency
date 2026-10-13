@@ -1,0 +1,13 @@
+CHECKS for stage 0
+0/01-make-check              FAIL   make check failed: dispatcher/test/opencode.test.ts(52,27): error TS7006: Parameter 'm' implicitly has an 'any' type. make: *** [Makefile:24: typecheck] Error 2 make: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-0-salvage' 
+0/02-ts-coverage             FAIL   ts-coverage: 1 tracked TypeScript file(s) outside the typecheck:
+0/03-harness-selftest        PASS   
+0/04-defect-register         PASS   
+0/05-salvage-provenance      FAIL   salvage destination missing: dispatcher/src/opencode.ts
+0/06-no-donor-code           PASS   
+0/07-no-skips                PASS   
+0/08-fake-matches-openapi    PASS   
+0/09-opencode-live           FAIL   live test failed:   0 pass  1 fail  1 error Ran 1 test across 1 file. [21.00ms] 
+0/10-ci-runs-make-check      PASS   
+stage 0: 6 pass, 0 skip, 4 fail (10 checks)
+log: /tmp/verify-sab/0/accept-20261013T040613Z.log
