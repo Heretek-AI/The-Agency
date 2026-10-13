@@ -62,7 +62,13 @@ if [ -z "$key" ]; then
 fi
 pw=$(python3 -c "import secrets; print(secrets.token_urlsafe(18))")
 
-# Throwaway git repository with a worktree as the workspace.
+# Throwaway git repository with a worktree as the workspace. The worktree
+# directory is mounted at the SAME absolute path inside the container:
+# a git worktree's .git file records an absolute path to the main repo,
+# so a remapped mount (host $WORK at container /work) leaves git — and
+# therefore the server's git-backed snapshots and session.diff — broken
+# ("not a git repository") inside the container. The fleet mounts /work at
+# /work everywhere (shared context 9.1) for the same reason.
 WORK=$(mktemp -d)
 git init -q "$WORK/demo-repo"
 git -C "$WORK/demo-repo" -c user.name=spike -c user.email=spike@agency.invalid commit -q --allow-empty -m seed
@@ -84,7 +90,7 @@ docker run -d --name "$NAME" \
   -e AGENCY_EXPERT=spike \
   -e OPENCODE_CONFIG_DIR=/etc/agency \
   -v "$ROOT/spike/config:/etc/agency:ro,z" \
-  -v "$WORK:/work:z" \
+  -v "$WORK:$WORK:z" \
   "$IMAGE" >/dev/null || {
   echo "spike: docker run failed for $NAME" >&2
   exit 1
@@ -147,7 +153,15 @@ grep -q '"/api/session"' "$WORK/openapi.json" || {
 # The session carries one probe rule with effect "ask" (evaluated after the
 # agent's baseline rules) so the permission request below pends instead of
 # resolving to allow or deny.
-session=$(api POST /api/session '{"title":"spike","agent":"spike","location":{"directory":"/work/trees/t1"},"permissions":[{"action":"edit","resource":"notes.txt","effect":"allow"},{"action":"spikeprobe","resource":"*","effect":"ask"}],"metadata":{"spike":"1a"}}')
+# The session pins a model that runs on the current provider account
+# (opencode/cat-jam-free). The fleet model AGENCY_MODEL
+# (opencode-go/muse-spark-1.3-contributor) resolves server-side but the
+# account's Go monthly usage limit is exhausted, and the server default
+# model fails with insufficient funds; both refusals are recorded in
+# docs/build-notes.md (Q1) and docs/evidence/1a/spike/q01.log. Pinning the
+# runnable model here changes only which model executes the flow — every
+# assertion below is unchanged and fail-closed.
+session=$(api POST /api/session '{"title":"spike","agent":"spike","model":{"providerID":"opencode","id":"cat-jam-free"},"location":{"directory":"'"$WORK/trees/t1"'"},"permissions":[{"action":"edit","resource":"notes.txt","effect":"allow"},{"action":"spikeprobe","resource":"*","effect":"ask"}],"metadata":{"spike":"1a"}}')
 sid=$(echo "$session" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['id'])") || {
   echo "spike: could not parse session id" >&2
   exit 1
@@ -176,8 +190,11 @@ if echo "$pending_after" | grep -q "$rid"; then
   exit 1
 fi
 
-# The model run: edit the granted file, then echo a marker.
-api POST "/api/session/$sid/prompt" '{"text":"Append exactly the line spike-ok to notes.txt in your session directory using the edit tool, then run `echo spike-shell-ok` with the shell tool. End with a ## RESULT fenced JSON block {\"status\":\"done\",\"summary\":\"spike edit and shell\"}."}' >/dev/null
+# The model run: edit the granted file, then echo a marker. The RESULT
+# instruction spells out the exact closing lines so the structural
+# transcript assertion has a deterministic target; the parser itself is
+# unchanged and still fails closed on any other shape.
+api POST "/api/session/$sid/prompt" '{"text":"Append exactly the line spike-ok to notes.txt in your session directory using the edit tool, then run `echo spike-shell-ok` with the shell tool. End your final message with exactly these two parts in order: first a line containing only ## RESULT, then a fenced code block that starts with ```json and ends with ``` containing this JSON: {\"status\":\"done\",\"summary\":\"spike edit and shell\"}."}' >/dev/null
 
 code=$(docker exec "$NAME" curl -sS --noproxy '*' -u "opencode:$pw" -X POST \
   -o /dev/null -w '%{http_code}' --max-time 600 \

@@ -1,0 +1,49 @@
+{
+  "data": [
+    {
+      "id": "msg_user_echo",
+      "time": { "created": 1 },
+      "type": "user",
+      "text": "Append exactly the line spike-ok to notes.txt in your session directory using the edit tool, then run `echo spike-shell-ok` with the shell tool. End with a ## RESULT fenced JSON block {\"status\":\"done\",\"summary\":\"spike edit and shell\"}."
+    },
+    {
+      "id": "msg_asst_tool",
+      "time": { "created": 2, "completed": 3 },
+      "type": "assistant",
+      "agent": "spike",
+      "model": { "id": "cat-jam-free", "providerID": "opencode" },
+      "content": [
+        { "type": "text", "text": "Running the shell command now." },
+        {
+          "type": "tool",
+          "id": "call-1",
+          "name": "shell",
+          "executed": true,
+          "state": {
+            "status": "completed",
+            "input": { "command": "echo spike-shell-ok" },
+            "content": [{ "type": "text", "text": "spike-shell-ok\n" }],
+            "metadata": { "status": "completed", "truncated": false, "exit": 0 }
+          },
+          "time": { "created": 2, "ran": 2, "completed": 3 }
+        }
+      ],
+      "finish": "tool-calls"
+    },
+    {
+      "id": "msg_assistant_result",
+      "time": { "created": 4, "completed": 5 },
+      "type": "assistant",
+      "agent": "spike",
+      "model": { "id": "cat-jam-free", "providerID": "opencode" },
+      "content": [
+        {
+          "type": "text",
+          "text": "Done.\n\n## RESULT\n```json\n{\"status\":\"done\",\"summary\":\"spike edit and shell\"}\n```"
+        }
+      ],
+      "finish": "stop"
+    }
+  ],
+  "cursor": { "previous": null, "next": null }
+}
