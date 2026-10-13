@@ -32,9 +32,9 @@ that changes the keyless facts above.
   root-owned), OpenCode at `OPENCODE_VERSION` in `/usr/local/bin` with a
   `--version` build check, `safe.directory '*'`, `HEALTHCHECK` on
   `/api/info`, `tini` entrypoint, `USER agent`, no secret in any layer /
-  arg / `ENV` (verified: `docker history` clean; the single
-  `docker inspect` hit is the HEALTHCHECK's runtime `${OPENCODE_PASSWORD}`
-  reference, not a value), no `latest`, single pinned `FROM`.
+  arg / `ENV` (`docker history --no-trunc` and `docker inspect` each show
+  the HEALTHCHECK's literal `${OPENCODE_PASSWORD}` variable-name reference
+  once; no value appears in either), no `latest`, single pinned `FROM`.
   Entrypoint: fail-closed exit 64 naming the variable, git identity
   `<expert> (The Agency)` / `agency.invalid`, MCP overlay disabling
   servers with unmet requirements (full entry carried), Dispatcher-side
@@ -178,6 +178,24 @@ Close-out proofs (tasks 1-3), all under `docs/evidence/1a/red/`:
 - `08-docker-ps-failclosed.log` — a PATH shim failing `docker ps -a`
   makes the check exit 1; the real docker passes.
 
+Cycle-2 rework proofs (verification pass 1 findings F2–F5), under `red/`
+and `qa/`:
+
+- `red/f4-no-donor-code-lsfiles.log` — a PATH shim failing `git ls-files`
+  (exit 128) makes stage-0 `0/06-no-donor-code` exit 1 (it passed before
+  the fix); stray `docker run` / `bwrap` / unreadable-file sabotages still
+  fail closed; exact revert → PASS.
+- `red/f3-negative-marker.log` — stripping a `Negative case:` marker from
+  `q03.log` exits 1; replacing its observation with "none obtainable"
+  exits 1; q10 marked answered while denial-only exits 1; restore → the
+  standing 4-NOT-PERFORMED FAIL.
+- `qa/f2-preflight-recorded.log` — the build-notes omission reproduced
+  (grep rc=1), the preflight run, and the recorded table byte-identical to
+  a fresh run.
+- `qa/f5-image-metadata-wording.log` — the image metadata the reworded
+  sentence now describes (one `${OPENCODE_PASSWORD}` placeholder in
+  history and in inspect, no value).
+
 Behavior evidence added by the same work:
 `docs/evidence/1a/spike-parse/run.log` (synthetic echo-only transcript →
 exit 1, positive → exit 0, malformed → exit 2; real invalid-key transcript
@@ -201,10 +219,16 @@ exit 1, positive → exit 0, malformed → exit 2; real invalid-key transcript
 - Every "Accept" item that needs a model (full `spike.sh` green, fifteen
   complete answers) is therefore not run. No model-driven evidence is
   claimed anywhere in this report.
+- The Step-0 close-out omitted the preflight table from
+  `docs/build-notes.md` (verification pass 1 finding F2). Corrected in the
+  cycle-2 rework: the table and the chosen port `AGENCY_HTTP_PORT=8081`
+  are recorded under "Stage 1a preflight" — see Deviations.
 
 ## 5. Not built
 
-Nothing the stage asked for is missing as an artifact. Unwired/deferred by
+Nothing the stage asked for is missing as an artifact now: the one gap
+verification pass 1 found — the preflight table omitted from build notes
+(finding F2) — is recorded under "Stage 1a preflight". Unwired/deferred by
 the prompt itself until the key arrives: a green `spike.sh` run and the
 four model-dependent answers above. No Dispatcher code, no `fleet.yaml`,
 no per-expert images — all explicitly not in this stage.
@@ -254,6 +278,21 @@ no per-expert images — all explicitly not in this stage.
   all acceptance checks touched); `make check` exits 0 after the changes
   (close-out re-run). `git status` of the base repo untouched; no push, no
   merge, no tags.
+- Stage-1a preflight table omitted from `docs/build-notes.md` in the
+  close-out (verification pass 1 finding F2); resolved via verification
+  pass 1 — the exact table and the chosen port `AGENCY_HTTP_PORT=8081` are
+  recorded under "Stage 1a preflight", with the reproduction and the
+  byte-identical re-run in `docs/evidence/1a/qa/f2-preflight-recorded.log`.
+- Cycle-2 rework: verification pass 1 findings F2–F5 addressed — preflight
+  table recorded (F2), `Negative case:` marker enforced by check `06` with
+  q10 gaining no evidence (F3), stage-0 `0/06-no-donor-code` fails closed
+  when `git ls-files` fails (F4), and the image-metadata sentence matches
+  `docker history`/`docker inspect` (F5). F1 — the user's provider key —
+  remains the blocker; no model-dependent result is claimed. Standing
+  accept after the rework: the same honest split (5 pass, 1 skip, 2 fail;
+  01 FAIL, 05 SKIP, 06 FAIL 4 NOT PERFORMED) —
+  `docs/evidence/1a/accept-20261013T192627Z.log`; stage-0 harness re-run
+  with `0/06` PASS — `docs/evidence/0/accept-20261013T192640Z.log`.
 
 ## 7. Proposed corrections
 

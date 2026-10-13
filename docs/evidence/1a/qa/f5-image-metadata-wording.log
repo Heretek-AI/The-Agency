@@ -1,0 +1,22 @@
+# F5 rework — image-metadata sentence matched to what docker actually shows
+# Date: 2026-10-13 (UTC), branch stage-1a-spike, cycle-2 rework.
+# Finding: docs/reports/stage-1a-verification.md F5 — the report claimed
+# "docker history clean", but history and inspect each carry the
+# HEALTHCHECK's literal ${OPENCODE_PASSWORD} variable-name reference once
+# (no value). Proof run against the local image the report refers to.
+
+$ docker images agency-base:2.0.26 --format '{{.Repository}}:{{.Tag}} {{.ID}}'
+agency-base:2.0.26 54a43372d1d7
+
+$ docker history --no-trunc agency-base:2.0.26 | grep -c 'OPENCODE_API_KEY\|OPENCODE_PASSWORD'
+1
+$ docker history --no-trunc agency-base:2.0.26 | grep 'OPENCODE_API_KEY\|OPENCODE_PASSWORD' | head -2
+<missing>  52 minutes ago  HEALTHCHECK {Test:[CMD-SHELL curl -fsS --noproxy '*' -u "opencode:${OPENCODE_PASSWORD}" "http://127.0.0.1:4096/api/info" > /dev/null] Interval:30s Timeout:5s StartPeriod:15s StartInterval:0s Retries:3}  0B  buildkit.dockerfile.v0
+
+$ docker inspect agency-base:2.0.26 | grep -n 'OPENCODE'
+20:                "OPENCODE_PORT=4096"
+36:                    "curl -fsS --noproxy '*' -u \"opencode:${OPENCODE_PASSWORD}\" \"http://127.0.0.1:4096/api/info\" > /dev/null"
+
+The one matching entry in each is the HEALTHCHECK's variable-name
+placeholder; no key or password value appears anywhere (check 07 remains
+the value scan). The report now says exactly this.
