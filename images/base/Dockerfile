@@ -104,7 +104,7 @@ RUN set -eu; \
     /home/agent/.local/share/opencode \
     /home/agent/.local/state/opencode \
     /home/agent/.cache/opencode; \
-  chown -R agent:agent /home/agent /work /artifacts; \
+  chown -R agent:agent /home/agent /work /artifacts /etc/agency; \
   chmod 755 /etc/agency; \
   id agent
 

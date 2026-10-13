@@ -53,8 +53,8 @@ PY
   fi
 fi
 
-# Fallbacks in force (docs/build-notes.md): none recorded in Stage 1a,
-# so there is nothing to apply. Each fallback added later gets its own
-# documented switch here.
+# Fallbacks in force (docs/build-notes.md): Q6 (keep salvaged client) and
+# Q8 (probe-on-timer) are Dispatcher-side and need no entrypoint switch;
+# no entrypoint fallback is in force in Stage 1a.
 
 exec opencode serve --hostname 0.0.0.0 --port 4096
