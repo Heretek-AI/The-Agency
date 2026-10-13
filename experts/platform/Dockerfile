@@ -62,7 +62,7 @@ RUN curl -fsSL -o /tmp/terraform-mcp-server.zip \
 # kubectl v1.37.1 (dl.k8s.io, hash matches upstream .sha256).
 RUN curl -fsSL -o /usr/local/bin/kubectl \
       "https://dl.k8s.io/release/v1.37.1/bin/linux/amd64/kubectl" \
-  && echo "65691ff77eb6fa44c908b77a1082c9f092c3b9733b5cefabec0d1104890e21a865691ff77eb6fa44c908b77a1082c9f092c3b9733b5cefabec0d1104890e21a8  /usr/local/bin/kubectl" | sha256sum -c - \
+  && echo "65691ff77eb6fa44c908b77a1082c9f092c3b9733b5cefabec0d1104890e21a8  /usr/local/bin/kubectl" | sha256sum -c - \
   && chmod 755 /usr/local/bin/kubectl \
   && kubectl version --client
 # helm v4.3.0 (get.helm.sh, sha256 checked).

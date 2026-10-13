@@ -3,6 +3,7 @@
 # proxy to an external address fails, and a request through the proxy to a
 # private/metadata address is denied with the proxy 403.
 set -u
+set -o pipefail
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../lib.sh"
 require_cmd docker

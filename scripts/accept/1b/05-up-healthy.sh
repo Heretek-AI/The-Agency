@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 05-up-healthy: after `make up`, twelve experts and the proxy are healthy.
 set -u
+set -o pipefail
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../lib.sh"
 root="$(git rev-parse --show-toplevel)"

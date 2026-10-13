@@ -5,6 +5,7 @@
 # read-only; ro experts mount /work read-only; nothing mounts a daemon
 # socket or sets privileged.
 set -u
+set -o pipefail
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../lib.sh"
 root="$(git rev-parse --show-toplevel)"

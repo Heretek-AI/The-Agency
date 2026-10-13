@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 02-compose-config: `docker compose config -q` exits 0.
 set -u
+set -o pipefail
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../lib.sh"
 root="$(git rev-parse --show-toplevel)"

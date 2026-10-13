@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 09-unique-passwords: every expert rejects every other expert's password.
 set -u
+set -o pipefail
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../lib.sh"
 root="$(git rev-parse --show-toplevel)"

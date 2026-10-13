@@ -71,14 +71,28 @@ for name in $(echo "$ROSTER" | python3 -c "import json,sys; print(' '.join(json.
   [ "$(docker exec "$container" id -u)" = "$AGENT_UID" ] \
     || fail "$name" "runs as uid $(docker exec "$container" id -u), want $AGENT_UID"
 
-  agents="$(api "$container" "$pw" GET /api/agent)" || fail "$name" "/api/agent unreachable"
-  echo "$agents" | python3 -c "import json,sys; assert '$name' in [a.get('id') for a in json.load(sys.stdin)['data']]" \
-    || fail "$name" "/api/agent does not list persona $name"
+  agents=""
+  for _ in $(seq 1 36); do
+    agents="$(api "$container" "$pw" GET /api/agent)" || fail "$name" "/api/agent unreachable"
+    if echo "$agents" | python3 -c "import json,sys; assert '$name' in [a.get('id') for a in json.load(sys.stdin)['data']]"; then
+      break
+    fi
+    agents=""
+    sleep 5
+  done
+  [ -n "$agents" ] || fail "$name" "/api/agent does not list persona $name"
 
-  skills="$(api "$container" "$pw" GET /api/skill)" || fail "$name" "/api/skill unreachable"
   for skill in $(echo "$ROSTER" | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)['$name']['skills']))"); do
-    echo "$skills" | python3 -c "import json,sys; assert '$skill' in [s.get('name') for s in json.load(sys.stdin)['data']]" \
-      || fail "$name" "/api/skill does not list skill $skill"
+    settled_skill=""
+    for _ in $(seq 1 36); do
+      skills="$(api "$container" "$pw" GET /api/skill)" || fail "$name" "/api/skill unreachable"
+      if echo "$skills" | python3 -c "import json,sys; assert '$skill' in [s.get('name') for s in json.load(sys.stdin)['data']]"; then
+        settled_skill="yes"
+        break
+      fi
+      sleep 5
+    done
+    [ -n "$settled_skill" ] || fail "$name" "/api/skill does not list skill $skill"
   done
 
   settled=""

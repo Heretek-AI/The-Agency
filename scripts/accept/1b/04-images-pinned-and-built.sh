@@ -2,15 +2,33 @@
 # 04-images-pinned-and-built: twelve expert images plus the proxy image
 # build from Dockerfiles free of floating versions.
 set -u
+set -o pipefail
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../lib.sh"
 root="$(git rev-parse --show-toplevel)"
 require_cmd docker
-# No floating versions anywhere a version can float.
-floats=$(cd "$root" && grep -rnE ':(latest|stable|master|main)([^a-zA-Z0-9._-]|$)|@(latest|stable|master|main)([^a-zA-Z0-9._-]|$)|npx +-y +[^ @]+( +|$)|uvx +--from +[^ =@]+( +|$)|npm +install +-g +[^ @]+( +|$)|pip +install +[^ =]+( +|$)' experts/*/Dockerfile egress/Dockerfile || true)
-[ -z "$floats" ] || fail "floating versions: $(echo "$floats" | head -3 | tr '\n' ' ')"
-untagged=$(cd "$root" && grep -rnE '^FROM +[^ :]+( +|$)' experts/*/Dockerfile egress/Dockerfile || true)
-[ -z "$untagged" ] || fail "untagged FROM: $(echo "$untagged" | head -2 | tr '\n' ' ')"
+join_lines() {
+  sed -e ':a' -e '/\\$/N' -e 's/\\\n/ /' -e 'ta' "$1"
+}
+bad=""
+for df in "$root"/experts/*/Dockerfile "$root"/egress/Dockerfile; do
+  joined=$(join_lines "$df")
+  echo "$joined" | grep -Eq '^FROM +[^ :]+( |$)' && bad="$bad $df:untagged-FROM"
+  echo "$joined" | grep -Eiq ':(latest|stable|master|main)([^a-zA-Z0-9._-]|$)' && bad="$bad $df:symbolic-tag"
+  echo "$joined" | grep -Eq 'pip +install' && {
+    echo "$joined" | grep -E 'pip +install' | grep -q '==' || bad="$bad $df:unpinned-pip"
+  }
+  echo "$joined" | grep -Eq 'npm +install +-g' && {
+    echo "$joined" | grep -E 'npm +install +-g' | grep -q '@' || bad="$bad $df:unpinned-npm"
+  }
+  echo "$joined" | grep -Eq 'npx +-y' && {
+    echo "$joined" | grep -E 'npx +-y' | grep -q '@' || bad="$bad $df:unpinned-npx"
+  }
+  echo "$joined" | grep -Eq 'uvx +--from' && {
+    echo "$joined" | grep -E 'uvx +--from' | grep -q '==' || bad="$bad $df:unpinned-uvx"
+  }
+done
+[ -z "$bad" ] || fail "floating versions:$bad"
 out=$(cd "$root" && docker compose build 2>&1 | tail -5) || fail "docker compose build failed: $(echo "$out" | tr '\n' ' ')"
 tag=$(grep '^OPENCODE_VERSION=' "$root/.env" 2>/dev/null | cut -d= -f2)
 [ -n "$tag" ] || fail "OPENCODE_VERSION missing from .env"

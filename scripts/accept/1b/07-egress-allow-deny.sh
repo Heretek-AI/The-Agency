@@ -4,6 +4,7 @@
 # with the proxy's denial; both appear in the proxy log with the right
 # expert's name and the right verdict.
 set -u
+set -o pipefail
 # shellcheck disable=SC1091
 source "$(dirname "$0")/../lib.sh"
 require_cmd docker
