@@ -1,5 +1,14 @@
-Sabotage: running (healthy) decoy container agency-spike-qa-decoy from the base image (differs from builder's stopped agency-spike-redproof in both name and state).
-cmd: bash scripts/accept/1a/08-no-containers-left.sh
-CHECK ?/08-no-containers-left: FAIL leftover container(s): agency-spike-qa-decoy
+Sabotage: leftover decoy container `agency-spike-qa-redproof` created from `agency-base:2.0.26` (spike name prefix); removed afterwards.
+QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+
+$ docker create --name agency-spike-qa-redproof agency-base:2.0.26
+$ bash scripts/accept/1a/08-no-containers-left.sh
+CHECK 1a/08-no-containers-left: FAIL leftover container(s): agency-spike-qa-redproof
 exit=1
-restored: Y (`docker rm -f agency-spike-qa-decoy`; `docker ps -a --format '{{.Names}}' | grep '^agency-spike'` empty, grep exit 1)
+
+$ docker rm agency-spike-qa-redproof
+$ bash scripts/accept/1a/08-no-containers-left.sh
+CHECK 1a/08-no-containers-left: PASS
+exit=0
+
+restored: Y (`docker ps -a --format '{{.Names}}' | grep '^agency-spike'` empty)

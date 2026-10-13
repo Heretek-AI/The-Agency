@@ -1,5 +1,10 @@
-Sabotage: images/base/Dockerfile FROM unpinned (`FROM ubuntu:24.04 AS base`, digest stripped; differs from builder's zeros-digest in versions.env).
-cmd: bash scripts/accept/1a/02-base-image-pinned.sh
-CHECK ?/02-base-image-pinned: FAIL FROM is not digest-pinned: FROM ubuntu:24.04 AS base
+Sabotage: `versions.env` `UBUNTU_DIGEST` replaced with sha256:0000... (digest/record mismatch vs the digest-pinned FROM); restored with `git checkout -- versions.env`.
+QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+
+$ sed -i 's/^UBUNTU_DIGEST=sha256:[0-9a-f]*/UBUNTU_DIGEST=sha256:0000000000000000000000000000000000000000000000000000000000000000/' versions.env
+$ bash scripts/accept/1a/02-base-image-pinned.sh
+CHECK 1a/02-base-image-pinned: FAIL FROM digest not recorded in versions.env
 exit=1
-restored: Y (Dockerfile restored from backup, `git diff --stat -- images/base/Dockerfile` empty)
+
+restored: Y (`git checkout -- versions.env`; `git diff --stat -- versions.env` empty, `git status --short` clean)
+note: the check still fails on any digest mismatch (the FROM pin itself is unchanged); it passes on the restored tree (final accept run).

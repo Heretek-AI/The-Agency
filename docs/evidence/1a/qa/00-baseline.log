@@ -1,0 +1,12 @@
+=== QA red-proof baseline 2026-10-13T18:50:18Z ===
+HEAD: 3f0592334adb6616153e877c850e5522c3f76984
+branch: stage-1a-spike
+git status --short:
+?? docs/evidence/1a/accept-20261013T184814Z.log
+?? docs/evidence/1a/accept-20261013T184844Z.log
+?? docs/evidence/1a/qa/
+?? docs/evidence/1a/verify/
+git diff --stat:
+.env.provider: ls: cannot access '.env.provider': No such file or directory
+agency-spike containers: none
+image: sha256:d30adc80bf59a6be1f166563fa346712e780a9e2666d427f956e0ed31d4d658e

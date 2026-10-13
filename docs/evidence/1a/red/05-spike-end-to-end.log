@@ -1,3 +1,10 @@
-Sabotage: .env.provider holds a dummy INVALID key (present-but-bad must fail closed, never pass). .env.provider removed after; dummy value in no tracked file.
-CHECK ?/05-spike-end-to-end: FAIL spike.sh failed: spike: session diff missing notes.txt 
+Sabotage: `.env.provider` held a throwaway, obviously-invalid dummy key (present-but-bad must fail closed, never pass). The file was deleted afterwards; the value is in no tracked file.
+QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+
+$ printf 'OPENCODE_API_KEY=<dummy-invalid-qa-value>\n' > .env.provider && chmod 600 .env.provider
+$ bash scripts/accept/1a/05-spike-end-to-end.sh
+CHECK 1a/05-spike-end-to-end: FAIL spike.sh failed: spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 other; user-role messages are ignored, not run output] spike: transcript assertion failed (see spike-assert-messages above)
 exit=1
+
+restored: Y (.env.provider deleted; `docker ps -a` shows no agency-spike container left; tree clean)
+note: the failure reason changed with the role-aware transcript parser (`scripts/spike-assert-messages.py`, commit ba64e84): with an invalid key the run now fails at the structural transcript assertion — no shell `output.output` carries spike-shell-ok and no assistant text carries the ## RESULT block — before the session-diff step that used to fail ("session diff missing notes.txt"). The run never passes, and the old grep's match on the user-role prompt echo can no longer make it pass.

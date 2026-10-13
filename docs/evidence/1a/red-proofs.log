@@ -1,35 +1,53 @@
-red-proofs: stage 1a acceptance checks (QA Agent, 2026-10-13T17:3xZ UTC)
-Baseline (clean tree, HEAD 0715607, no .env.provider): `make check` initially
-exit 2 — format-check failed on docs/build-notes.md (pre-existing on the clean
-tree; fixed with `bunx prettier --write docs/build-notes.md`, a 1-line diff,
-no check weakened), then typecheck failed on missing `zod` (node_modules
-absent in this worktree; environmental; fixed with `bun install`). Final
-`make check` exit 0 (78 pass, 0 fail). `make build-base` exit 0,
-image agency-base:2.0.26 present. `make accept STAGE=1a` exit 1
-(4 pass, 1 skip, 3 fail). Green log:
-docs/evidence/1a/accept-20261013T173413Z.log.
-Method: for each check under scripts/accept/1a/, introduce a temporary defect
-striking at the guarded invariant (never weakening the check itself; every
-sabotage below differs from the builder's recorded in docs/evidence/1a/red/),
-run the single check script directly (`bash scripts/accept/1a/<nn>-*.sh`),
-assert exit 1 with a FAIL line, then restore EXACTLY (`git checkout` semantics
-via pre-sabotage backup copies, verified with `git diff --stat`; sentinels and
-decoy containers deleted) and confirm `git status` clean before the next. No
-writes outside this worktree; base repo untouched; nothing pushed.
+red-proofs: stage 1a acceptance checks (QA Agent, frozen final tree, 2026-10-13 UTC)
+Baseline (HEAD 3f05923, branch stage-1a-spike, no .env.provider, no agency-spike containers):
+  - `make check` exit 0 (78 pass, 0 fail: format-check, lint, typecheck, ts-coverage, render-check, unit tests) — docs/evidence/1a/qa/01-make-check.log
+  - `make build-base` exit 0; image agency-base:2.0.26 present — docs/evidence/1a/qa/02-build-base.log
+  - `bash scripts/accept.sh 1a` exit 1: 5 pass / 1 skip / 2 fail (01 FAIL missing key, 05 SKIP no key, 06 FAIL 4 NOT PERFORMED; 02/03/04/07/08 PASS) — docs/evidence/1a/accept-20261013T184814Z.log (authoritative)
+  - `make accept STAGE=1a` exit 2 (GNU make normalizes the recipe's exit 1 to 2), same table — docs/evidence/1a/accept-20261013T184844Z.log
+  The split is exactly the honest keyless table in docs/reports/stage-1a.md; no check diverges.
 
-01 | 1a/01-preflight | broke: scripts/preflight.sh compose requirement raised to impossible major>99/minor>=99 (builder used absent-provider); ignored .env.provider with dummy key (mode 0600, removed after) isolated the failure to the compose row | cmd: bash scripts/accept/1a/01-preflight.sh | exit: 1 | detail: CHECK ?/01-preflight: FAIL preflight exited non-zero: ... preflight: 4 pass, 1 fail | restored: Y (preflight.sh restored, no diff; .env.provider removed; status clean)
-02 | 1a/02-base-image-pinned | broke: images/base/Dockerfile FROM unpinned to `FROM ubuntu:24.04 AS base` (builder replaced UBUNTU_DIGEST with zeros) | cmd: bash scripts/accept/1a/02-base-image-pinned.sh | exit: 1 | detail: CHECK ?/02-base-image-pinned: FAIL FROM is not digest-pinned: FROM ubuntu:24.04 AS base | restored: Y (Dockerfile restored, no diff; status clean)
-03 | 1a/03-entrypoint-fails-closed | broke: images/base/entrypoint.sh OPENCODE_PASSWORD refusal block (lines 12-15) deleted, image rebuilt; API-key refusal intact (builder pointed OPENCODE_VERSION at a nonexistent tag) | cmd: make build-base && bash scripts/accept/1a/03-entrypoint-fails-closed.sh | exit: 1 | detail: CHECK ?/03-entrypoint-fails-closed: FAIL no-password container still running | restored: Y (entrypoint.sh restored, no diff; image rebuilt green; check 03 re-confirmed PASS)
-04 | 1a/04-healthy-nonroot | broke: images/base/Dockerfile `USER agent` -> `USER root`, image rebuilt (builder used nonexistent tag) | cmd: make build-base && bash scripts/accept/1a/04-healthy-nonroot.sh | exit: 1 | detail: CHECK ?/04-healthy-nonroot: FAIL runs as uid 0, want AGENT_UID 1000 | restored: Y (Dockerfile restored, no diff; image rebuilt green; check 04 re-confirmed PASS)
-05 | 1a/05-spike-end-to-end | broke: N/A — no provider key exists (.env.provider absent), so no model-backed spike run or sabotage is possible | cmd: N/A | exit: N/A (standing SKIP: .env.provider has no usable OPENCODE_API_KEY) | restored: N/A (tree untouched). Builder's dummy-key red proof preserved at docs/evidence/1a/red/05-spike-end-to-end.log.
-06 | 1a/06-spike-answers-complete | broke: docs/evidence/1a/spike/q04.log blanked to 0 bytes (builder moved q07.log away) | cmd: bash scripts/accept/1a/06-spike-answers-complete.sh | exit: 1 | detail: CHECK ?/06-spike-answers-complete: FAIL evidence q04.log missing or empty | restored: Y (q04.log restored, 1216 bytes, no diff; re-run shows standing honest failure: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete)
-07 | 1a/07-no-secret-leak | broke: staged-then-removed file redproof-07-sentinel.tmp holding an obviously-fake sentinel OPENCODE_API_KEY value, never committed (builder used .env.provider dummy + evidence scratch; this log names the file only, never the value) | cmd: bash scripts/accept/1a/07-no-secret-leak.sh | exit: 1 | detail: CHECK ?/07-no-secret-leak: FAIL non-empty OPENCODE_API_KEY assignment in tracked files: redproof-07-sentinel.tmp:1:... (sentinel named first) plus the two standing 03/04 dummy hits | restored: Y (`git rm --cached` + deleted; status shows no trace)
-08 | 1a/08-no-containers-left | broke: running (healthy) decoy container agency-spike-qa-decoy from the base image (builder left a stopped agency-spike-redproof; differs in name and state) | cmd: bash scripts/accept/1a/08-no-containers-left.sh | exit: 1 | detail: CHECK ?/08-no-containers-left: FAIL leftover container(s): agency-spike-qa-decoy | restored: Y (`docker rm -f`; `docker ps -a --format '{{.Names}}' | grep '^agency-spike'` empty, grep exit 1)
+Method: for every stage-1a check (01..08) plus stage-0 0/06-no-donor-code, the guarded condition was
+broken on this tree, the check run directly with ACCEPT_STAGE=1a, exit 1 asserted, then restored
+exactly (`git checkout --`, inverse edit, mv back, sentinel unstaged/deleted, docker rm). After every
+restore, `git status --short` and `git diff --stat` were clean for the touched paths before the next
+sabotage; nothing was committed in a sabotaged state and no check was weakened. Canonical logs
+docs/evidence/1a/red/01..08 were refreshed on this tree, the stage-0 proof was added as
+0-06-no-donor-code-qa.log, and qa-01..08 were refreshed to the same final-tree content; the previous
+passes' versions remain in git history (c9962dc, 0715607).
 
-Result: 7/8 checks red-proven with distinct sabotages (each fails exit 1, all restored, no check weakened); 05 recorded N/A with reason (no key). Per-check QA logs: docs/evidence/1a/red/qa-01-preflight.log through qa-08-no-containers-left.log (qa-05 is the N/A record). Builder's red logs under docs/evidence/1a/red/ untouched.
+Per check (all runs on HEAD 3f05923; the first line of each log states the sabotage):
+01 | 1a/01-preflight | standing red: .env.provider absent → exit 1 (only provider-file row FAIL); dummy-key counterfactual → exit 0 | red/01-preflight.log | restored Y
+02 | 1a/02-base-image-pinned | versions.env UBUNTU_DIGEST zeroed → exit 1 (digest not recorded) | red/02-base-image-pinned.log | restored Y
+03 | 1a/03-entrypoint-fails-closed | entrypoint OPENCODE_PASSWORD refusal deleted + rebuild → exit 1 (no-password container still running) | red/03-entrypoint-fails-closed.log | restored Y (rebuilt; re-run PASS)
+04 | 1a/04-healthy-nonroot | Dockerfile USER agent → USER root + rebuild → exit 1 (runs as uid 0) | red/04-healthy-nonroot.log | restored Y (rebuilt; re-run PASS)
+05 | 1a/05-spike-end-to-end | dummy invalid key in .env.provider → exit 1 at the structural transcript assertion (new parser reason; never passes) | red/05-spike-end-to-end.log | restored Y (key deleted; no container left)
+06 | 1a/06-spike-answers-complete | spike q06.log moved aside → exit 1 (evidence missing) | red/06-spike-answers-complete.log | restored Y (standing honest failure remains)
+07 | 1a/07-no-secret-leak | keyed branch: clean PASS, tracked sentinel FAIL, evidence sentinel FAIL, green PASS; no-key branch: clean PASS, staged sentinel FAIL, green PASS | red/07-no-secret-leak.log | restored Y (sentinels and .env.provider deleted)
+08 | 1a/08-no-containers-left | decoy container agency-spike-qa-redproof → exit 1 | red/08-no-containers-left.log | restored Y (removed; re-run PASS)
+0/06 | 0/06-no-donor-code | stray `docker run` appended to scripts/preflight.sh → exit 1 | red/0-06-no-donor-code-qa.log | restored Y (exact revert; re-run PASS)
 
-Findings vs the builder's report (docs/reports/stage-1a.md):
-F1 | check 07 is FAIL, not PASS, on the clean no-key tree. Independent `make accept STAGE=1a` gives CHECK 1a/07-no-secret-leak: FAIL non-empty OPENCODE_API_KEY assignment in tracked files: scripts/accept/1a/03-entrypoint-fails-closed.sh:22 ... scripts/accept/1a/04-healthy-nonroot.sh:21 ... — the committed checks' own dummy `-e OPENCODE_API_KEY=<check>-dummy` literals trip the check's no-key branch regex `^[^#]*OPENCODE_API_KEY=["']?[A-Za-z0-9]`. The 07 script is byte-identical since ec59321 (`git log` shows no later change), so the reported PASS is not reproducible from HEAD; the PASS was likely recorded with a dummy .env.provider present (key branch, which passes for dummy values) or before those literals existed. NOT fixed: narrowing the check would weaken it and rewriting the dummy literals would game it — left for the builder.
-F2 | observation (not a defect): preflight's compose>=2.24 comparison passes any major>2 regardless of minor (compose 5.6.0 passes via `major -gt 2`); first 01 sabotage attempt (`-ge 24`->`-ge 99` only) still PASSED for this reason. Recorded in qa-01 log.
-F3 | `make check` was red at HEAD in a fresh worktree without node_modules: (a) docs/build-notes.md failed prettier (fixed, 1-line diff, kept); (b) typecheck needs `bun install` first (environmental). Final `make check` exit 0 (78 pass, 0 fail).
-Consequence: honest accept outcome is 4 pass, 1 skip, 3 fail (01, 06, 07 FAIL), exit 1 — not the 5/1/2 split in the builder's report. Stage remains NOT complete (no key), with the additional open item F1 for the builder.
+Result: 8/8 stage-1a checks plus stage-0 0/06 are red-proven on the frozen tree, each failing closed
+with exit 1 and restoring exactly. 01 and 06 remain red afterwards for the honest no-key reason: the
+stage is not complete.
+
+Reviewed and kept (builder's close-out proofs; behavior still matches):
+  - red/07-keyed-branch-proof.log — dummy key → PASS; tracked sentinel → FAIL; evidence sentinel → FAIL; no-key → PASS. Reproduced live by this pass (red/07-no-secret-leak.log).
+  - red/08-docker-ps-failclosed.log — broken `docker ps` → FAIL (fails closed, never a vacuous pass).
+  - red/06-no-donor-code-scope-proof.log — stray docker run / bwrap / unreadable scanned file → FAIL; exact revert → PASS. Complemented by 0-06-no-donor-code-qa.log.
+
+05 reason change: with the role-aware transcript parser (scripts/spike-assert-messages.py, commit
+ba64e84) the dummy-invalid-key run now fails at `spike-assert-messages: FAIL missing shell marker
+spike-shell-ok ... ## RESULT block` instead of the former `session diff missing notes.txt`; the
+corresponding row in docs/reports/stage-1a.md was updated. The fail-closed claim is unchanged: a bad
+key never passes, and the old regex's match on the user-role prompt echo can no longer be vacuous.
+
+Findings: none beyond the honest keyless state (01 FAIL, 05 SKIP, 06 FAIL as the prompt requires; all
+other checks green). The previous pass's F1 (07 failing on the clean no-key tree because of dummy
+literals in checks 03/04) is fixed at HEAD — 07 passes in a direct clean run and in all three accept
+runs. F2 (compose comparison `major > 2`) is informational, not a defect: any major > 2 is newer than
+2.24, so docker compose 5.6.0 correctly passes. F3 (node_modules absent) does not apply: node_modules
+is present and `make check` is clean.
+
+Final confirmation run (after all restores, frozen tree): `bash scripts/accept.sh 1a`
+→ exit 1, 5 pass / 1 skip / 2 fail; log docs/evidence/1a/accept-20261013T185638Z.log,
+cited by docs/reports/stage-1a.md section 2. This was the last acceptance run of the pass.

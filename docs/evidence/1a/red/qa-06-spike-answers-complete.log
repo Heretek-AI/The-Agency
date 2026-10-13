@@ -1,5 +1,10 @@
-Sabotage: docs/evidence/1a/spike/q04.log blanked to 0 bytes (differs from builder's moved-away q07.log).
-cmd: bash scripts/accept/1a/06-spike-answers-complete.sh
-CHECK ?/06-spike-answers-complete: FAIL evidence q04.log missing or empty
+Sabotage: `docs/evidence/1a/spike/q06.log` moved aside (missing evidence file); restored exactly afterwards.
+QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+
+$ mv docs/evidence/1a/spike/q06.log /tmp/.../q06.log.aside
+$ bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL evidence q06.log missing or empty
 exit=1
-restored: Y (q04.log restored from backup, `git diff --stat` empty for the file, size back to 1216 bytes; re-run shows the standing honest failure: CHECK ?/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete, exit 1)
+
+restored: Y (moved back; `git status --short -- docs/evidence/1a/spike/` empty)
+note: after restore the check still fails honestly, as reported: 4 question(s) NOT PERFORMED (no provider key); stage incomplete. exit=1.

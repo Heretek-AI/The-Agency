@@ -1,3 +1,12 @@
-Sabotage: versions.env OPENCODE_VERSION pointed at nonexistent image tag agency-base:9.9.9-redproof (required image absent).
-CHECK ?/04-healthy-nonroot: FAIL image agency-base:9.9.9-redproof absent (run: make build-base)
+Sabotage: `USER agent` changed to `USER root` in `images/base/Dockerfile` and the image rebuilt; the container is then healthy but runs as uid 0.
+QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+
+$ sed -i 's/^USER agent$/USER root/' images/base/Dockerfile && make build-base
+$ bash scripts/accept/1a/04-healthy-nonroot.sh
+CHECK 1a/04-healthy-nonroot: FAIL runs as uid 0, want AGENT_UID 1000
 exit=1
+(no agency-spike container left behind: the check's EXIT trap removed agency-spike-accept04)
+
+restored: Y (`git checkout -- images/base/Dockerfile`; `git diff --stat` empty; image rebuilt; re-run:
+  CHECK 1a/04-healthy-nonroot: PASS
+  exit=0)
