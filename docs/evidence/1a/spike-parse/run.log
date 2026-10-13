@@ -46,3 +46,30 @@ $ grep -c '## RESULT' docs/evidence/1a/spike-parse/invalid-key-transcript.json  
 ## /api/session/<id>/prompt with spike.sh's exact prompt text; POST
 ## /api/experimental/session/<id>/wait -> 204; GET /api/session/<id>/message
 ## saved verbatim. The dummy value appears nowhere in the file (grepped).
+
+## Keyed re-proof 2026-10-13 (parser accepts assistant shell tool parts)
+The 2.0.26 server emits shell-tool output as assistant `{type: tool, name:
+shell}` parts, never as standalone `type: shell` messages (background
+shells only, message-updater.ts). The parser now counts both genuine
+run-output shapes and still ignores the user echo. Fixture
+`toolpart-positive.json` mirrors the real keyed transcript shape.
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/toolpart-positive.json
+spike-assert-messages: PASS spike-shell-ok in shell run output; ## RESULT block in assistant text
+exit=0
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/positive.json
+spike-assert-messages: PASS spike-shell-ok in shell run output; ## RESULT block in assistant text
+exit=0
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/echo-only.json
+spike-assert-messages: FAIL missing shell marker spike-shell-ok in shell run output (a shell message output.output or an assistant shell tool part); ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 shell; user-role messages are ignored, not run output]
+exit=1
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/malformed.json
+spike-assert-messages: FAIL transcript is not valid JSON: Expecting property name enclosed in double quotes: line 6 column 1 (char 81)
+exit=2
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/invalid-key-transcript.json
+spike-assert-messages: FAIL missing shell marker spike-shell-ok in shell run output (a shell message output.output or an assistant shell tool part); ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 other; user-role messages are ignored, not run output]
+exit=1

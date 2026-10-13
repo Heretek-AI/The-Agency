@@ -1,18 +1,52 @@
 # Q9 — Does Session.Info report cost + token counts for the chosen model?
-Date: 2026-10-13. No provider key; no model run possible.
+Date: 2026-10-13. Container agency-spike-q9 (agency-base:2.0.26, bridge,
+same-path worktree mount). Model that runs: opencode/cat-jam-free.
+AGENCY_MODEL proper: opencode-go/muse-spark-1.3-contributor (quota-blocked, see below).
 
 ## Commands + trimmed output
 
-$ POST /api/session {"title":"q",...} -> HTTP 200, body includes:
-{"data":{"id":"ses_...","cost":0,
-  "tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},...}}
-$ GET /api/session/<id> -> same cost 0 + zeroed tokens (HTTP 200)
+$ curl -X POST /api/session {"title":"q9","agent":"spike",
+  "model":{"providerID":"opencode","id":"cat-jam-free"},"location":{...}}
+{"data":{"id":"ses_ec8f67df9ffeyjBTuZVYS3dF43",...}}          # HTTP 200
 
-Source: openapi Session.Info requires ["id","projectID","cost","tokens","time","location"].
+$ curl /api/session/ses_ec8f67df9ffeyjBTuZVYS3dF43   # pre-run
+{"data":{"id":"ses_ec8f67df9ffeyjBTuZVYS3dF43",...,
+  "cost":0,
+  "tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},...}}
+
+$ curl -X POST /api/session/<id>/prompt {"text":"Reply with exactly: q9-marker"}
+HTTP 200
+$ curl -X POST /api/experimental/session/<id>/wait
+HTTP 204   (assistant finish: stop, error: null; transcript holds q9-marker)
+
+$ curl /api/session/ses_ec8f67df9ffeyjBTuZVYS3dF43   # post-run
+{"data":{"id":"ses_ec8f67df9ffeyjBTuZVYS3dF43",...,
+  "cost":0,
+  "tokens":{"input":1814,"output":4,"reasoning":26,"cache":{"read":896,"write":0}},
+  "outcome":"succeeded",...}}
+
+$ # AGENCY_MODEL leg (same container, same prompt shape)
+$ curl -X POST /api/session {"title":"q9-go","agent":"spike",
+  "model":{"providerID":"opencode-go","id":"muse-spark-1.3-contributor"},...}
+{"data":{"id":"ses_ec8f65cb6ffetZq4wYr275l5EN",...}}          # HTTP 200
+$ curl .../prompt ... ; curl .../wait
+HTTP 204
+$ curl /api/session/ses_ec8f65cb6ffetZq4wYr275l5EN/message  (assistant, trimmed)
+finish: error | {"type":"provider.quota","message":"Go usage limit exceeded",
+  "status":429,...GoUsageLimitError...limitName: monthly...}
+$ curl /api/session/ses_ec8f65cb6ffetZq4wYr275l5EN
+{"data":{...,"cost":0,
+  "tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},
+  "outcome":"failed",...}}
 
 ## Observation
-The fields EXIST and are reported (cost 0, all token counters 0 before any
-model run). Whether they fill in correctly for AGENCY_MODEL after a real
-run is untested — no key, no model id.
+- The mechanism works: after a real run Session.Info reports cost plus
+  filled-in token counts (input/output/reasoning/cache.read). The running
+  model is a free tier, so cost stays 0 while tokens fill in.
+- For AGENCY_MODEL itself the fill-in is untestable right now: the account's
+  Go monthly usage limit is exhausted (429 GoUsageLimitError), the turn
+  fails, and cost/tokens stay zeroed. Nothing about the reporting path looks
+  model-specific (same Session.Info shape, same zeroed pre-run fields).
 
-## Verdict: NOT PERFORMED (no provider key; pre-run zero values observed)
+## Verdict: partly (reporting proven with the running model; AGENCY_MODEL
+fill-in pending quota reset; tokens-only fallback not needed)

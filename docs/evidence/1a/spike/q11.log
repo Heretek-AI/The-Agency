@@ -1,21 +1,84 @@
-# Q11 — SSE: MCP tool call carries session id + tool output?
-Date: 2026-10-13. No provider key; no model-driven tool call possible.
+# Q11 — Do SSE events for an MCP tool call carry the session id + tool output?
+Date: 2026-10-13. Host Bun 1.4.2 MCP server (/tmp/opencode/q14/mcp.ts,
+spike_echo tool, port 8377). Container agency-spike-q11 (agency-base:2.0.26,
+bridge, --add-host=host.docker.internal:host-gateway, SPIKE_MCP_ENABLE=1,
+spike/config). Model: opencode/cat-jam-free. SSE: background
+`curl -N /api/event` (Basic auth) captured to a file during each run.
 
-## Commands + trimmed output (code search; nothing executed speculatively)
+## Commands + trimmed output
 
-Source: review/opencode/packages/schema/src/permission.ts
-  Asked = ephemeral({ type:"permission.asked", schema: Request.fields })
-    # Request.fields includes sessionID (+action/resources/source)
-  Replied = ephemeral({ type:"permission.replied",
-    schema: { sessionID, requestID, reply } })
-Source: GET /api/event is the single per-server SSE stream (shared context
-5.2, re-confirmed in openapi paths: /api/event exists, no per-session stream).
+$ curl -X POST /api/experimental/mcp/bunprobe/connect   # first: 404 (lazy registration)
+$ curl -X POST /api/experimental/mcp/bunprobe/connect   # retry: 204
+$ curl /api/mcp
+{"data":[{"name":"bunprobe","status":{"status":"connected"}},
+         {"name":"spikeprobe","status":{"status":"disabled"}}]}
+
+$ # attempt 1: session WITHOUT any MCP permission allow, prompt names spike_echo
+$ curl -X POST /api/session {...,"permissions":[]...} -> ses_ec8e9dce8ffeZvD1lA0wCJmBft
+assistant tool part (trimmed):
+{"type":"tool","name":"spike_echo","executed":false,
+ "state":{"status":"error","input":{"text":"hello-sse"},
+  "error":{"type":"tool.execution",
+   "message":"No tool named \"spike_echo\" is currently available. ..."}}}
+# -> without a per-server allow, the MCP tool is permission-filtered out of
+# the model's tool list entirely (same for name bunprobe_spike_echo).
+# Tool naming to the model is <server>_<tool>; the grant must be
+# {"action":"bunprobe_*","resource":"*","effect":"allow"} — exactly the
+# per-server allow shared context 9.6 requires Stage 1c to pass per task.
+
+$ # attempt 2: session WITH the MCP allow, prompt names bunprobe_spike_echo
+$ curl -X POST /api/session {"title":"q11c","agent":"spike",
+  "model":{"providerID":"opencode","id":"cat-jam-free"},"location":{...},
+  "permissions":[{"action":"bunprobe_*","resource":"*","effect":"allow"}]}
+{"data":{"id":"ses_ec8e3a650ffe35djgRiTk1WjQE",...}}          # HTTP 200
+$ curl .../prompt {"text":"Call the tool bunprobe_spike_echo once ..."} -> 200
+$ curl -X POST /api/experimental/session/<id>/wait -> 204
+$ curl /api/session/<id>/message  (trimmed)
+assistant tool part:
+{"type":"tool","name":"bunprobe_spike_echo","executed":false,
+ "state":{"status":"completed","input":{"text":"hello-sse3"},
+  "content":[{"type":"text","text":"echo:hello-sse3"}]}}
+assistant text: "echo:hello-sse3 ... ## RESULT ```json {...} ```"
+idle: succeeded
+
+$ # SSE frames from the background capture during attempt 2 (30 data frames):
+session.tool.called:
+{"id":"evt_1371c6ad0001RG2jXXIVglHG7g","created":1791925971664,
+ "type":"session.tool.called",
+ "location":{"directory":"/tmp/tmp.7OH8VOWwVZ/trees/t1"},
+ "data":{"sessionID":"ses_ec8e3a650ffe35djgRiTk1WjQE",
+  "assistantMessageID":"msg_1371c6679001MDkEPPMYuAKknQ",
+  "id":"call-adb3c86b-eea8-485c-8a08-ad83830c95bc",
+  "input":{"text":"hello-sse3"},"executed":false},...}
+session.tool.success:
+{"id":"evt_1371c6ae30013TTyme86jptqiB","created":1791925971683,
+ "type":"session.tool.success",
+ "location":{"directory":"/tmp/tmp.7OH8VOWwVZ/trees/t1"},
+ "data":{"sessionID":"ses_ec8e3a650ffe35djgRiTk1WjQE",
+  "assistantMessageID":"msg_1371c6679001MDkEPPMYuAKknQ",
+  "id":"call-adb3c86b-eea8-485c-8a08-ad83830c95bc",
+  "content":[{"type":"text","text":"echo:hello-sse3"}],
+  "metadata":{"truncated":false},"executed":false},...}
+# -> both frames carry the session id; called carries the call id + input,
+# success carries the same call id + the tool output text. The Dispatcher
+# can match a fleet_mission_create call to its session by sessionID/call id.
+
+Anomaly (recorded, non-blocking): the FIRST q11 container became
+API-unresponsive (0% CPU, /api/info timeout) after repeated client-side
+60-150 s timeout POSTs to the connect endpoint; a fresh container with the
+same config/image connected at once (404 then 204 in ms). Unexplained;
+kept the wedged container's log line count (3 boot lines) as the observation.
+
+Hygiene note: the unconstrained attempt-1/2 sessions show the model dumps
+container env (including OPENCODE_API_KEY/OPENCODE_PASSWORD-derived strings)
+into transcripts via shell. This log is hand-transcribed with all secrets
+redacted; raw transcripts lived only in ephemeral container DBs, destroyed
+with the containers (`docker rm -f`). Stage 1b/1c must redact transcripts
+before storing evidence, and experts should not see raw provider secrets.
 
 ## Observation
-Permission Asked/Replied events DO carry sessionID (Replied adds
-requestID), so a permission-gated tool call is matchable. But an MCP tool
-call's output event shape — whether the SSE frame for the tool RESULT
-carries session id + output — was not observed: emitting one needs a model
-to invoke the tool. The Director-polls fallback stays undecided.
+Yes. session.tool.called and session.tool.success each carry sessionID
+(plus assistantMessageID and the shared call id); success carries the tool
+output content. Matching needs no polling.
 
-## Verdict: NOT PERFORMED (no provider key; event-envelope shape noted)
+## Verdict: yes (Director-polls fallback not needed)

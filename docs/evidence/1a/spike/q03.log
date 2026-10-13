@@ -48,3 +48,14 @@ Negative case: a container-side write to the read-only /work mount fails
 EROFS (rc=1), and the host-side edit stays invisible to turn-diff.
 
 ## Verdict: yes (no fallback needed)
+
+## Supplement 2026-10-13 (keyed model run, same-path mount)
+The keyed `scripts/spike.sh` run mounts the throwaway workspace at the SAME
+absolute path inside the container (`-v WORK:WORK`, session directory
+$WORK/trees/t1) because a git worktree's .git file records an absolute path:
+with the old remapped mount (host $WORK at container /work) git reported
+"not a git repository" in-container and session.diff was always empty. With
+the same-path mount the model edited notes.txt via the edit tool and
+`GET /api/session/<id>/diff` returned the notes.txt patch (spike exits 0 on
+`grep notes.txt`). This mirrors shared context 9.1 (fleet mounts /work at
+/work everywhere). Read-only-mount findings above are unchanged.
