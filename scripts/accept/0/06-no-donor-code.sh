@@ -19,11 +19,41 @@ launchers=$(git ls-files | grep "^launcher/" || true)
 [ -z "$launchers" ] || fail "launcher/ directory present"
 
 code=$(git ls-files 'dispatcher/**' 'verifier/**' 'scripts/**' 'Makefile')
-bwraps=$(echo "$code" | grep -v "^$self$" | xargs grep -ln "bwrap" 2>/dev/null || true)
+
+# One fixed-string grep per scanned file, fail-closed: exit 0 is a match,
+# exit 1 is no match, and any other exit means the file could not be read,
+# so the guard must not pass. Matches accumulate in SCAN_HITS. The function
+# runs in the current shell (no command substitution), so fail() stops the
+# whole check.
+scan() {
+  local needle="$1" f rc
+  SCAN_HITS=""
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    [ "$f" = "$self" ] && continue
+    grep -lF -- "$needle" "$f" >/dev/null 2>&1
+    rc=$?
+    case "$rc" in
+      0) SCAN_HITS+="$f"$'\n' ;;
+      1) ;;
+      *) fail "cannot scan $f for '$needle' (grep exit $rc)" ;;
+    esac
+  done <<<"$code"
+}
+
+scan "bwrap"
+bwraps="$SCAN_HITS"
 [ -z "$bwraps" ] || fail "bwrap in first-party source: $(echo "$bwraps" | head -3 | tr '\n' ' ')"
 
-dockers=$(echo "$code" | grep -v "^$self$" | xargs grep -ln "docker run" 2>/dev/null || true)
-dockers=$(echo "$dockers" | grep -v "^envrunner/" | grep -v "^lifecycle/" || true)
-[ -z "$dockers" ] || fail "docker run outside envrunner/ and lifecycle/: $(echo "$dockers" | head -3 | tr '\n' ' ')"
+scan "docker run"
+dockers="$SCAN_HITS"
+# The Stage 1a prompt requires scripts/spike.sh and the stage-1a acceptance
+# checks to start named containers with `docker run` (base image health,
+# fail-closed entrypoint, spike session flow). Those two paths are sanctioned
+# by that prompt, so the scan exempts exactly them; a `docker run` added to
+# any other scanned file still fails.
+dockers=$(printf '%s\n' "$dockers" | grep -v '^scripts/spike\.sh$' | grep -v '^scripts/accept/' \
+  | grep -v '^envrunner/' | grep -v '^lifecycle/')
+[ -z "$dockers" ] || fail "docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: $(echo "$dockers" | head -3 | tr '\n' ' ')"
 
 pass
