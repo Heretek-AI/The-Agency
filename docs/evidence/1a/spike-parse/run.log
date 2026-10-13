@@ -38,3 +38,11 @@ $ grep -c '## RESULT' docs/evidence/1a/spike-parse/invalid-key-transcript.json  
 ## exited 1 at the transcript assertions (never a pass); see
 ## docs/evidence/1a/spike-parse/invalid-key-run.log for the full run output.
 ## The keyed positive run remains pending the user's real provider key.
+
+## Capture of invalid-key-transcript.json (one-off, same container flow as
+## spike.sh, not committed as a script): docker run agency-base:2.0.26 with
+## a throwaway invalid dummy key and spike/config mounted read-only at
+## /etc/agency; POST /api/session (agent spike, location /work); POST
+## /api/session/<id>/prompt with spike.sh's exact prompt text; POST
+## /api/experimental/session/<id>/wait -> 204; GET /api/session/<id>/message
+## saved verbatim. The dummy value appears nowhere in the file (grepped).
