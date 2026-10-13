@@ -1,0 +1,21 @@
+# Q11 — SSE: MCP tool call carries session id + tool output?
+Date: 2026-10-13. No provider key; no model-driven tool call possible.
+
+## Commands + trimmed output (code search; nothing executed speculatively)
+
+Source: review/opencode/packages/schema/src/permission.ts
+  Asked = ephemeral({ type:"permission.asked", schema: Request.fields })
+    # Request.fields includes sessionID (+action/resources/source)
+  Replied = ephemeral({ type:"permission.replied",
+    schema: { sessionID, requestID, reply } })
+Source: GET /api/event is the single per-server SSE stream (shared context
+5.2, re-confirmed in openapi paths: /api/event exists, no per-session stream).
+
+## Observation
+Permission Asked/Replied events DO carry sessionID (Replied adds
+requestID), so a permission-gated tool call is matchable. But an MCP tool
+call's output event shape — whether the SSE frame for the tool RESULT
+carries session id + output — was not observed: emitting one needs a model
+to invoke the tool. The Director-polls fallback stays undecided.
+
+## Verdict: NOT PERFORMED (no provider key; event-envelope shape noted)

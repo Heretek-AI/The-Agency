@@ -1,0 +1,34 @@
+# Q1 — OPENCODE_API_KEY from env; AGENCY_MODEL listed by `opencode models`
+Date: 2026-10-13. Container: agency-base:2.0.26 as agency-spike-q (dummy invalid key in env only, never in a file).
+
+## Commands + trimmed output
+
+$ docker exec agency-spike-q opencode models
+Error: Server process exited with code 1
+PlatformError: Unknown: FileSystem.writeFile (/etc/agency/service.json.tmp)
+  [cause]: Error: EROFS: read-only file system, open '/etc/agency/service.json.tmp'
+    at cli.server-connection.resolve (...)
+
+$ docker exec agency-spike-q opencode models --standalone
+(rc=0, no output — empty model list)
+
+$ docker exec agency-spike-q sh -c 'echo AGENCY_MODEL=${AGENCY_MODEL:-<unset>}'
+AGENCY_MODEL=<unset>
+
+Server log (all spike containers, dummy key):
+  level=WARN message="failed to load OpenCode provider config"
+    cause="OpencodeConsole.SignedOut: Reconnect OpenCode Console to continue."
+Session prompt with dummy key (see q08.log) resolved model
+  {"id":"cat-jam-free","providerID":"opencode"} then failed with provider.auth.
+
+## Observation
+- Serve DOES pick up OPENCODE_API_KEY from the environment: with a dummy
+  value the provider attempted authentication and the Console refused it
+  (provider.auth/401), not a missing-variable error.
+- `opencode models` without a valid key lists nothing (empty output with
+  --standalone). The plain form additionally needs a writable config dir
+  for service registration (EROFS on the read-only /etc/agency mount).
+- AGENCY_MODEL is unset in this environment, so "is the id listed" cannot
+  even be attempted.
+
+## Verdict: NOT PERFORMED (no provider key; AGENCY_MODEL unset)

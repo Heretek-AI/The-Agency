@@ -1,0 +1,28 @@
+# Q6 — @opencode/client from Bun: installable, usable, better than salvaged fetch?
+Date: 2026-10-13. Host bun 1.4.2 (pinned). Target: live agency-spike-q (2.0.26).
+
+## Commands + trimmed output
+
+$ cd /tmp/opencode/q6 && bun init -y && bun add @opencode/client@2.0.26
+installed @opencode/client@2.0.26
+12 packages installed [187.00ms]   # + Saved lockfile
+
+$ bun t.ts   # OpenCode.make({baseUrl:'http://<container>:4096', headers: Basic}) then:
+INFO_OK version=2.0.26             # via client.server.info()
+AGENTS_N=6                         # via client.agent.list()
+
+Negative case (why not better): the generated client types server.info()
+as returning {data}, but the real server returns /api/info UNWRAPPED
+(Stage-0 correction, re-confirmed: `info.data.version` is undefined, top
+level carries version). First script failed with:
+  TypeError: undefined is not an object (evaluating 'info.data.version')
+The salvaged fetch client (dispatcher/src/opencode.ts) already models info
+unwrapped and passed live checks in Stage 0.
+
+## Observation
+Installable: yes. Usable: yes (info + agent.list against the real
+container). Better than the salvaged client: no — same routes, plus a
+wrong unwrap type on /api/info that already bit once. Keep the salvaged
+fetch client (the stage's default fallback).
+
+## Verdict: yes (installable+usable) / fallback ADOPTED: keep salvaged client

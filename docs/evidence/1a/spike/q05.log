@@ -1,0 +1,34 @@
+# Q5 — Is disabling built-in build/plan/general agents safe?
+Date: 2026-10-13. Container agency-spike-q, healthy throughout.
+
+## Commands + trimmed output
+
+$ curl /api/agent          # first call, ~40s after boot
+{"location":{"directory":"/work"},"data":[]}
+$ curl /api/agent          # second call, agents loaded
+{"location":{"directory":"/work"},"data":[
+  {"id":"build",...,"mode":"primary","hidden":false,...},
+  {"id":"compaction",...,"hidden":true,...},
+  {"id":"title",...,"hidden":true,...},
+  {"id":"summary",...,"hidden":true,...},
+  {"id":"plan",...,"hidden":false,...},
+  {"id":"spike",...,"mode":"primary","hidden":false,...} ]}
+$ curl /api/agent/spike | python3 -c 'print id, mode, hidden'
+spike primary False
+$ curl -X POST /api/session {...,"agent":"spike",...}
+HTTP 200, "agent":"spike"
+
+Source: review/opencode/packages/core/src/agent.ts
+  export const defaultID = ID.make("build")   # default only; agents come from config
+  # no hard-coded "general"/"explore" agent exists anywhere in v2 source.
+
+## Observation
+Partly premise correction: v2 has NO built-in "general" (or "explore")
+agent — agents are config-defined (built-ins observed: build, plan, plus
+hidden compaction/title/summary). Disabling the nonexistent ids is a safe
+no-op: serve is healthy, /api/agent/spike resolves with our system prompt,
+and sessions on agent "spike" create fine. (First list returned [] because
+agents load asynchronously after boot; retries resolve — same race as Q7.)
+The "hidden" fallback is unnecessary; "disabled" entries are harmless.
+
+## Verdict: yes (safe; premise corrected — no general/explore built-ins exist)

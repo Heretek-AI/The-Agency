@@ -1,0 +1,31 @@
+{
+  "$comment": "Spike MCP requirements (Stage 1a). Each server lists the variables that must all be non-empty for it to stay enabled, plus its complete config. The entrypoint republishes every server with unmet requirements as disabled in OPENCODE_CONFIG_CONTENT. SPIKE_MISSING_VAR_XYZ is deliberately unset so the overlay path is exercised.",
+  "mcpServers": {
+    "bunprobe": {
+      "requires": ["SPIKE_MCP_ENABLE"],
+      "config": {
+        "type": "remote",
+        "url": "http://host.docker.internal:8377/mcp",
+        "headers": {},
+        "oauth": false,
+        "codemode": false,
+        "timeout": {
+          "execution": 10000
+        }
+      }
+    },
+    "spikeprobe": {
+      "requires": ["SPIKE_MISSING_VAR_XYZ"],
+      "config": {
+        "type": "remote",
+        "url": "http://127.0.0.1:9/mcp",
+        "headers": {},
+        "oauth": false,
+        "codemode": false,
+        "timeout": {
+          "execution": 1000
+        }
+      }
+    }
+  }
+}

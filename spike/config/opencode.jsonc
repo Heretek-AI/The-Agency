@@ -1,0 +1,51 @@
+{
+  // Spike config (Stage 1a, Step 2). Mounted read-only at /etc/agency and
+  // used as OPENCODE_CONFIG_DIR. Baseline deny-all ruleset from shared
+  // context 9.6, one agent (`spike`), built-in `general`/`explore` disabled
+  // (spike question 5).
+  "permissions": [
+    { "action": "*", "resource": "*", "effect": "deny" },
+    { "action": "read", "resource": "*", "effect": "allow" },
+    { "action": "glob", "resource": "*", "effect": "allow" },
+    { "action": "grep", "resource": "*", "effect": "allow" },
+    { "action": "skill", "resource": "*", "effect": "allow" },
+    { "action": "webfetch", "resource": "*", "effect": "allow" },
+    { "action": "websearch", "resource": "*", "effect": "allow" },
+    { "action": "subagent", "resource": "explore", "effect": "allow" },
+    { "action": "external_directory", "resource": "/work/*", "effect": "allow" },
+    { "action": "external_directory", "resource": "/artifacts/*", "effect": "allow" },
+    { "action": "edit", "resource": "/artifacts/*", "effect": "allow" },
+    { "action": "read", "resource": "*.env", "effect": "deny" },
+    { "action": "read", "resource": "*.env.*", "effect": "deny" },
+    { "action": "read", "resource": "*.env.example", "effect": "allow" },
+    { "action": "shell", "resource": "*", "effect": "allow" },
+    { "action": "shell", "resource": "git push*", "effect": "deny" },
+    { "action": "shell", "resource": "git merge*", "effect": "deny" },
+    { "action": "shell", "resource": "git rebase*", "effect": "deny" },
+    { "action": "shell", "resource": "git switch*", "effect": "deny" },
+    { "action": "shell", "resource": "git checkout*", "effect": "deny" },
+    { "action": "shell", "resource": "git worktree*", "effect": "deny" },
+    { "action": "shell", "resource": "git tag*", "effect": "deny" },
+  ],
+  "agents": {
+    "general": { "disabled": true },
+    "explore": { "disabled": true },
+  },
+  // Probe remote MCP server for spike question 14. It stays disabled unless
+  // the entrypoint sees SPIKE_MCP_ENABLE (see mcp-requirements.json): normal
+  // spike runs never contact it.
+  "mcp": {
+    "servers": {
+      "bunprobe": {
+        "type": "remote",
+        "url": "http://host.docker.internal:8377/mcp",
+        "headers": {},
+        "oauth": false,
+        "codemode": false,
+        "timeout": {
+          "execution": 10000,
+        },
+      },
+    },
+  },
+}

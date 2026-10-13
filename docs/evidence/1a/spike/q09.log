@@ -1,0 +1,18 @@
+# Q9 — Does Session.Info report cost + token counts for the chosen model?
+Date: 2026-10-13. No provider key; no model run possible.
+
+## Commands + trimmed output
+
+$ POST /api/session {"title":"q",...} -> HTTP 200, body includes:
+{"data":{"id":"ses_...","cost":0,
+  "tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}},...}}
+$ GET /api/session/<id> -> same cost 0 + zeroed tokens (HTTP 200)
+
+Source: openapi Session.Info requires ["id","projectID","cost","tokens","time","location"].
+
+## Observation
+The fields EXIST and are reported (cost 0, all token counters 0 before any
+model run). Whether they fill in correctly for AGENCY_MODEL after a real
+run is untested — no key, no model id.
+
+## Verdict: NOT PERFORMED (no provider key; pre-run zero values observed)

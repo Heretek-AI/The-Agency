@@ -1,0 +1,48 @@
+# Q14 — Bun MCP Streamable-HTTP server + bun:sqlite WAL on :z?
+Date: 2026-10-13. Host bun 1.4.2. MCP SDK 1.32.1 (pinned for the probe).
+
+## (a) Bun MCP server -> OpenCode MCP client. Commands + trimmed output
+
+$ # /tmp/opencode/q14/mcp.ts (18 lines, untracked): McpServer with one tool
+$ # spike_echo, StreamableHTTPServerTransport stateless, node:http under Bun
+$ bun mcp.ts & ; curl initialize http://127.0.0.1:8377/mcp
+event: message
+data: {"result":{"protocolVersion":"2025-06-18",...,
+  "serverInfo":{"name":"spikeprobe","version":"1.0.0"}},...}
+$ # spike/config gains bunprobe remote entry (url host.docker.internal:8377/mcp),
+$ # gated by entrypoint overlay on SPIKE_MCP_ENABLE (mcp-requirements.json)
+$ docker run -d --name agency-spike-q14 ... -e SPIKE_MCP_ENABLE=1 \
+    --add-host=host.docker.internal:host-gateway ...   # healthy
+$ POST /api/experimental/mcp/bunprobe/connect   # first: 404 (lazy registration),
+                                                # retry: 204
+$ GET /api/mcp
+{"data":[{"name":"bunprobe","status":{"status":"connected"}},
+         {"name":"spikeprobe","status":{"status":"disabled"}}]}
+$ server log: "mcp connected" server=bunprobe tools=1   # POSITIVE: tool catalog
+$ # NEGATIVE: stop the Bun server, POST connect, GET /api/mcp:
+{"data":[{"name":"bunprobe","status":{"status":"failed",
+  "error":"Unable to connect. ... (ConnectionRefused)"}},...]}
+
+Two probe notes: SDK transport needs node:http req/res (Bun.serve WHATWG
+fetch fails inside handleRequest); one McpServer per connection (re-connect
+on a shared instance errors "Already connected").
+
+## (b) bun:sqlite WAL. Commands + trimmed output
+
+$ bun wal.ts   # Database("spike.db",{create:true}); PRAGMA journal_mode=WAL;
+JOURNAL_MODE=wal
+ROWS=2
+REOPEN_ROWS=2
+WAL_OK
+$ bun wal.ts /tmp/opencode/q14ro   # chmod 555 dir, NEGATIVE:
+SQLiteError: unable to open database file (errno 14), rc=1
+$ docker run --rm --entrypoint id -v /tmp/opencode/q14db:/db:z agency-base:2.0.26
+uid=1000(agent) ...                # :z volume visible to agent in-container
+
+## Observation
+Yes to both. OpenCode's MCP client lists and connects a Bun-served
+Streamable-HTTP server (1 tool discovered; clean failure when down), and
+bun:sqlite WAL works with durable reopen; :z mounts are container-visible.
+The Dispatcher stays on Bun — Node-24 fallback not needed.
+
+## Verdict: yes / yes (no fallback)

@@ -1,0 +1,25 @@
+# Q10 — HTTPS_PROXY + no direct route: provider calls + remote MCP?
+Date: 2026-10-13. No provider key; provider leg impossible.
+
+## Commands + trimmed output (code search; no network fabrication)
+
+$ grep -rn "HTTPS_PROXY\|HTTP_PROXY\|NO_PROXY\|NODE_USE_ENV_PROXY" \
+    review/opencode/packages/core/src review/opencode/packages/ai/src
+review/opencode/packages/core/src/effect/websocket-constructor.ts:39:
+  if (bypassesProxy(url, environmentValue(environment, "NO_PROXY"))) ...
+review/opencode/packages/core/src/effect/websocket-constructor.ts:41:
+  const standardProxy = url.protocol === "wss:" ? "HTTPS_PROXY" : "HTTP_PROXY"
+(no other hits: provider fetch and MCP HTTP go through paths with no
+proxy-env handling found)
+
+## Observation
+Only the websocket constructor honors *_PROXY/NO_PROXY. No proxy support
+was found in the provider fetch path or the MCP HTTP client, and no
+NODE_USE_ENV_PROXY-style switch surfaced. Whether provider calls and
+remote MCP work behind a proxy on an internal network is UNTESTED: it
+needs a model key, an internal:true network, and a throwaway proxy.
+No fallback adopted yet — the "last resort" routed exception stays a
+documented option for Stage 1b, not a decision.
+
+## Verdict: NOT PERFORMED (no provider key; proxy support not found in source)
+Negative case: none obtainable without a key — no proxy egress was attempted.

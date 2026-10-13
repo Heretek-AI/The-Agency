@@ -1,0 +1,48 @@
+# Q3 — Read-only workspace mount: sessions, snapshots, session.diff?
+Date: 2026-10-13. Container agency-spike-q3: /work mounted -v WORK:/work:ro,z,
+/etc/agency ro. Healthy.
+
+## Commands + trimmed output (password via env, never logged)
+
+$ # session create on the ro mount
+$ curl -X POST /api/session {...,"location":{"directory":"/work/trees/t1"}}
+{"data":{"id":"ses_eca0b9ca2ffennBJma44Q415GN",...,"cost":0,...}}  # HTTP 200
+
+$ curl /api/session/<id>/diff
+{"data":[]}                              # HTTP 200, empty pre-turn diff
+$ curl /api/session/<id>/message
+{"data":[],"cursor":{"previous":null,"next":null}}                 # HTTP 200
+
+$ docker exec agency-spike-q3 touch /work/trees/t1/ro-probe
+touch: cannot touch '/work/trees/t1/ro-probe': Read-only file system  (rc=1)
+
+$ # full error-turn on the ro mount (dummy invalid key provokes provider.auth)
+$ curl -X POST /api/session/<id>/prompt {"text":"Reply with exactly: q3-ro-marker"}
+{"data":{"id":"msg_...","type":"user",...}}                        # HTTP 200
+$ curl -X POST /api/experimental/session/<id>/wait
+HTTP 204
+$ curl /api/session/<id>/message  (types + finish, trimmed)
+idle |  | "failed"
+assistant | error | {"type":"provider.auth","status":401,...}
+user |  | "Reply with exactly: q3-ro-marker"
+$ curl /api/session/<id>/diff
+{"data":[]}                              # HTTP 200 after failed turn
+
+Source: review/opencode/packages/core/src/snapshot.ts:96
+  path.join(global.data, "snapshot", location.project.id, ...)  # snapshots live
+  in the data dir (~/.local/share), NOT under /work.
+
+A host-side edit to notes.txt after the failed turn did NOT appear in
+session.diff: diff compares turn snapshots ("Compares the range's first
+recorded start snapshot with its last recorded end snapshot", diff.ts),
+not the live working tree.
+
+## Observation
+Yes. Create, prompt, wait, messages, and diff all return 200 on a
+read-only /work mount, including a complete (failed) turn. Snapshot trees
+live in the writable data dir, so snapshots are unaffected by a ro
+workspace; the mount itself enforces read-only (EROFS on write).
+Negative cases: container-side write fails EROFS; host-side edits are
+invisible to turn-diff (snapshot semantics, by design).
+
+## Verdict: yes (no fallback needed)

@@ -1,0 +1,30 @@
+# Q2 — Do server logs reach container stdout?
+Date: 2026-10-13. Container agency-spike-q (base image, dummy key).
+
+## Commands + trimmed output
+
+$ docker logs agency-spike-q | head -n 5
+server listening on http://0.0.0.0:4096
+
+$ docker exec agency-spike-q find /home/agent/.local /home/agent/.cache -name '*.log'
+/home/agent/.local/share/opencode/log/opencode.log
+
+$ docker exec agency-spike-q tail -n 3 /home/agent/.local/share/opencode/log/opencode.log
+timestamp=... level=INFO ... message="watcher started" path=/work type=entries ...
+timestamp=... level=INFO ... message=event ... event.type=model.updated ...
+timestamp=... level=INFO ... message=event ... event.type=agent.updated ...
+
+Source: review/opencode/packages/cli/src/commands/commands.ts
+  PrintLogs = GlobalFlag.Setting("print-logs")({
+    flag: Flag.Boolean("print-logs")  // "Print logs to stderr (server logs require --standalone)"
+
+$ docker exec agency-spike-q opencode serve --help | grep print-logs
+  --print-logs   Print logs to stderr (server logs require --standalone)
+
+## Observation
+Yes. `opencode serve` logs to container stdout without any flag
+(`docker logs` shows startup + request lines), and the structured log is
+also tailed at ~/.local/share/opencode/log/opencode.log. --print-logs
+exists but targets stderr for standalone runs; serve needs no fallback.
+
+## Verdict: yes
