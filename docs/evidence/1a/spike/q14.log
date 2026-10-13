@@ -39,6 +39,11 @@ SQLiteError: unable to open database file (errno 14), rc=1
 $ docker run --rm --entrypoint id -v /tmp/opencode/q14db:/db:z agency-base:2.0.26
 uid=1000(agent) ...                # :z volume visible to agent in-container
 
+Negative case: with the Bun MCP server stopped, connect/list reports
+failed ConnectionRefused.
+Negative case: a read-only database dir fails to open (SQLiteError,
+unable to open database file, rc=1).
+
 ## Observation
 Yes to both. OpenCode's MCP client lists and connects a Bun-served
 Streamable-HTTP server (1 tool discovered; clean failure when down), and

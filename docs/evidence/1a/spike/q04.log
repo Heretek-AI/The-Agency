@@ -21,5 +21,7 @@ from a read-only config dir; writes to it fail EROFS while serving is
 unaffected (negative case). Hot-reload watches are subscribed (see q12.log
 watcher lines); config changes would arrive via remount/recreate, which is
 already the fleet's update path (per-expert config rendered at deploy).
+Negative case: writing to the read-only config dir fails EROFS (rc=1)
+while serve stays healthy and /api/info keeps returning 200.
 
 ## Verdict: yes (fallback "bake into image" not needed)

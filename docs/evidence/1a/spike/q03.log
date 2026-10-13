@@ -44,5 +44,7 @@ live in the writable data dir, so snapshots are unaffected by a ro
 workspace; the mount itself enforces read-only (EROFS on write).
 Negative cases: container-side write fails EROFS; host-side edits are
 invisible to turn-diff (snapshot semantics, by design).
+Negative case: a container-side write to the read-only /work mount fails
+EROFS (rc=1), and the host-side edit stays invisible to turn-diff.
 
 ## Verdict: yes (no fallback needed)

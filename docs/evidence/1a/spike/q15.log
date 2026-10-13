@@ -17,6 +17,9 @@ $ POST /api/session/S3/shell (same command, no PUT ever) -> 204
 $ GET /api/session/S3/message (trimmed)
 "output":{"output":"VAR-was:UNSET\n",...}          # NEGATIVE: isolated
 
+Negative case: a second session (S3) that never received the PUT sees
+SPIKE_Q15_VAR as UNSET.
+
 ## Observation
 Yes. One PUT replaces the session's process environment; that session's
 shell sees it, a second session does not. Same service feeds model tool

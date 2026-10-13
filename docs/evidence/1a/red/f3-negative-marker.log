@@ -1,0 +1,74 @@
+# F3 red proof — 1a/06 requires a structured observed negative case
+# Date: 2026-10-13 (UTC), branch stage-1a-spike, cycle-2 rework.
+# Finding: docs/reports/stage-1a-verification.md F3 (old enforcement:
+# `grep -qi 'negative' "$ev/q$n.log"`; the only thing it caught was the word).
+#
+# Sabotages: (1) strip the structured marker from q03.log; (2) replace the
+# observation after it with a denial ("none obtainable"); (3) mark q10's
+# build-notes row answered while q10.log still holds only its denial, so the
+# check must evaluate q10 and reject the denial. All restored exactly.
+#
+# q10.log was NOT edited: q10 is NOT PERFORMED and gains no evidence it does
+# not have (its existing "Negative case: none obtainable..." line is kept).
+
+$ bash -n scripts/accept/1a/06-spike-answers-complete.sh && echo 'bash -n: ok'
+bash -n: ok
+
+## Standing state after the fix (markers added to q03/q04/q07/q14/q15 only)
+
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+$ grep -cE '^\| *[0-9]+ +\| NOT PERFORMED' docs/build-notes.md
+4
+$ git diff --stat -- docs/evidence/1a/spike/
+ docs/evidence/1a/spike/q03.log | 2 ++
+ docs/evidence/1a/spike/q04.log | 2 ++
+ docs/evidence/1a/spike/q07.log | 4 ++++
+ docs/evidence/1a/spike/q14.log | 5 +++++
+ docs/evidence/1a/spike/q15.log | 3 +++
+ 5 files changed, 16 insertions(+)
+$ grep -n 'Negative' docs/evidence/1a/spike/q10.log
+25:Negative case: none obtainable without a key — no proxy egress was attempted.
+(unchanged; no marker added)
+
+## Sabotage 1: strip the marker from q03.log
+
+$ # python3: delete the two added marker lines from q03.log
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log has no structured 'Negative case: <observation>' line
+exit=1
+
+## Sabotage 2: keep the marker, replace its observation with a denial
+
+$ # python3: "Negative case: none obtainable without a key."
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+
+$ cp /tmp/opencode/f3-q03-marked.log docs/evidence/1a/spike/q03.log
+$ cmp docs/evidence/1a/spike/q03.log /tmp/opencode/f3-q03-marked.log
+restore: byte-identical
+
+## Sabotage 3: q10 answered while its log still holds only the denial
+
+$ # python3: build-notes row "| 10  | NOT PERFORMED" -> "| 10  | partly"
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q10.log: negative case is a denial, not an observation
+exit=1
+
+$ cp /tmp/opencode/f3-build-notes.log docs/build-notes.md
+$ cmp docs/build-notes.md /tmp/opencode/f3-build-notes.log
+restore: byte-identical
+
+## Restored standing state
+
+$ grep -cE '^\| *[0-9]+ +\| NOT PERFORMED' docs/build-notes.md
+4
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+
+The check still fails honestly for q10 (one of the four NOT PERFORMED
+rows); it can only pass once q10 is answered with a recorded negative
+observation and no row is NOT PERFORMED.

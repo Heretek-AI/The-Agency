@@ -21,6 +21,10 @@ HTTP 204
 $ GET /api/session/S3/permission
 {"data":[]}                                     # rejected request disappears
 
+Negative case: an edit of other.txt outside the per-task grant is
+refused (effect deny), and the rejected permission request disappears
+from the session's permission list.
+
 Source: review/opencode/packages/core/src/permission.ts:158-163,87-97
   configured = merge(agent?.permissions ?? [deny-all], session.permissions)
   evaluate = findLast match; unmatched -> ask.
