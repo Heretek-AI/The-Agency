@@ -51,3 +51,34 @@ is present and `make check` is clean.
 Final confirmation run (after all restores, frozen tree): `bash scripts/accept.sh 1a`
 → exit 1, 5 pass / 1 skip / 2 fail; log docs/evidence/1a/accept-20261013T185638Z.log,
 cited by docs/reports/stage-1a.md section 2. This was the last acceptance run of the pass.
+
+---
+QA keyed re-verification (2026-10-13 UTC, HEAD d25114b, branch stage-1a-spike, keyed tree)
+Baseline: `make check` exit 0 (78 pass, 0 fail) — docs/evidence/1a/qa/qa-make-check-keyed.log;
+`bash scripts/accept.sh 1a` exit 0, 8 pass / 0 skip / 0 fail (05 RUN and PASS, no skip) —
+docs/evidence/1a/accept-20261013T212056Z.log (authoritative green run, one live spike).
+
+Method: each check 01..08 sabotaged with a defect deliberately different from the
+builder's where practical, the single check invoked directly with
+`ACCEPT_STAGE=1a ACCEPT_CHECK=...` (no full accept re-runs, so zero extra green spike
+runs beyond the task-2 run; only the 05 sabotage ran spike.sh, failing fast at auth
+with a dummy invalid key and spending nothing), exit 1 asserted, then restored
+(`git checkout --` / `chmod 600` / key backup restore / `docker rm -f`, plus
+`make build-base` rebuilds where the image was sabotaged for 03/04). Nothing committed
+in a sabotaged state; the real key value appears in no file; no check weakened.
+
+Per check (first line of each qa- log states the sabotage):
+01 | 1a/01-preflight | .env.provider mode 0644 (key present, wrong mode) → exit 1 (provider-file row FAIL); chmod 600 → PASS | red/qa-01-preflight.log | restored Y
+02 | 1a/02-base-image-pinned | Dockerfile FROM digest stripped to floating ubuntu:24.04 → exit 1 (not digest-pinned, fails before build so the good image was untouched) | red/qa-02-base-image-pinned.log | restored Y
+03 | 1a/03-entrypoint-fails-closed | entrypoint OPENCODE_API_KEY refusal deleted + rebuild → exit 1 (no-key container still running); restore + rebuild → PASS | red/qa-03-entrypoint-fails-closed.log | restored Y
+04 | 1a/04-healthy-nonroot | Dockerfile HEALTHCHECK deleted + rebuild → exit 1 (container never healthy, status=unknown; poll loop exhausts and fails closed); restore + rebuild → PASS | red/qa-04-healthy-nonroot.log | restored Y
+05 | 1a/05-spike-end-to-end | dummy invalid key in .env.provider (real key in /tmp backup) → exit 1 at the role-aware transcript assertion (never passes); real key restored, deliberately NOT re-run green (identical tree to the task-2 green run) | red/qa-05-spike-end-to-end.log | restored Y (mode 0600, no container left)
+06 | 1a/06-spike-answers-complete | `Negative case:` marker renamed away in q10.log → exit 1 (no structured marker line); restore → PASS | red/qa-06-spike-answers-complete.log | restored Y
+07 | 1a/07-no-secret-leak | clean PASS on real key; dummy key + its value appended unstaged to docs/build-notes.md → exit 1 (key value found in tracked files); both restored → PASS | red/qa-07-no-secret-leak.log | restored Y (real key never in any file)
+08 | 1a/08-no-containers-left | decoy agency-spike-qa-decoy-08 (created, never started) → exit 1; removed → PASS | red/qa-08-no-containers-left.log | restored Y
+
+Result: 8/8 checks red-proven on the keyed tree, each failing closed with exit 1 and
+restoring exactly. Post-restore: `git diff` empty for Dockerfile/entrypoint/
+versions.env/build-notes/spike evidence; `docker ps -a` shows no agency-spike
+container; .env/.env.provider untracked (gitignored), mode 0600. The prior keyless
+proofs above remain valid history and are complemented, not replaced, by this pass.

@@ -1,10 +1,14 @@
-Sabotage: `versions.env` `UBUNTU_DIGEST` replaced with sha256:0000... (digest/record mismatch vs the digest-pinned FROM); restored with `git checkout -- versions.env`.
-QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+Sabotage: `images/base/Dockerfile` FROM digest stripped to floating `FROM ubuntu:24.04` (differs from the builder's zeroed-UBUNTU_DIGEST proof); restored with `git checkout -- images/base/Dockerfile`.
+QA keyed re-verification on HEAD d25114b, 2026-10-13 UTC. Check invoked directly (no full accept run, no extra spike spend).
 
-$ sed -i 's/^UBUNTU_DIGEST=sha256:[0-9a-f]*/UBUNTU_DIGEST=sha256:0000000000000000000000000000000000000000000000000000000000000000/' versions.env
-$ bash scripts/accept/1a/02-base-image-pinned.sh
-CHECK 1a/02-base-image-pinned: FAIL FROM digest not recorded in versions.env
+$ sed -i 's|FROM ubuntu:24.04@sha256:[0-9a-f]*|FROM ubuntu:24.04|' images/base/Dockerfile; grep -n '^FROM' images/base/Dockerfile
+19:FROM ubuntu:24.04 AS base
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/02-base-image-pinned.sh bash scripts/accept/1a/02-base-image-pinned.sh
+CHECK 1a/02-base-image-pinned: FAIL FROM is not digest-pinned: FROM ubuntu:24.04 AS base
 exit=1
 
-restored: Y (`git checkout -- versions.env`; `git diff --stat -- versions.env` empty, `git status --short` clean)
-note: the check still fails on any digest mismatch (the FROM pin itself is unchanged); it passes on the restored tree (final accept run).
+restored: Y (`git checkout -- images/base/Dockerfile`; `git status --short -- images/base/Dockerfile` empty)
+$ grep -n '^FROM' images/base/Dockerfile
+19:FROM ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55 AS base
+image agency-base:2.0.26 present after restore (the check fails on the Dockerfile text before `make build-base`, so the good image was never overwritten and no rebuild was needed).
+note: the digest-pin guard fails closed on a floating tag; complements the builder's digest/record-mismatch proof.

@@ -1,10 +1,15 @@
-Sabotage: `docs/evidence/1a/spike/q06.log` moved aside (missing evidence file); restored exactly afterwards.
-QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+Sabotage: the single `Negative case:` marker line in `docs/evidence/1a/spike/q10.log` renamed to `Negative case REMOVED-FOR-QA-REDPROOF:` (builder's proof moved `q06.log` aside instead); restored with `git checkout -- docs/evidence/1a/spike/q10.log`.
+QA keyed re-verification on HEAD d25114b, 2026-10-13 UTC. Check invoked directly (file checks only, no container run, no full accept run, no extra spike spend).
 
-$ mv docs/evidence/1a/spike/q06.log /tmp/.../q06.log.aside
-$ bash scripts/accept/1a/06-spike-answers-complete.sh
-CHECK 1a/06-spike-answers-complete: FAIL evidence q06.log missing or empty
+$ grep -n '^Negative case: ' docs/evidence/1a/spike/q10.log
+21:Negative case: direct egress without the proxy fails — curl --noproxy '*'
+$ sed -i 's/^Negative case: /Negative case REMOVED-FOR-QA-REDPROOF: /' docs/evidence/1a/spike/q10.log
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/06-spike-answers-complete.sh bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q10.log has no structured 'Negative case: <observation>' line
 exit=1
 
-restored: Y (moved back; `git status --short -- docs/evidence/1a/spike/` empty)
-note: after restore the check still fails honestly, as reported: 4 question(s) NOT PERFORMED (no provider key); stage incomplete. exit=1.
+restored: Y (`git checkout -- docs/evidence/1a/spike/q10.log`; `git status --short -- docs/evidence/1a/spike/` empty; marker line 21 back)
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/06-spike-answers-complete.sh bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: PASS
+exit=0
+note: the per-question structured-marker guard fails closed on a stripped marker; complements the builder's missing-file proof.

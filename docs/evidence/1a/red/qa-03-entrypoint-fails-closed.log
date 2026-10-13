@@ -1,12 +1,18 @@
-Sabotage: the `OPENCODE_PASSWORD` refusal block deleted from `images/base/entrypoint.sh` (the `OPENCODE_API_KEY` refusal left intact) and the image rebuilt; the container then serves with an invented password instead of exiting non-zero.
-QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+Sabotage: `images/base/entrypoint.sh` OPENCODE_API_KEY refusal block deleted (builder's proof deleted the OPENCODE_PASSWORD block instead) + `make build-base`; restored with `git checkout -- images/base/entrypoint.sh` + rebuild.
+QA keyed re-verification on HEAD d25114b, 2026-10-13 UTC. Check invoked directly (dummy keys only, no real spike spend, no full accept run).
 
-$ sed -i '/^if \[ -z "${OPENCODE_PASSWORD:-}" \]; then$/,/^fi$/d' images/base/entrypoint.sh && make build-base
-$ bash scripts/accept/1a/03-entrypoint-fails-closed.sh
-CHECK 1a/03-entrypoint-fails-closed: FAIL no-password container still running
+$ python3 # delete the 4-line `if [ -z "${OPENCODE_API_KEY:-}" ] ... exit 64 / fi` block
+$ grep -n 'OPENCODE_API_KEY' images/base/entrypoint.sh; echo "grep-exit:$? (1 means refusal deleted)"
+grep-exit:1 (1 means refusal deleted)
+$ make build-base 2>&1 | tail -n 2
+BUILD_EXIT:0
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/03-entrypoint-fails-closed.sh bash scripts/accept/1a/03-entrypoint-fails-closed.sh
+CHECK 1a/03-entrypoint-fails-closed: FAIL no-key container still running
 exit=1
-(no agency-spike container left behind: the check's EXIT trap removed agency-spike-accept03)
 
-restored: Y (`git checkout -- images/base/entrypoint.sh`; `git diff --stat` empty; image rebuilt; re-run:
-  CHECK 1a/03-entrypoint-fails-closed: PASS
-  exit=0)
+restored: Y (`git checkout -- images/base/entrypoint.sh`; status clean for the path; refusal line 19 back; `make build-base` exit 0)
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/03-entrypoint-fails-closed.sh bash scripts/accept/1a/03-entrypoint-fails-closed.sh
+CHECK 1a/03-entrypoint-fails-closed: PASS
+exit=0
+`docker ps -a` shows no agency-spike container left afterwards.
+note: the no-key half of the entrypoint guard fails closed; complements the builder's no-password proof.

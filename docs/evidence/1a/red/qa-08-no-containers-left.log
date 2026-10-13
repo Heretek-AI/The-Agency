@@ -1,14 +1,15 @@
-Sabotage: leftover decoy container `agency-spike-qa-redproof` created from `agency-base:2.0.26` (spike name prefix); removed afterwards.
-QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+Sabotage: decoy container `agency-spike-qa-decoy-08` (`docker create`, never started — even a Created-state leftover trips the prefix scan; builder's proof used a differently-named decoy); removed with `docker rm -f` afterwards.
+QA keyed re-verification on HEAD d25114b, 2026-10-13 UTC. Check invoked directly (no container startup, no full accept run, no spike spend).
 
-$ docker create --name agency-spike-qa-redproof agency-base:2.0.26
-$ bash scripts/accept/1a/08-no-containers-left.sh
-CHECK 1a/08-no-containers-left: FAIL leftover container(s): agency-spike-qa-redproof
+$ docker create --name agency-spike-qa-decoy-08 "agency-base:$TAG" true
+ee7ee46c6563ffd937378e58138fab10a618b31f2780cbb002bb9a9d07e2c74b
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/08-no-containers-left.sh bash scripts/accept/1a/08-no-containers-left.sh
+CHECK 1a/08-no-containers-left: FAIL leftover container(s): agency-spike-qa-decoy-08
 exit=1
 
-$ docker rm agency-spike-qa-redproof
-$ bash scripts/accept/1a/08-no-containers-left.sh
+restored: Y (`docker rm -f agency-spike-qa-decoy-08`)
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/08-no-containers-left.sh bash scripts/accept/1a/08-no-containers-left.sh
 CHECK 1a/08-no-containers-left: PASS
-exit=0
-
-restored: Y (`docker ps -a --format '{{.Names}}' | grep '^agency-spike'` empty)
+rerun-exit=0
+`docker ps -a` shows no agency-spike container left afterwards.
+note: the prefix scan fails closed on a non-running leftover too, not only on running ones.
