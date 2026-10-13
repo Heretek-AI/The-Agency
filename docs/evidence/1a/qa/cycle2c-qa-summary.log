@@ -1,0 +1,60 @@
+# QA cycle-2c summary — H1 re-check of fix 50756ea (denial list + observed-outcome signal)
+# Date: 2026-10-13 (UTC). Branch: stage-1a-spike. Re-verified HEAD: 50756eaeee3f7de9d2f08641d3841662a0c3f28b.
+# Role: QA Agent (Triad role 2). Independent probes only; QA fixed nothing and weakened no check.
+
+## Scope
+Focused re-check of H1 (cycle2b-qa-summary.log): "failed to reproduce" and
+"could not get it to fail" counted as observations. Fix 50756ea adds (a) an
+extended DENIAL_RE and (b) a positive-shape requirement: each surviving
+marker paragraph (marker line through the next blank line) must carry an
+observed-outcome signal (SIGNAL_RE). Verified against the committed check;
+its red proof read but not trusted.
+
+## Mandated probes (end-to-end, scratch q03.log; all as expected)
+- "failed to reproduce"                -> FAIL q03.log: negative case is a denial, not an observation; exit 1  [MATCH]
+- "could not get it to fail"           -> FAIL q03.log: negative case is a denial, not an observation; exit 1  [MATCH]
+- novel no-signal denial "we saw nothing unusual"
+                                       -> FAIL q03.log: negative case shows no observed outcome (no signal in its paragraph); exit 1  [MATCH]
+- signal-less sentence "the experiment was done twice"
+                                       -> FAIL q03.log: negative case shows no observed outcome (no signal in its paragraph); exit 1  [MATCH]
+
+## Boundary probes (reported as-is; residuals expected, not fixed)
+- "attempts to reproduce did not yield a failure"
+  -> ACCEPTED as an observation. Failure is only the standing NOT PERFORMED
+     count (exit 1). RESIDUAL P1: DENIAL_RE has no "did not yield" shape and
+     the word "failure" satisfies SIGNAL_RE.
+- "the disallowed edit did not succeed but was recorded"
+  -> REJECTED: no-observed-outcome reason (exit 1). No signal word in the
+     paragraph, caught by mechanism (b).
+- "the error never showed up"
+  -> ACCEPTED as an observation. Failure is only the standing NOT PERFORMED
+     count (exit 1). RESIDUAL P2: SIGNAL_RE's word "error" is the noun of the
+     thing that never appeared; DENIAL_RE does not catch mid-sentence "never".
+
+Root cause of P1/P2: mechanism (b) is a keyword list too; signal words can
+name the thing that was NOT observed, so a denial that mentions "failure"/"error"
+can still pass. This matches the check's own stance (both mechanisms judge
+shapes only; semantic genuineness remains the independent verifier's read).
+Reported for the record; no fix requested or applied.
+
+## Five genuine markers (both mechanisms)
+Baseline run fails only on the count; all six marker lines pass both
+mechanisms (direct harness: is_denial rc=1, has_signal rc=0):
+  q03:47, q04:24, q07:24, q14:42, q14:44, q15:20.
+q10.log untouched (git status/diff empty); its line classifies DENIAL.
+Standing failure unchanged, exact command:
+  bash scripts/accept/1a/06-spike-answers-complete.sh
+  -> exit 1, "4 question(s) NOT PERFORMED (no provider key); stage incomplete".
+
+## Gates
+- make check                 -> exit 0 (78 pass, 0 fail)   [cycle2c-make-check.log]
+- bash scripts/accept.sh 1a  -> exit 1; unchanged honest split:
+  01 FAIL, 02 PASS, 03 PASS, 04 PASS, 05 SKIP, 06 FAIL "4 question(s) NOT PERFORMED",
+  07 PASS, 08 PASS (5 pass / 1 skip / 2 fail)  [cycle2c-accept-standalone.log;
+  log docs/evidence/1a/accept-20261013T195433Z.log]
+
+## Restoration and final state
+- Every scratch q03 swap restored byte-identical (cmp + git diff --exit-code).
+- q10.log never written; .env.provider absent (F1 stands); no agency-spike*
+  containers; docs/evidence/1a/verify/ untouched; no push.
+- Only additions are this pass's evidence logs; no tracked file modified by QA.
