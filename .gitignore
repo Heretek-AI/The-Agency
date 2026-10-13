@@ -1,0 +1,13 @@
+# The Agency Ingo: see shared context section 8.
+review/
+.env
+.env.*
+!.env.example
+secrets/
+state/
+workspace/
+packs/installed/
+node_modules/
+dist/
+build/
+coverage/

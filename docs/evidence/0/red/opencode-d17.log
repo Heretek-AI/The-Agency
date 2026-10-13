@@ -1,0 +1,24 @@
+Sabotage: reverted createSession to the unfixed shape (POST /api/session with {} instead of {title, agent, location, permissions, metadata}) and ran the D-17 guard test against it
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/opencode.test.ts:
+92 |       body: body !== undefined ? JSON.stringify(body) : undefined,
+93 |     });
+94 |     if (res.status === 204) return { status: 204, data: undefined as T };
+95 |     const text: string = await res.text();
+96 |     if (!res.ok)
+97 |       throw new OpenCodeError(`opencode ${method} ${path} failed: ${res.status}`, res.status, text);
+                 ^
+OpenCodeError: opencode POST /api/session failed: 400
+ status: 400,
+   body: "{\"error\":\"location.directory is required\"}",
+
+      at request (/home/john/Projects/The-Agency/worktrees/wave-0-salvage/dispatcher/src/opencode.ts:97:13)
+      at async createSession (/home/john/Projects/The-Agency/worktrees/wave-0-salvage/dispatcher/src/opencode.ts:215:33)
+      at async <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-0-salvage/dispatcher/test/opencode.test.ts:87:20)
+(fail) opencode client against the fake > createSession sends agent, location, permissions, metadata [33.91ms]
+
+ 0 pass
+ 9 filtered out
+ 1 fail
+Ran 1 test across 1 file. [47.00ms]

@@ -1,0 +1,3 @@
+Sabotage: appended test.skip to dispatcher/test/util/hash.test.ts so check-no-skips fails
+CHECK 0/07-no-skips: FAIL check-no-skips: FAIL dispatcher/test/util/hash.test.ts contains a skip/todo:
+34:test.skip("sabotage skip", () => {});

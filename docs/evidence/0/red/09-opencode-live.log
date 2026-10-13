@@ -1,0 +1,2 @@
+Sabotage: pointed OPENCODE_BIN at /bin/false (exits at once) so the live client test fails
+CHECK 0/09-opencode-live: FAIL live test failed: (fail) (unnamed) [4.77ms]   0 pass  1 fail Ran 1 test across 1 file. [3.02s] 

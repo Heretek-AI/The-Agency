@@ -1,0 +1,6 @@
+Sabotage: none - ran the two defect tests against the unchanged salvaged exec.ts (inherits process.env, kills only the direct child)
+
+error: expect(received).not.toContain(expected)
+(fail) exec > defect: child sees only the explicit environment [14.48ms]
+(fail) exec > defect: timeout kills the whole process group [5000.09ms]
+Ran 2 tests across 1 file. [5.03s]

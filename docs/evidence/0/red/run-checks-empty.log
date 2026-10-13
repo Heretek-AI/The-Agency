@@ -1,0 +1,3 @@
+Sabotage: none - D-03 reproduced on unchanged salvaged gates/runner.ts: an empty gate list returns success and DEFAULT_GATES names tools that are not installed
+empty check list throws (want true): false - runGates([]) returned []
+DEFAULT_GATES present (want false): true

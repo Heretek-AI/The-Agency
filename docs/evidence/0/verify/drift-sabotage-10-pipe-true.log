@@ -1,0 +1,2 @@
+14:      - run: make check || true
+CHECK 0/10-ci-runs-make-check: FAIL workflow overrides a step exit code

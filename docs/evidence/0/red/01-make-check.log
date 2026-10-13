@@ -1,0 +1,2 @@
+Sabotage: appended a bogus import to dispatcher/src/util/hash.ts so make check (typecheck) fails
+CHECK 0/01-make-check: FAIL make check failed: dispatcher/src/util/hash.ts(38,10): error TS2305: Module '"node:os"' has no exported member 'doesNotExist'. make: *** [Makefile:24: typecheck] Error 2 make: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-0-salvage' 

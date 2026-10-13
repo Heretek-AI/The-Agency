@@ -1,0 +1,3 @@
+Sabotage: none - D-18 reproduced on unchanged salvaged code: neither the fleet judge parser nor the sdk JudgeReportSchema accepts the 9.8 VERDICT shape
+fleet parser accepts the 9.8 verdict (want true): false - unknown seat undefined
+sdk schema accepts the 9.8 verdict (want true): false

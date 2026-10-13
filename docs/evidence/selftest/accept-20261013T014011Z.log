@@ -1,0 +1,9 @@
+accept stage selftest (2026-10-13T01:40:11Z), timeout 120s per check
+===== selftest/01-always-pass (exit 0) =====
+CHECK selftest/01-always-pass: PASS
+===== selftest/02-always-skip (exit 77) =====
+CHECK selftest/02-always-skip: SKIP fixture skip for selftest
+CHECKS for stage selftest
+selftest/01-always-pass      PASS   
+selftest/02-always-skip      SKIP   fixture skip for selftest
+stage selftest: 1 pass, 1 skip, 0 fail (2 checks)

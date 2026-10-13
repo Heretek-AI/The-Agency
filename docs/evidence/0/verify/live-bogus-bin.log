@@ -1,0 +1,9 @@
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/live/opencode.live.test.ts:
+[opencode-live] SKIP: binary "/nonexistent-xyz" not found on PATH. Install OpenCode v2 (opencode.ai) or set OPENCODE_BIN to skip gracefully.
+[opencode-live] SKIP: binary "/nonexistent-xyz" not found on PATH. Install OpenCode v2 (opencode.ai) or set OPENCODE_BIN to skip gracefully.
+
+ 2 pass
+ 0 fail
+Ran 2 tests across 1 file. [3.02s]

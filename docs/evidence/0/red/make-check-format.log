@@ -1,0 +1,5 @@
+Sabotage: appended trailing whitespace to README.md to break prettier
+Checking formatting...
+[warn] README.md
+[warn] Code style issues found in the above file. Run Prettier with --write to fix.
+make: *** [Makefile:10: format-check] Error 1

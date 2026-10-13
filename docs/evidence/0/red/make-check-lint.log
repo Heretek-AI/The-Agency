@@ -1,0 +1,4 @@
+Sabotage: appended an unused import to dispatcher/test/scaffolding.test.ts to break oxlint
+bunx oxlint
+dispatcher/test/scaffolding.test.ts:32:20: error eslint(no-unused-vars): Identifier 'unusedTmpdir' is imported but never used. help: Consider removing this import.
+make: *** [Makefile:13: lint] Error 1

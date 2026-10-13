@@ -1,0 +1,2 @@
+Sabotage: pointed SALVAGE_SRC at /tmp (not a checkout at 14f297a) so provenance fails
+CHECK 0/05-salvage-provenance: FAIL SALVAGE_SRC is at unknown, want 14f297a

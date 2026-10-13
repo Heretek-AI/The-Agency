@@ -1,0 +1,2 @@
+Sabotage: staged evil.patch so the no-donor-code guard fails
+CHECK 0/06-no-donor-code: FAIL tracked *.patch files: evil.patch 

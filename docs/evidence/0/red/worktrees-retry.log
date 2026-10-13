@@ -1,0 +1,3 @@
+Sabotage: none - D-10 reproduced on unchanged salvaged lanes/worktree.ts: retry force-resets fleet/t-1 to main and leaves the new worktree detached
+retry keeps task commit on branch (want true): false
+reallocated worktree is on fleet/t-1 (want true): false
