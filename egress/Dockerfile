@@ -13,8 +13,7 @@ RUN apt-get update \
        curl=8.5.0-2ubuntu10.15 \
   && rm -rf /var/lib/apt/lists/* \
   && squid -v 2>&1 | head -1 \
-  && htpasswd --help >/dev/null 2>&1 \
-  && ln -sf /dev/stdout /var/log/squid/access.log
+  && htpasswd -nb testuser testpass >/dev/null
 EXPOSE 3128
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh

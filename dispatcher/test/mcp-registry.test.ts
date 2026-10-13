@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { parse as parseJsonc } from "jsonc-parser";
+import { parse as parseJsonc, type ParseError } from "jsonc-parser";
 import { parse as parseYaml } from "yaml";
 import { McpRegistrySchema } from "../src/mcp-registry.js";
 import { FleetSchema } from "../src/fleet-schema.js";
 
 async function loadRegistry(): Promise<unknown> {
   const file = Bun.file(new URL("../../mcp/registry.jsonc", import.meta.url));
-  const errors: unknown[] = [];
+  const errors: ParseError[] = [];
   const parsed: unknown = parseJsonc(await file.text(), errors, { allowTrailingComma: true });
   expect(errors).toEqual([]);
   return parsed;
@@ -49,8 +49,8 @@ describe("mcp/registry.jsonc", () => {
       if (entry.config.type !== "local") continue;
       const command = entry.config.command.join(" ");
       // npx/uvx without a pinned version would fetch latest at run time.
-      expect(command).not.toMatch(/\bnpx\b(?![^]*@)/);
-      expect(command).not.toMatch(/\buvx\b.*--from\s+\S+(?<!\d)$/);
+      expect(`${key}: ${command}`).not.toMatch(/\bnpx\b(?![^]*@)/);
+      expect(`${key}: ${command}`).not.toMatch(/\buvx\b.*--from\s+\S+(?<!\d)$/);
     }
   });
 });

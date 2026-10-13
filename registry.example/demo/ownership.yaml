@@ -1,0 +1,8 @@
+# Demo ownership map (approved copy lives in state/registry/demo/).
+version: 1
+experts:
+  backend: { writes: ["src/*"] }
+  qa: { writes: ["tests/*", "*.test.*"] }
+  docs: { writes: ["README*", "docs/*"] }
+shared: ["package.json", "pnpm-lock.yaml"]
+protected: [".github/*"]

@@ -206,3 +206,105 @@ finding; serve itself is fine read-only.
   register row matches, and the scan itself fails closed when a scanned
   file cannot be read (it previously tolerated grep errors). Proof:
   `docs/evidence/1a/red/06-no-donor-code-scope-proof.log`.
+
+## Stage 1b (branch `stage-1b-roster`)
+
+### Proxy choice: Squid
+
+Squid 6.14 (`APT_SQUID=6.14-0ubuntu0.24.04.4` on the pinned Ubuntu
+digest) serves as the egress forward proxy. It supports per-user
+credentials (`basic_ncsa_auth` against a password file built at container
+start from `PROXY_PW_<NAME>`), ACLs (allowlist as `dstdomain`, CONNECT
+port limits, private/loopback/link-local/metadata destination denies), and
+logged usernames (custom `logformat` with `%un`) directly. The salvaged
+Smokescreen Dockerfile was not chosen: as salvaged it has no ACL and no
+role mapping, so meeting the stage's bullets would mean adding both plus
+per-user identity and verdict logging around it. Squid meets every bullet
+with configuration, not new code.
+
+### MCP registry verification (per entry)
+
+Remote endpoints probed with curl (status proves existence, not
+authorization): `https://mcp.context7.com/mcp` 405, `https://mcp.deepwiki.com/mcp`
+406, `https://api.githubcopilot.com/mcp/` 401, `https://huggingface.co/mcp` 200. (Q10 already proved `mcp.context7.com` connects through a proxy with
+2 tools.) `fleet` is built here (no endpoint to probe; disabled until
+`FLEET_MCP_TOKEN` exists in Stage 1d). `figma`/`linear` are OAuth-only
+remote servers shipped disabled. `sentry` uses the remote form
+(`https://mcp.sentry.dev/mcp`); the sketch allows local or remote.
+Local packages verified then installed at build time: `@playwright/mcp`
+0.0.83 (bin `playwright-mcp`; browsers from its exact `playwright-core`
+1.64.0-alpha dependency into `/ms-playwright`), `serena` at commit
+`f9972a3` via `uv tool install` (binary symlinked on PATH),
+`semgrep` 1.180.0 (PyPI, `semgrep mcp` present), `trivy` 0.75.0 plus its
+`mcp` plugin at pinned `v0.0.20` (`trivy plugin install mcp@v0.0.20`),
+`terraform-mcp-server` 1.3.0 (HashiCorp release, hash matches upstream
+SHA256SUMS; the npm package of the same name is an unrelated community
+project and was not used), `kubernetes-mcp-server` 0.0.67 (bin verified),
+`@bytebase/dbhub` 1.5.0 (bin `dbhub` runs), `postgres-mcp` 0.3.0 (PyPI,
+`--access-mode=restricted` flag verified), `chrome-devtools-mcp` 1.10.1
+and `mcp-grafana` 2.0.2 (binaries verified; installed when their extended
+experts arrive in Stage 4a). `postgres`, `dbhub`, `figma`, `linear` ship
+`disabled: true`; `fleet`, `github`, `kubernetes`, `grafana`, `sentry`,
+`huggingface` carry `requires` and end up disabled at container start
+until their variables exist.
+
+### Expert tool verification (per image)
+
+noble-updates versions recorded in `versions.env`
+(`tree`, `shellcheck`, `shfmt`, `yamllint`, `make`, `postgresql-client`,
+`sqlite3`, `mysql-client`, `gh`, `libxml2` for the hurl binary).
+npm tools pinned from the registry (`pnpm`, `@axe-core/cli`,
+`dependency-cruiser`, `madge`, `markdownlint-cli2`, `prettier` at the
+repo's own 3.6.2). PyPI tools pinned (`sqlfluff`, `checkov`, `httpie`,
+`pytest`). GitHub release binaries downloaded, hashed, executed (`--version`
+or equivalent), and re-checked by hash at build time: `scc`, `ast-grep`,
+`delta`, `difftastic`, `hadolint`, `actionlint`, `tflint`, `gitleaks`,
+`trivy`, `syft`, `grype`, `osv-scanner`, `hurl`, `lychee`, `kubeconform`,
+`kustomize`, `git-cliff` (git-cliff only recorded; its expert arrives in
+Stage 4a), plus `bun` 1.4.2 (matches `BUN_VERSION`), `helm` (get.helm.sh),
+`kubectl` (hash matches upstream `.sha256`), and `terraform` (hash matches
+upstream `SHA256SUMS`).
+Not installed, with reasons: `vale` (its repository answers Moved
+Permanently, so no release asset could be verified; docs keeps
+markdownlint-cli2, lychee, prettier), `atlas` (its releases carry no
+downloadable assets to verify), the Docker CLI (needs the Docker apt
+repository, and there is deliberately no daemon socket for it to reach;
+Dockerfiles are linted with hadolint instead), Go/Rust/JDK toolchains
+(listed as optional in the research catalog; no 1b task needs them),
+and every tool belonging only to extended experts (their images arrive in
+Stage 4a).
+
+### Fallbacks in force (from Stage 1a, applied here)
+
+- Q6 keep the salvaged fetch client: no `@opencode/client` anywhere in
+  this stage's toolchain.
+- Q10 NO_PROXY for fleet-internal hosts: every expert gets
+  `NO_PROXY=localhost,127.0.0.1,egress,dispatcher,verifier`.
+- Q5 disable built-in agents: every generated config disables `build`,
+  `plan`, and `general` (absent ids are a safe no-op).
+- Q3/Q4 read-only mounts and read-only config dir: `ro` experts mount
+  `/work` read-only; every config mount is `:ro`.
+- Q1/model leg: `AGENCY_MODEL` stands as-is (the server resolves it).
+- Q7/Q11/Q15 (session permissions, per-server MCP allow, session
+  environment) and Q8 (probe-on-timer) are Dispatcher behavior and land in
+  Stage 1c; the static per-server MCP allows are already in every
+  generated config.
+- Q12: project config stays disabled (`OPENCODE_DISABLE_PROJECT_CONFIG=1`).
+
+### Deviations recorded in Stage 1b
+
+- Compose omits `userns_mode: "keep-id"`: that mode is Podman-only and the
+  development host runs Docker, where it would be rejected. Revisit on a
+  Podman host.
+- Generated compose uses explicit per-service maps instead of the
+  `x-expert` YAML anchor in the prompt's sketch: identical fields, easier
+  byte-for-byte comparison in `--check`.
+- `postgres` MCP command is the installed `postgres-mcp` binary rather
+  than the sketch's `uvx --from ...` form, so no fetch happens at
+  container start.
+- `sentry` uses the remote MCP form; the sketch allows local or remote.
+- Security and reviewer personas close with the `VERDICT` block: they are
+  judges under shared context 9.8, and the stage's "RESULT block" bullet
+  is read as "its closing block from the fleet protocol".
+- Compose sets explicit `container_name: agency-<name>` and
+  `image: agency-<name>:<tag>` per service so checks address stable names.

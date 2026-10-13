@@ -49,4 +49,10 @@ if ! squid -k parse -f "$conf" 2>&1; then
   exit 64
 fi
 
+# Mirror the request log to the container's stdout so `docker logs` shows
+# one line per proxied request; the file itself stays authoritative for
+# audits. The tail dies with the container.
+touch /var/log/squid/access.log
+chown proxy:proxy /var/log/squid/access.log
+tail -n0 -F /var/log/squid/access.log 2>/dev/null &
 exec squid -N -f "$conf"

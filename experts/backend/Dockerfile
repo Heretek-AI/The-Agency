@@ -5,10 +5,11 @@ ARG OPENCODE_VERSION=2.0.26
 FROM agency-base:${OPENCODE_VERSION}
 LABEL org.agency.expert="backend"
 USER root
-# make (apt, pinned).
+# make and hurl's runtime library (apt, pinned).
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
        make=4.3-4.1build2 \
+       libxml2=2.9.14+dfsg-1.3ubuntu3.10 \
   && rm -rf /var/lib/apt/lists/* \
   && make --version | head -1
 # pnpm (npm, pinned).
