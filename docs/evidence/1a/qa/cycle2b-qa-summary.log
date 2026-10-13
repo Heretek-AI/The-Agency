@@ -1,0 +1,60 @@
+# QA cycle-2b summary — R1 re-check of the denial filter fix (4e48766)
+# Date: 2026-10-13 (UTC). Branch: stage-1a-spike. Re-verified HEAD: 4e48766f7b13fb1cc3bd3c6aab65dbf01eb18eb5.
+# Role: QA Agent (Triad role 2). Independent probes only; QA fixed nothing and weakened no check.
+
+## Scope
+Focused re-check of R1 (recorded in cycle2-qa-summary.log and cycle2-f3-negative-probe.log):
+denial paraphrases slipping through scripts/accept/1a/06-spike-answers-complete.sh.
+Builder fix 4e48766 was verified by re-running the probes myself against the
+committed check, its red proof read but not trusted.
+
+## Probe results (cycle2b-r1-recheck.log)
+Baseline: `ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh`
+-> exit 1, FAIL "4 question(s) NOT PERFORMED" (count only, no denial message)
+=> all five genuine marker sets (q03, q04, q07, q14, q15) pass the new filter.
+
+Filter exercised from the committed script (extracted DENIAL_RE + is_denial;
+evidence shows the extracted text). Direct classification:
+  my paraphrase "couldn't be reproduced"      -> DENIAL (rc=0)
+  my paraphrase "unable to reproduce it"      -> DENIAL (rc=0)
+  my paraphrase "does not reproduce"          -> DENIAL (rc=0)
+  builder's new denial "no negative case could be produced" -> DENIAL (rc=0)
+  invented denial "cannot be triggered here"  -> DENIAL (rc=0)
+  invented denial "failed to reproduce"       -> observation (rc=1)  [SLIP]
+  invented variant "could not get it to fail" -> observation (rc=1)  [SLIP]
+  q10 line "none obtainable ..."              -> DENIAL (rc=0)
+  all 6 genuine marker lines q03/q04/q07/q14x2/q15 -> observation (rc=1)
+
+End-to-end through the real check with a scratch q03.log (q10 never written):
+  "couldn't be reproduced"   -> FAIL q03.log: negative case is a denial, not an observation; exit 1  [CAUGHT]
+  "unable to reproduce it"   -> FAIL q03.log: negative case is a denial, not an observation; exit 1  [CAUGHT]
+  "does not reproduce"       -> FAIL q03.log: negative case is a denial, not an observation; exit 1  [CAUGHT]
+  "failed to reproduce"      -> FAIL 4 question(s) NOT PERFORMED; exit 1  [SLIP: no denial reason]
+  "could not get it to fail" -> FAIL 4 question(s) NOT PERFORMED; exit 1  [SLIP: no denial reason]
+Every swap restored byte-identical (cmp + git diff --exit-code clean).
+
+## Surviving hole (H1, reported, NOT fixed)
+"failed to reproduce" — the most idiomatic paraphrase of a denial of
+reproduction — and "could not get it to fail" are still accepted as
+observations. The filter remains an enumerated deny-list (contractions,
+inability, "not <adj>", absence phrases, does/did-not-reproduce); any denial
+phrased outside those classes counts as an observation. The stub exit 1 does
+not distinguish this: the failure is only the standing NOT PERFORMED count.
+Fairness: the check comment already defers semantic genuineness to the
+independent verifier's read, and the fix materially narrows R1 (my three
+recorded paraphrases are now caught). Closing the class fully would need a
+positive-shaped observation requirement (e.g. command/exit/observed markers)
+or a wider deny-list — the builder's call, not applied by QA.
+
+## Gates after the fix
+- make check                          -> exit 0 (78 pass, 0 fail)   [cycle2b-make-check.log]
+- bash scripts/accept.sh 1a           -> exit 1; unchanged honest split:
+  01 FAIL, 02 PASS, 03 PASS, 04 PASS, 05 SKIP, 06 FAIL "4 question(s) NOT PERFORMED",
+  07 PASS, 08 PASS (5 pass / 1 skip / 2 fail)   [cycle2b-accept-standalone.log;
+  log docs/evidence/1a/accept-20261013T194434Z.log]
+
+## Final state
+- q03.log restored byte-identical; q10.log untouched (git status/diff empty).
+- .env.provider absent (F1 stands); no agency-spike* containers.
+- docs/evidence/1a/verify/ untouched; no push.
+- Only additions are this pass's evidence logs; no tracked file modified by QA.
