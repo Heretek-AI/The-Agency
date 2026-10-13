@@ -1,6 +1,6 @@
 # Stage 0 — verification
 
-Commit: `66b21bc`   Branch: `stage-0-salvage`   Date: 2026-10-13 (UTC)   Verifier: Muse Spark 1.3 (OpenCode)
+Commit: `66b21bc` Branch: `stage-0-salvage` Date: 2026-10-13 (UTC) Verifier: Muse Spark 1.3 (OpenCode)
 
 VERDICT: FAIL
 
@@ -10,33 +10,33 @@ On a clean re-run, `make check` is green (78 pass, 0 fail) and `bash scripts/acc
 
 ## Checks
 
-| Check | Builder | Verifier | Evidence |
-|---|---|---|---|
-| 0/01-make-check | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/02-ts-coverage | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/03-harness-selftest | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/04-defect-register | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/05-salvage-provenance | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/06-no-donor-code | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/07-no-skips | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/08-fake-matches-openapi | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| 0/09-opencode-live | PASS | PASS on clean run; FAIL (timeout) on later rerun; PASS-vacuous under sabotage | docs/evidence/0/verify/accept-0.log, live-direct.log, live-bogus-bin.log, probe-09-bogus-bin-accept.log |
-| 0/10-ci-runs-make-check | PASS | PASS | docs/evidence/0/verify/accept-0.log |
-| `make check` green, 78 pass | green | green, 78 pass | docs/evidence/0/verify/make-check.log |
-| `accept.sh selftest` exit 77 | 77 (1 pass, 1 skip) | 77 (1 pass, 1 skip) | harness output, table matches |
-| Targeted defect tests (exec, audit, worktrees, run-checks, protocol, opencode) | pass | 46 pass, 0 fail | rerun during verification |
-| Live suite direct run | 2 pass, 8.3 s | 2 pass, 8 expects, 8.61 s | docs/evidence/0/verify/live-direct.log |
+| Check                                                                          | Builder             | Verifier                                                                      | Evidence                                                                                                |
+| ------------------------------------------------------------------------------ | ------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 0/01-make-check                                                                | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/02-ts-coverage                                                               | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/03-harness-selftest                                                          | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/04-defect-register                                                           | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/05-salvage-provenance                                                        | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/06-no-donor-code                                                             | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/07-no-skips                                                                  | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/08-fake-matches-openapi                                                      | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| 0/09-opencode-live                                                             | PASS                | PASS on clean run; FAIL (timeout) on later rerun; PASS-vacuous under sabotage | docs/evidence/0/verify/accept-0.log, live-direct.log, live-bogus-bin.log, probe-09-bogus-bin-accept.log |
+| 0/10-ci-runs-make-check                                                        | PASS                | PASS                                                                          | docs/evidence/0/verify/accept-0.log                                                                     |
+| `make check` green, 78 pass                                                    | green               | green, 78 pass                                                                | docs/evidence/0/verify/make-check.log                                                                   |
+| `accept.sh selftest` exit 77                                                   | 77 (1 pass, 1 skip) | 77 (1 pass, 1 skip)                                                           | harness output, table matches                                                                           |
+| Targeted defect tests (exec, audit, worktrees, run-checks, protocol, opencode) | pass                | 46 pass, 0 fail                                                               | rerun during verification                                                                               |
+| Live suite direct run                                                          | 2 pass, 8.3 s       | 2 pass, 8 expects, 8.61 s                                                     | docs/evidence/0/verify/live-direct.log                                                                  |
 
 Starting state: clean tree on `stage-0-salvage` at `66b21bc`; Bun 1.4.2, Docker 29.9.0, `opencode` 2.0.27 on PATH (pin 2.0.26); `OPENCODE_API_KEY` absent; no fleet containers (only unrelated host stacks). `SALVAGE_SRC` verified at `14f297a`, donor untouched (read-only). Step-0 preflight facts in `docs/build-notes.md` confirmed (Bun/git/Docker/SELinux/salvage commit). All 11 salvage sources exist at `14f297a`; all table destinations exist.
 
 ## Sabotage sample
 
-| Check | What I broke | Result | Restored |
-|---|---|---|---|
-| 0/04-defect-register | Changed D-24 disposition `guarded: no credential default` to `pending` (different from builder's row deletion) | FAIL `row D-24 has unknown disposition: pending`, 9 pass/1 fail | Yes, `git checkout -- docs/audit/defects.md`, status clean |
-| 0/06-no-donor-code | Staged `docs/unlock-sabotage-note.md` (different from builder's `.patch`) | FAIL `paths containing unlock`, accept exit 1, 9 pass/1 fail | Yes, reset + rm, status clean |
-| 0/05-salvage-provenance | Moved `dispatcher/src/opencode.ts` to /tmp during the run (different from builder's `SALVAGE_SRC` override) | FAIL `salvage destination missing`, accept exit 1 (4 fail incl. cascading 01/02/08) | Yes, moved back, `git diff` empty, status clean |
-| 0/09-opencode-live | `OPENCODE_BIN=/nonexistent-xyz` (binary IS on PATH, so no harness skip) | **Stayed green**: suite printed two `[opencode-live] SKIP` warnings, `bun test` reported `2 pass`, check printed PASS, overall exit 0 | Env-only, no tree change |
+| Check                   | What I broke                                                                                                   | Result                                                                                                                                | Restored                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 0/04-defect-register    | Changed D-24 disposition `guarded: no credential default` to `pending` (different from builder's row deletion) | FAIL `row D-24 has unknown disposition: pending`, 9 pass/1 fail                                                                       | Yes, `git checkout -- docs/audit/defects.md`, status clean |
+| 0/06-no-donor-code      | Staged `docs/unlock-sabotage-note.md` (different from builder's `.patch`)                                      | FAIL `paths containing unlock`, accept exit 1, 9 pass/1 fail                                                                          | Yes, reset + rm, status clean                              |
+| 0/05-salvage-provenance | Moved `dispatcher/src/opencode.ts` to /tmp during the run (different from builder's `SALVAGE_SRC` override)    | FAIL `salvage destination missing`, accept exit 1 (4 fail incl. cascading 01/02/08)                                                   | Yes, moved back, `git diff` empty, status clean            |
+| 0/09-opencode-live      | `OPENCODE_BIN=/nonexistent-xyz` (binary IS on PATH, so no harness skip)                                        | **Stayed green**: suite printed two `[opencode-live] SKIP` warnings, `bun test` reported `2 pass`, check printed PASS, overall exit 0 | Env-only, no tree change                                   |
 
 Builder red proofs under `docs/evidence/0/red/` reviewed: every check has a first-line sabotage statement, each sabotage is real and matched to the check's claim, plus five `make check` red runs and six defect reds on unfixed code. All credible.
 
@@ -69,15 +69,15 @@ Builder red proofs under `docs/evidence/0/red/` reviewed: every check has a firs
 
 ## Fail-closed probes
 
-| Situation | Expected | Observed |
-|---|---|---|
-| Empty verifier check list | Error / `no-checks` | `NoChecksError` unit test passes (46-test targeted run green) |
-| Torn audit tail | Refuse to open with byte offset | Unit test passes |
-| Second audit writer | Refused (lock holder named) | Unit test passes |
-| Missing `opencode` binary | Check-level skip (77), not pass | By design via `require_cmd --optional`; not triggered (binary present) |
-| Unrunnable binary override (`OPENCODE_BIN` bogus) | FAIL or SKIP, never PASS | **PASS with exit 0 (Finding 1)** |
-| Unbuilt `make` targets | Exit 1 with `not built until stage X` | `make build` → `Error 1` as required |
-| Credential-less service start | Refuse, naming variable | N/A in stage 0 (no service; guard due in 1d) |
+| Situation                                         | Expected                              | Observed                                                               |
+| ------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------- |
+| Empty verifier check list                         | Error / `no-checks`                   | `NoChecksError` unit test passes (46-test targeted run green)          |
+| Torn audit tail                                   | Refuse to open with byte offset       | Unit test passes                                                       |
+| Second audit writer                               | Refused (lock holder named)           | Unit test passes                                                       |
+| Missing `opencode` binary                         | Check-level skip (77), not pass       | By design via `require_cmd --optional`; not triggered (binary present) |
+| Unrunnable binary override (`OPENCODE_BIN` bogus) | FAIL or SKIP, never PASS              | **PASS with exit 0 (Finding 1)**                                       |
+| Unbuilt `make` targets                            | Exit 1 with `not built until stage X` | `make build` → `Error 1` as required                                   |
+| Credential-less service start                     | Refuse, naming variable               | N/A in stage 0 (no service; guard due in 1d)                           |
 
 ## Not verified
 
