@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Egress proxy entrypoint (Stage 1b).
-# Builds the Squid password file from PROXY_PW_<NAME> (one identity per
-# expert) and starts Squid in the foreground. Refuses to start when any
-# PROXY_PW_<NAME> is empty (fail-closed, exit 64) and validates the Squid
-# configuration before serving. Passwords travel on stdin only, never on a
-# command line.
+# Runs as the unprivileged `proxy` user (see Dockerfile): the container
+# drops ALL capabilities, so nothing here may need privilege. Builds the
+# Squid password file from PROXY_PW_<NAME> (one identity per expert) and
+# starts Squid in the foreground. Refuses to start when any PROXY_PW_<NAME>
+# is empty (fail-closed, exit 64) and validates the Squid configuration
+# before serving. Passwords travel on stdin only, never on a command line.
 set -u
+umask 077
 
 passwd_file="/etc/squid/passwd"
 conf="/etc/squid/squid.conf"
@@ -40,8 +42,6 @@ if [ "$count" -eq 0 ]; then
   exit 64
 fi
 
-chmod 600 "$passwd_file"
-chown proxy:proxy "$passwd_file"
 echo "entrypoint: proxy identities:$matched"
 
 if ! squid -k parse -f "$conf" 2>&1; then
@@ -53,6 +53,5 @@ fi
 # one line per proxied request; the file itself stays authoritative for
 # audits. The tail dies with the container.
 touch /var/log/squid/access.log
-chown proxy:proxy /var/log/squid/access.log
 tail -n0 -F /var/log/squid/access.log 2>/dev/null &
 exec squid -N -f "$conf"

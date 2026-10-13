@@ -21,11 +21,9 @@ git init -q "$work/outer"
 git -C "$work/outer" -c user.name=t -c user.email=t@t commit -q --allow-empty -m seed
 git -C "$work/outer" -c protocol.file.allow=always -c user.name=t -c user.email=t@t submodule add -q "$work/inner" inner
 git -C "$work/outer" -c user.name=t -c user.email=t@t commit -qm sub
-if "$root/scripts/workspace-init.sh" subtrap "$work/outer" 2>&1 | grep -qi 'submodule'; then
-  :
-else
-  fail "repository with a submodule was not refused for that reason"
-fi
+refusal_out=$("$root/scripts/workspace-init.sh" subtrap "$work/outer" 2>&1 || true)
+echo "$refusal_out" | grep -qi 'submodule' \
+  || fail "repository with a submodule was not refused for that reason"
 [ -e "$root/workspace/subtrap" ] && fail "refused workspace left a directory behind"
 out=$(cd "$root" && bun test dispatcher/test/registry-schema.test.ts 2>&1 | tail -3) \
   || fail "registry control files do not validate: $(echo "$out" | tr '\n' ' ')"

@@ -6,7 +6,7 @@
 import { parse as parseYaml } from "yaml";
 import { FleetSchema, enabledExperts } from "../../dispatcher/src/fleet-schema.js";
 
-const root = new URL("../../..", import.meta.url).pathname.replace(/\/$/, "");
+const root = new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
 const doc = parseYaml(await Bun.file(`${root}/docker-compose.yml`).text()) as {
   services?: Record<string, Record<string, unknown>>;
 };

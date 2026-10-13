@@ -16,5 +16,12 @@ RUN apt-get update \
   && htpasswd -nb testuser testpass >/dev/null
 EXPOSE 3128
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod 755 /usr/local/bin/entrypoint.sh
+RUN chmod 755 /usr/local/bin/entrypoint.sh \
+  && chown proxy:proxy /etc/squid \
+  && chmod 755 /etc/squid
+# Unprivileged from here: with ALL capabilities dropped, Squid cannot
+# setuid to the proxy user itself, so it starts as that user. The
+# entrypoint writes only /etc/squid/passwd (umask 077) and the proxy-owned
+# log and spool directories the package provides.
+USER proxy
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -39,7 +39,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://director:${PROXY_PW_DIRECTOR}@egress:3128
       HTTPS_PROXY: http://director:${PROXY_PW_DIRECTOR}@egress:3128
+      http_proxy: http://director:${PROXY_PW_DIRECTOR}@egress:3128
+      https_proxy: http://director:${PROXY_PW_DIRECTOR}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -91,7 +94,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://scout:${PROXY_PW_SCOUT}@egress:3128
       HTTPS_PROXY: http://scout:${PROXY_PW_SCOUT}@egress:3128
+      http_proxy: http://scout:${PROXY_PW_SCOUT}@egress:3128
+      https_proxy: http://scout:${PROXY_PW_SCOUT}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -143,7 +149,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
       HTTPS_PROXY: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
+      http_proxy: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
+      https_proxy: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -195,7 +204,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://product:${PROXY_PW_PRODUCT}@egress:3128
       HTTPS_PROXY: http://product:${PROXY_PW_PRODUCT}@egress:3128
+      http_proxy: http://product:${PROXY_PW_PRODUCT}@egress:3128
+      https_proxy: http://product:${PROXY_PW_PRODUCT}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -247,7 +259,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
       HTTPS_PROXY: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
+      http_proxy: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
+      https_proxy: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -300,7 +315,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://backend:${PROXY_PW_BACKEND}@egress:3128
       HTTPS_PROXY: http://backend:${PROXY_PW_BACKEND}@egress:3128
+      http_proxy: http://backend:${PROXY_PW_BACKEND}@egress:3128
+      https_proxy: http://backend:${PROXY_PW_BACKEND}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -352,7 +370,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://dba:${PROXY_PW_DBA}@egress:3128
       HTTPS_PROXY: http://dba:${PROXY_PW_DBA}@egress:3128
+      http_proxy: http://dba:${PROXY_PW_DBA}@egress:3128
+      https_proxy: http://dba:${PROXY_PW_DBA}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -404,7 +425,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://platform:${PROXY_PW_PLATFORM}@egress:3128
       HTTPS_PROXY: http://platform:${PROXY_PW_PLATFORM}@egress:3128
+      http_proxy: http://platform:${PROXY_PW_PLATFORM}@egress:3128
+      https_proxy: http://platform:${PROXY_PW_PLATFORM}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -456,7 +480,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://security:${PROXY_PW_SECURITY}@egress:3128
       HTTPS_PROXY: http://security:${PROXY_PW_SECURITY}@egress:3128
+      http_proxy: http://security:${PROXY_PW_SECURITY}@egress:3128
+      https_proxy: http://security:${PROXY_PW_SECURITY}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -508,7 +535,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://qa:${PROXY_PW_QA}@egress:3128
       HTTPS_PROXY: http://qa:${PROXY_PW_QA}@egress:3128
+      http_proxy: http://qa:${PROXY_PW_QA}@egress:3128
+      https_proxy: http://qa:${PROXY_PW_QA}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -561,7 +591,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
       HTTPS_PROXY: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
+      http_proxy: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
+      https_proxy: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true
@@ -613,7 +646,10 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       HTTP_PROXY: http://docs:${PROXY_PW_DOCS}@egress:3128
       HTTPS_PROXY: http://docs:${PROXY_PW_DOCS}@egress:3128
+      http_proxy: http://docs:${PROXY_PW_DOCS}@egress:3128
+      https_proxy: http://docs:${PROXY_PW_DOCS}@egress:3128
       NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
     env_file:
       - path: .env.provider
         required: true

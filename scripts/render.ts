@@ -352,7 +352,10 @@ function renderCompose(fleet: FleetConfig): string {
         AGENCY_MODEL: "${AGENCY_MODEL}",
         HTTP_PROXY: `http://${name}:\${PROXY_PW_${upper(name)}}@egress:3128`,
         HTTPS_PROXY: `http://${name}:\${PROXY_PW_${upper(name)}}@egress:3128`,
+        http_proxy: `http://${name}:\${PROXY_PW_${upper(name)}}@egress:3128`,
+        https_proxy: `http://${name}:\${PROXY_PW_${upper(name)}}@egress:3128`,
         NO_PROXY: "localhost,127.0.0.1,egress,dispatcher,verifier",
+        no_proxy: "localhost,127.0.0.1,egress,dispatcher,verifier",
       },
       env_file: [
         { path: ".env.provider", required: true },

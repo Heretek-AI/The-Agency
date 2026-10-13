@@ -4,6 +4,9 @@
 # created at container start by the egress entrypoint from PROXY_PW_<NAME>.
 http_port @@PORT@@
 visible_hostname egress
+# Writable by the unprivileged proxy user (the container drops ALL
+# capabilities, so /run is out of reach).
+pid_filename /var/log/squid/squid.pid
 forwarded_for delete
 via off
 cache deny all
