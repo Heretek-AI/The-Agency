@@ -5,6 +5,8 @@
 # 3. Disable MCP servers whose required variables are unset, via an
 #    OPENCODE_CONFIG_CONTENT overlay that carries each disabled server's
 #    complete config (a later config document replaces a server entry whole).
+#    A malformed requirements file refuses to start instead of serving
+#    with servers that should have been disabled.
 # 4. Apply the fallbacks recorded under "Fallbacks in force" (none yet).
 # 5. Serve OpenCode.
 set -u
@@ -29,10 +31,12 @@ export OPENCODE_CONFIG_DIR
 
 # MCP overlay: /etc/agency/mcp-requirements.json maps each server to its
 # required variables plus its complete config. Servers with unmet
-# requirements are republished here with "disabled": true.
+# requirements are republished here with "disabled": true. A malformed
+# requirements file is a configuration error: refuse to start rather than
+# serve with servers that should have been disabled.
 req_file="/etc/agency/mcp-requirements.json"
 if [ -f "$req_file" ]; then
-  overlay=$(python3 - "$req_file" <<'PY'
+  if ! overlay=$(python3 - "$req_file" <<'PY'
 import json, os, sys
 with open(sys.argv[1]) as fh:
     req = json.load(fh)
@@ -47,7 +51,10 @@ for name, entry in req.get("mcpServers", {}).items():
 if disabled:
     print(json.dumps({"mcp": {"servers": disabled}}))
 PY
-)
+  ); then
+    echo "entrypoint: refusing to start: cannot read MCP requirements from $req_file" >&2
+    exit 64
+  fi
   if [ -n "$overlay" ]; then
     export OPENCODE_CONFIG_CONTENT="$overlay"
   fi

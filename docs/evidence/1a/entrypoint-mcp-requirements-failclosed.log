@@ -1,0 +1,16 @@
+Entrypoint fail-closed on an unparseable /etc/agency/mcp-requirements.json.
+Sabotage/premise: the mounted requirements file is invalid JSON; before this
+fix the python parse failure was silently swallowed and the server started
+with servers that should have been disabled. Command and output:
+
+$ printf '{ "mcpServers": { broken\n' > /tmp/opencode/badreq/mcp-requirements.json
+$ docker run -d --name agency-spike-badreq -e OPENCODE_PASSWORD=<dummy> \
+    -e OPENCODE_API_KEY=<dummy> -v /tmp/opencode/badreq:/etc/agency:ro,z agency-base:2.0.26
+$ docker inspect -f '{{.State.ExitCode}}/{{.State.Running}}' agency-spike-badreq
+64/false
+$ docker logs agency-spike-badreq
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 19 (char 18)
+entrypoint: refusing to start: cannot read MCP requirements from /etc/agency/mcp-requirements.json
+
+Expected: exit code 64, not running, log names mcp-requirements.json.
