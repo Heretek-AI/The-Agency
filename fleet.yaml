@@ -1,0 +1,598 @@
+# The Agency fleet roster (Stage 1b). Source of truth for the roster.
+# From shared context 9.9/9.10, descriptions/handles/delegates/skills for the
+# twelve core experts taken from the salvaged opencode-fleet catalog
+# ($SALVAGE_SRC/packages/opencode-fleet/src/experts/catalog.ts at 14f297a,
+# itself ported from docs/research/02-expert-fleet-catalog.md sections
+# 3.1-3.12) and checked against that catalog; the other thirteen written
+# from the research catalog (sections 3.13-3.14 and 4). The TypeScript
+# catalog is not kept: this file replaces it.
+version: 1
+defaults:
+  port: 4096
+  maxConcurrent: 2
+  taskTimeoutSec: 3600
+  resources:
+    cpus: 2
+    memory: 4g
+tiers:
+  frontier: "{env:AGENCY_MODEL}"
+  standard: "{env:AGENCY_MODEL}"
+  fast: "{env:AGENCY_MODEL}"
+  review: "{env:AGENCY_MODEL}"
+experts:
+  director:
+    enabled: true
+    profile: core
+    tier: frontier
+    access: ro
+    description: "Mission orchestrator. Leads each mission: picks a playbook, writes the plan and task briefs, reads results, decides accept or rework within playbook limits, and reports. One Director session per mission."
+    handles:
+      - "Decomposition of missions into plans and task briefs"
+      - "Playbook selection and sequencing"
+      - "Reading results and diffs"
+      - "Rework decisions within playbook limits"
+      - "Final mission report"
+    delegates:
+      - "Everything else: never edits files"
+      - "Landing to the Dispatcher (cannot skip a playbook gate)"
+    proposed_writes: []
+    mcp: [fleet]
+    skills:
+      [task-decomposition, dispatch-brief, playbook-selection, rework-decisions, mission-reporting]
+    image_tools: []
+    egress: []
+    browser: false
+  scout:
+    enabled: true
+    profile: core
+    tier: fast
+    access: ro
+    description: "Reconnaissance and research. Cheap, fast context gathering so other experts and the Director do not spend their context on it."
+    handles:
+      - "Code maps (where X lives, who calls it)"
+      - "Dependency and stack inventories"
+      - "Summaries of unfamiliar modules"
+      - "External research briefs with sources"
+    delegates:
+      - "Any judgement call about design"
+      - "Every change"
+    proposed_writes: []
+    mcp: [context7, deepwiki]
+    skills: [codebase-mapping, research-brief]
+    image_tools: [ast-grep, scc, tree]
+    egress: []
+    browser: false
+  architect:
+    enabled: true
+    profile: core
+    tier: frontier
+    access: scoped
+    description: "System design owner: module boundaries, data flow, API contracts at design level, technology choices, and the decision record. Breaks ties when the two QA judges disagree."
+    handles:
+      - "ADRs and architecture docs/diagrams"
+      - "Design reviews of proposed changes"
+      - "Breaking large work into components with interfaces"
+      - "Tie-breaking QA judge disagreements (decision recorded with reasons)"
+    delegates:
+      - "Implementation to the builders"
+      - "Detailed contract files to api"
+      - "Threat modeling to security"
+    proposed_writes: ["docs/adr/*", "docs/architecture/*"]
+    mcp: [context7, deepwiki]
+    skills: [adr-writing, c4-modeling, tradeoff-analysis, interface-first-decomposition]
+    image_tools: [scc, dependency-cruiser, madge]
+    egress: []
+    browser: false
+  product:
+    enabled: true
+    profile: core
+    tier: standard
+    access: scoped
+    description: "Requirements owner. Turns intent into testable requirements: user stories, acceptance criteria, scope cuts, backlog slicing."
+    handles:
+      - "User stories"
+      - "Acceptance criteria in Given/When/Then form"
+      - "Scope cuts and backlog slicing"
+      - "Issue grooming"
+    delegates:
+      - "Technical design to architect"
+      - "Estimates to the owning builder"
+    proposed_writes: ["docs/product/*", "docs/requirements/*"]
+    mcp: [github, linear]
+    skills: [user-story-writing, acceptance-criteria, scope-slicing]
+    image_tools: [gh]
+    egress: []
+    browser: false
+  frontend:
+    enabled: true
+    profile: core
+    tier: standard
+    access: scoped
+    description: "UI engineering: components, client state, styling, client-side data fetching, accessibility, colocated tests, visual verification."
+    handles:
+      - "Components and client state"
+      - "Styling and client-side data fetching"
+      - "Accessibility in the implementation"
+      - "Colocated component tests"
+      - "Visual verification with screenshots"
+    delegates:
+      - "API changes to backend"
+      - "End-to-end suites to qa"
+      - "Design-system decisions and audits to design"
+    proposed_writes:
+      [
+        "web/*",
+        "apps/web/*",
+        "src/components/*",
+        "src/pages/*",
+        "src/app/*",
+        "src/styles/*",
+        "public/*",
+      ]
+    mcp: [playwright, context7, figma]
+    skills:
+      [
+        component-implementation,
+        a11y-in-implementation,
+        visual-verification,
+        frontend-state-conventions,
+      ]
+    image_tools: [pnpm, bun, chromium-playwright, "@axe-core/cli"]
+    egress: []
+    browser: true
+  backend:
+    enabled: true
+    profile: core
+    tier: standard
+    access: scoped
+    description: "Services and APIs: endpoints, business logic, integrations, background jobs, colocated unit tests, error handling and logging."
+    handles:
+      - "Endpoints and business logic"
+      - "Integrations and background jobs"
+      - "Colocated unit tests"
+      - "Error handling and logging in application code"
+    delegates:
+      - "Schema changes and migrations to dba"
+      - "Pipelines and deployment to platform"
+      - "Contract files to api"
+    proposed_writes:
+      ["src/*", "server/*", "api/*", "services/*", "internal/*", "pkg/*", "cmd/*", "lib/*"]
+    mcp: [context7, serena, dbhub]
+    skills:
+      [
+        endpoint-implementation,
+        error-handling-conventions,
+        dependency-addition-policy,
+        test-with-the-change,
+      ]
+    image_tools: [pnpm, hurl, httpie, make]
+    egress: []
+    browser: false
+  dba:
+    enabled: true
+    profile: core
+    tier: standard
+    access: scoped
+    description: "Data layer owner: schema design, reversible migrations, index design, query review, data-safety checks, seed data. Works against the dev database only."
+    handles:
+      - "Schema design and reversible migrations (expand then contract)"
+      - "Index design and query review with EXPLAIN"
+      - "Data-safety checks and seed data"
+    delegates:
+      - "Application query code to backend"
+      - "Database provisioning to platform"
+    proposed_writes: ["migrations/*", "db/*", "prisma/*", "schema/*", "*.sql"]
+    mcp: [postgres, dbhub]
+    skills: [migration-authoring, query-plan-review, index-design, data-safety-checklist]
+    image_tools: [psql, pg_dump, sqlite3, mysql, sqlfluff, atlas]
+    egress: []
+    browser: false
+  platform:
+    enabled: true
+    profile: core
+    tier: standard
+    access: scoped
+    description: "DevOps and infrastructure: Dockerfiles, compose stacks, CI/CD, IaC, manifests and charts. No container daemon access; builds run in the environment runner."
+    handles:
+      - "Dockerfiles and compose files"
+      - "CI/CD workflows and build scripts"
+      - "Infrastructure as code, K8s manifests, Helm charts"
+    delegates:
+      - "Application code to the builders"
+      - "Applying to real environments and secret rotation to a human"
+    proposed_writes:
+      [
+        "Dockerfile*",
+        "*compose*.yml",
+        ".github/*",
+        ".gitlab-ci.yml",
+        "infra/*",
+        "deploy/*",
+        "k8s/*",
+        "helm/*",
+        "terraform/*",
+        "Makefile",
+        "scripts/*",
+      ]
+    mcp: [terraform, kubernetes, github]
+    skills: [dockerfile-hardening, ci-pipeline-authoring, iac-plan-review, k8s-manifest-conventions]
+    image_tools:
+      [
+        hadolint,
+        actionlint,
+        shellcheck,
+        shfmt,
+        yamllint,
+        terraform,
+        tflint,
+        kubectl,
+        helm,
+        kustomize,
+        kubeconform,
+        docker,
+      ]
+    egress: []
+    browser: false
+  security:
+    enabled: true
+    profile: core
+    tier: frontier
+    access: ro
+    description: "Application security reviewer. Finds and explains security problems; does not fix them. Output is a severity-ranked report plus SARIF."
+    handles:
+      - "Threat models (STRIDE per trust boundary)"
+      - "SAST triage with reachability confirmation"
+      - "Dependency, container, and secret scanning"
+      - "Security review of diffs and IaC misconfigurations"
+    delegates:
+      - "Fixes to the owning expert, with a suggested patch in the report"
+    proposed_writes: []
+    mcp: [semgrep, trivy]
+    skills:
+      [
+        threat-modeling,
+        sast-triage,
+        dependency-risk-review,
+        secret-exposure-procedure,
+        security-report-format,
+      ]
+    image_tools: [semgrep, trivy, gitleaks, osv-scanner, syft, grype, checkov]
+    egress: []
+    browser: false
+  qa:
+    enabled: true
+    profile: core
+    tier: standard
+    access: scoped
+    description: "Test author. Writes the tests a change is judged by, independently of the builder: acceptance, integration, e2e, fixtures, flake triage, coverage gaps."
+    handles:
+      - "Failing acceptance tests from the brief before the build lands"
+      - "Integration and end-to-end tests, fixtures"
+      - "Flake triage and coverage gap analysis"
+      - "Reproducing reported defects as failing tests"
+    delegates:
+      - "Production-code fixes to the owning expert"
+      - "Pass/fail judgement to the two QA judges"
+    proposed_writes:
+      [
+        "tests/*",
+        "test/*",
+        "e2e/*",
+        "*.test.*",
+        "*.spec.*",
+        "*__tests__*",
+        "playwright.config.*",
+        "vitest.config.*",
+        "jest.config.*",
+      ]
+    mcp: [playwright]
+    skills: [test-strategy, e2e-authoring, flake-triage, coverage-gap-analysis, bug-report-format]
+    image_tools: [pnpm, chromium-playwright, pytest]
+    egress: []
+    browser: true
+  reviewer:
+    enabled: true
+    profile: core
+    tier: review
+    access: ro
+    description: "Independent code reviewer of a task diff before integration: correctness, regressions, maintainability, test adequacy, repo conventions. Verdict: approve or request changes."
+    handles:
+      - "Correctness and regression review"
+      - "Maintainability and test adequacy"
+      - "Adherence to repo conventions"
+      - "Verdict (approve / request changes) with findings by severity and file:line"
+    delegates:
+      - "Deep security analysis to security"
+      - "Fixes to the author"
+    proposed_writes: []
+    # No MCP by default (leanest context in the fleet). The github
+    # pull-request toolset is available but disabled; see the registry.
+    mcp: []
+    skills: [review-rubric, diff-reading-procedure, review-report-format]
+    image_tools: [delta, difftastic, scc]
+    egress: []
+    browser: false
+  docs:
+    enabled: true
+    profile: core
+    tier: fast
+    access: scoped
+    description: "Technical writing owner: README, guides, tutorials, API reference prose, troubleshooting. Every documented command is run first."
+    handles:
+      - "README, guides, tutorials, troubleshooting pages"
+      - "API reference prose"
+      - "Doc verification by running documented commands"
+    delegates:
+      - "ADRs to architect"
+      - "Requirements to product"
+      - "Changelog and release notes to release"
+    proposed_writes:
+      [
+        "docs/guides/*",
+        "docs/reference/*",
+        "docs/tutorials/*",
+        "README*",
+        "CONTRIBUTING*",
+        "mkdocs.yml",
+      ]
+    mcp: [context7]
+    skills: [docs-structure, reference-from-source, verify-what-you-document]
+    image_tools: [markdownlint-cli2, vale, lychee, prettier]
+    egress: []
+    browser: false
+  qa-functional:
+    enabled: false
+    profile: core
+    tier: standard
+    access: ro
+    description: "Functional judge. Decides whether the change does what the brief and its acceptance criteria say. Its verdict blocks landing. Arrives in Stage 2a."
+    handles:
+      - "Running the acceptance tests and the application in the task environment stack"
+      - "Checking each criterion, returning a verdict with evidence per criterion"
+    delegates:
+      - "Fixes to the author"
+      - "Writes nothing to the repository"
+    proposed_writes: []
+    mcp: [playwright]
+    skills: [criterion-by-criterion-verification, verdict-format]
+    image_tools: [pnpm, chromium-playwright, hurl]
+    egress: []
+    browser: true
+  qa-adversarial:
+    enabled: false
+    profile: core
+    tier: standard
+    access: ro
+    description: "Adversarial judge. Tries to break the change: edge cases, invalid and hostile input, concurrency, error paths, regressions in neighbouring behavior. Its verdict blocks landing. Arrives in Stage 2a."
+    handles:
+      - "Edge cases, invalid and hostile input, concurrency, error paths"
+      - "Regressions in neighbouring behavior, every failure with reproduction steps"
+    delegates:
+      - "Fixes to the author"
+      - "Writes nothing to the repository"
+    proposed_writes: []
+    mcp: [playwright]
+    skills: [adversarial-test-design, regression-probing, verdict-format]
+    image_tools: [pnpm, chromium-playwright, hurl]
+    egress: []
+    browser: true
+  api:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Contracts owner: OpenAPI, GraphQL, and protobuf definitions; contract linting; breaking-change detection; contract tests; mock servers. Starts on demand (Stage 4a)."
+    handles:
+      - "OpenAPI, GraphQL, and protobuf definitions"
+      - "Contract linting and breaking-change detection"
+      - "Contract tests and mock servers"
+    delegates:
+      - "Implementing the contract to backend"
+      - "Consuming it to frontend"
+    proposed_writes: ["openapi/*", "proto/*", "graphql/*", "*.graphql", "contracts/*"]
+    mcp: [context7]
+    skills: [openapi-design-rules, breaking-change-review, contract-testing]
+    image_tools: [spectral, oasdiff, buf, schemathesis, hurl, prism]
+    egress: []
+    browser: false
+  sre:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Reliability and observability owner: SLOs, alert rules, dashboards as code, runbooks, incident timelines and postmortems. Starts on demand (Stage 4a)."
+    handles:
+      - "SLOs, alert rules, dashboards as code"
+      - "Runbooks, incident timelines and postmortems, capacity notes"
+    delegates:
+      - "Instrumentation inside application code to the builders"
+      - "Infrastructure changes to platform"
+    proposed_writes: ["ops/*", "monitoring/*", "alerts/*", "dashboards/*", "docs/runbooks/*"]
+    mcp: [grafana, sentry]
+    skills: [slo-definition, symptom-based-alerting, runbook-format, postmortem-format]
+    image_tools: [promtool, amtool, logcli]
+    egress: []
+    browser: false
+  performance:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Performance engineering: measures, then recommends. Benchmarks, load tests, profiling, budgets, regression reports with numbers and method. Starts on demand (Stage 4a)."
+    handles:
+      - "Benchmarks, load tests, profiling"
+      - "Performance budgets and regression reports with numbers and method"
+    delegates:
+      - "The optimization itself to the owning builder, unless confined to benchmark code"
+    proposed_writes: ["bench/*", "perf/*", "k6/*"]
+    mcp: [chrome-devtools]
+    skills: [benchmark-methodology, load-test-design, perf-report-format]
+    image_tools: [k6, hyperfine, lighthouse, py-spy, Chromium]
+    egress: []
+    browser: true
+  debugger:
+    enabled: false
+    profile: extended
+    tier: frontier
+    access: scoped
+    description: "Root-cause analysis: reproduction, bisection, instrumentation, a written hypothesis log, a root-cause report with the minimal failing case. Starts on demand (Stage 4a)."
+    handles:
+      - "Reproduction, bisection, instrumentation"
+      - "Written hypothesis log and root-cause report with the minimal failing case"
+    delegates:
+      - "The fix to the owning expert"
+    proposed_writes: ["tests/repro/*"]
+    mcp: [chrome-devtools, sentry]
+    skills: [hypothesis-driven-debugging, minimal-repro, bisect-procedure, rca-report-format]
+    image_tools: [gdb, strace, ltrace]
+    egress: []
+    browser: false
+  refactor:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Mechanical change at scale: codemods, renames, module moves, dependency and framework upgrades, dead-code removal. Characterization tests come first. Starts on demand (Stage 4a)."
+    handles:
+      - "Codemods, renames, module moves"
+      - "Dependency and framework upgrades, dead-code removal"
+    delegates:
+      - "Any change that alters behavior to the owning builder"
+    proposed_writes:
+      [
+        "src/*",
+        "server/*",
+        "api/*",
+        "services/*",
+        "internal/*",
+        "pkg/*",
+        "cmd/*",
+        "lib/*",
+        "web/*",
+        "apps/web/*",
+        "src/components/*",
+        "src/pages/*",
+        "src/app/*",
+        "src/styles/*",
+        "public/*",
+      ]
+    mcp: [serena]
+    skills: [behavior-preserving-refactor, codemod-authoring, upgrade-playbook]
+    image_tools: [ast-grep, comby, jscodeshift, knip, ruff]
+    egress: []
+    browser: false
+  data:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Data engineering and analytics owner: transformations, dbt models, warehouse schemas, data quality tests, analytical SQL. Starts on demand (Stage 4a)."
+    handles:
+      - "Transformations, dbt models, warehouse schemas"
+      - "Data quality tests and analytical SQL"
+    delegates:
+      - "Operational database schema to dba"
+      - "Pipeline infrastructure to platform"
+    proposed_writes: ["data/*", "pipelines/*", "dbt/*", "analytics/*", "notebooks/*"]
+    mcp: [dbhub]
+    skills: [dbt-modeling-conventions, data-quality-tests, idempotent-pipelines]
+    image_tools: [duckdb, dbt-core, sqlfluff]
+    egress: []
+    browser: false
+  ml:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "AI and ML engineering owner: prompts, evaluation suites, retrieval pipelines, model client code, serving wrappers. Evals are written before prompt changes. Starts on demand (Stage 4a)."
+    handles:
+      - "Prompts, evaluation suites, retrieval pipelines"
+      - "Model client code and serving wrappers"
+    delegates:
+      - "Compute and serving infrastructure to platform"
+      - "Upstream data to data"
+    proposed_writes: ["ml/*", "models/*", "evals/*", "prompts/*"]
+    mcp: [huggingface, context7]
+    skills: [eval-first-development, prompt-versioning, rag-design-checklist]
+    image_tools: [promptfoo, jupyter]
+    egress: []
+    browser: false
+  mobile:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Mobile client implementation (code only: a Linux container has no Xcode or iOS simulator, and an Android emulator needs KVM passthrough). Starts on demand (Stage 4a)."
+    handles:
+      - "React Native, Flutter, Kotlin, and Swift source"
+      - "Platform conventions and offline behavior"
+    delegates:
+      - "Backend changes to backend"
+      - "Store submission to a human"
+    proposed_writes: ["mobile/*", "apps/mobile/*", "android/*", "ios/*"]
+    mcp: [context7]
+    skills: [platform-guidelines, offline-first-patterns, store-release-checklist]
+    image_tools: [node-android-tools]
+    egress: []
+    browser: false
+  design:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Design system and experience audit owner: design tokens, component usage guidance, WCAG audits, heuristic UX reviews, interface copy. Starts on demand (Stage 4a)."
+    handles:
+      - "Design tokens and component usage guidance"
+      - "WCAG audits, heuristic UX reviews, interface copy"
+    delegates:
+      - "Component implementation to frontend"
+    proposed_writes: ["design/*", "docs/design/*", "tokens/*"]
+    mcp: [playwright, figma]
+    skills: [wcag-audit-procedure, design-token-conventions, ux-heuristic-review, ui-copy-style]
+    image_tools: ["@axe-core/cli", pa11y, lighthouse, Chromium]
+    egress: []
+    browser: true
+  release:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: scoped
+    description: "Release management owner: version decisions, changelog, release notes, tagging, dependency update batches, release checklists. The only expert whose ruleset re-allows git tag. Starts on demand (Stage 4a)."
+    handles:
+      - "Version decisions, changelog, release notes, tagging"
+      - "Dependency update batches and release checklists"
+    delegates:
+      - "Fixes found during release checks to the owning expert"
+      - "Pushing and opening the draft pull request to the Dispatcher; merging and publishing to a human"
+    proposed_writes:
+      [
+        "CHANGELOG*",
+        "release/*",
+        ".release-please*",
+        "package.json",
+        "Cargo.toml",
+        "pyproject.toml",
+      ]
+    mcp: [github]
+    skills: [semver-decision, changelog-authoring, release-checklist]
+    image_tools: [gh, git-cliff]
+    egress: []
+    browser: false
+  compliance:
+    enabled: false
+    profile: extended
+    tier: standard
+    access: ro
+    description: "Licensing and privacy checks: license inventory and compatibility, SBOM generation, PII data-flow review, mapping controls to a checklist. Starts on demand (Stage 4a)."
+    handles:
+      - "License inventory and compatibility, SBOM generation"
+      - "PII data-flow review and control mapping"
+    delegates:
+      - "Remediation to the owning expert"
+      - "Legal judgement to a human"
+    proposed_writes: []
+    mcp: []
+    skills: [license-compatibility-review, sbom-generation, pii-dataflow-review]
+    image_tools: [syft, trivy, reuse]
+    egress: []
+    browser: false
