@@ -130,3 +130,11 @@ finding; serve itself is fine read-only.
   ever matched. Fixed to allow padding — including in the NOT PERFORMED
   count, which with the old pattern counted 0 and would have passed a
   stage with unperformed questions.
+- Stage 0 check `06-no-donor-code` scanned `scripts/**` for `docker run`
+  with no exemptions, so the Stage 1a prompt-mandated harness
+  (`scripts/spike.sh`, `scripts/accept/1a/*`) failed the stage-0 guard on
+  this branch — the two prompts contradicted each other. The scan now
+  exempts exactly those sanctioned paths (stated in-check), the D-06
+  register row matches, and the scan itself fails closed when a scanned
+  file cannot be read (it previously tolerated grep errors). Proof:
+  `docs/evidence/1a/red/06-no-donor-code-scope-proof.log`.

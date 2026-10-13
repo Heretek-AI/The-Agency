@@ -5,10 +5,13 @@ Date: 2026-10-13 (UTC). Branch: `stage-1a-spike`. Image: `agency-base:2.0.26`.
 **This stage is NOT complete.** There is no provider key anywhere
 (`.env.provider` absent, `AGENCY_MODEL` unset), and the stage prompt says
 this stage cannot complete without the key. `scripts/preflight.sh` cannot
-exit 0 (check 01 fails), `scripts/spike.sh` skips without a key (check 05),
-and questions 1, 9, 10, 11 are NOT PERFORMED (check 06 fails). Everything
-that can be settled without a key is settled with real container evidence;
-nothing model-dependent is fabricated.
+exit 0 (check 01 fails), `scripts/spike.sh` exits 1 without a key and check
+05 skips it (the only prompt-allowed skip), and questions 1, 9, 10, 11 are
+NOT PERFORMED (check 06 fails). Everything that can be settled without a
+key is settled with real container evidence; nothing model-dependent is
+fabricated. A close-out session then fixed the known transcript-assertion
+weakness and swept the stage diff for tolerated errors (section 6); none of
+that changes the keyless facts above.
 
 ## 1. Built
 
@@ -49,6 +52,21 @@ serve --hostname 0.0.0.0 --port 4096`.
   SKIP — the skip lives in the acceptance check only). Its EXIT-trap
   `docker rm -f ... || true` is kept with the explanatory comment:
   teardown tolerance, while every assertion under test fails closed.
+- **Close-out session** (commits `ba64e84`, `0501a09`, `382aa7e`,
+  `3ccfd64`, `7e572d1`). Task 1: the vacuous transcript greps in
+  `scripts/spike.sh` are replaced by a role-aware parser
+  (`scripts/spike-assert-messages.py`; evidence
+  `docs/evidence/1a/spike-parse/`). Task 2: stage-0 `0/06-no-donor-code`
+  now exempts exactly the stage-1a harness it contradicted, with an
+  in-check comment and a proof
+  (`docs/evidence/1a/red/06-no-donor-code-scope-proof.log`), and its scan
+  fails closed on unreadable files; D-06's register text matches. Task 3
+  sweep: checks `05`/`07`/`08` fail closed on scan/`docker ps` errors
+  (`07-keyed-branch-proof.log`, `08-docker-ps-failclosed.log`), the
+  entrypoint refuses to serve on an unreadable `mcp-requirements.json`
+  (`entrypoint-mcp-requirements-failclosed.log`), the preflight compose
+  probe is explicit, 03/04 teardown tolerances are annotated, and
+  `spike.sh` checks its own `docker run`.
 
 ### Fifteen answers
 
@@ -87,8 +105,10 @@ credentials redacted).
 
 ## 2. Acceptance
 
-Final run: `bash scripts/accept.sh 1a` → exit **1**.
-Log: `docs/evidence/1a/accept-20261013T173136Z.log`.
+Final run (close-out, after the task 1-3 changes): `bash scripts/accept.sh 1a`
+→ exit **1**; same honest split as before (01/06 fail for the missing key,
+05 skips).
+Log: `docs/evidence/1a/accept-20261013T183757Z.log`.
 
 ```
 CHECKS for stage 1a
@@ -103,16 +123,24 @@ CHECKS for stage 1a
 stage 1a: 5 pass, 1 skip, 2 fail (8 checks)
 ```
 
-| Check                      | Result                                                    | Evidence                                           |
-| -------------------------- | --------------------------------------------------------- | -------------------------------------------------- |
-| 01-preflight               | FAIL (honest: no `.env.provider`)                         | `docs/evidence/1a/accept-20261013T173136Z.log`     |
-| 02-base-image-pinned       | PASS                                                      | same log; image `agency-base:2.0.26` rebuilt green |
-| 03-entrypoint-fails-closed | PASS (dummy now via `$dummy_api_key`; behavior identical) | builder log + fresh per-check run exit 0           |
-| 04-healthy-nonroot         | PASS (dummy now via `$dummy_api_key`; behavior identical) | builder log + fresh per-check run exit 0           |
-| 05-spike-end-to-end        | SKIP (no key; the only prompt-allowed skip)               | same log                                           |
-| 06-spike-answers-complete  | FAIL (honest: 4 × NOT PERFORMED)                          | same log                                           |
-| 07-no-secret-leak          | PASS (F1 fixed; re-verified green)                        | fresh per-check run exit 0; sentinel proof below   |
-| 08-no-containers-left      | PASS                                                      | same log                                           |
+| Check                      | Result                                                | Evidence                                       |
+| -------------------------- | ----------------------------------------------------- | ---------------------------------------------- |
+| 01-preflight               | FAIL (honest: no `.env.provider`)                     | `docs/evidence/1a/accept-20261013T183757Z.log` |
+| 02-base-image-pinned       | PASS (image `agency-base:2.0.26` rebuilt green)       | same log                                       |
+| 03-entrypoint-fails-closed | PASS (dummy via `$dummy_api_key`; behavior identical) | same log; comment-only change re-run green     |
+| 04-healthy-nonroot         | PASS (dummy via `$dummy_api_key`; behavior identical) | same log; comment-only change re-run green     |
+| 05-spike-end-to-end        | SKIP (no key; the only prompt-allowed skip)           | same log                                       |
+| 06-spike-answers-complete  | FAIL (honest: 4 × NOT PERFORMED)                      | same log                                       |
+| 07-no-secret-leak          | PASS (no-key branch; keyed branch proven separately)  | same log; `red/07-keyed-branch-proof.log`      |
+| 08-no-containers-left      | PASS (and fails closed when `docker ps` fails)        | same log; `red/08-docker-ps-failclosed.log`    |
+
+Stage-0 re-run on this branch (`bash scripts/accept.sh 0`): exit **1**,
+9 pass / 1 fail. `0/06-no-donor-code` now **PASSES** (it failed on the
+pre-fix tree, `docs/evidence/0/accept-20261013T175814Z.log`, naming the
+stage-1a `docker run` calls); the one failure is `0/05-salvage-provenance`,
+which compares the branch name to `stage-0-salvage` — expected when the
+stage-0 checks run from the stage-1a branch, unchanged from before, and
+unrelated to this stage. Log: `docs/evidence/0/accept-20261013T183818Z.log`.
 
 ## 3. Red proofs
 
@@ -121,16 +149,36 @@ of each file states what was broken. Every check was restored to its
 final result afterwards (03/04/07/08 re-confirmed green; 01/06 remain red
 for the honest no-key reasons in section 4).
 
-| Check | Sabotage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Red log                                               |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| 01    | `.env.provider` absent (the fail-closed condition itself) → exit 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `docs/evidence/1a/red/01-preflight.log`               |
-| 02    | `versions.env` `UBUNTU_DIGEST` replaced with zeros → digest/record mismatch                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `docs/evidence/1a/red/02-base-image-pinned.log`       |
-| 03    | `OPENCODE_VERSION` pointed at nonexistent tag (image absent)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `docs/evidence/1a/red/03-entrypoint-fails-closed.log` |
-| 04    | same as 03                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `docs/evidence/1a/red/04-healthy-nonroot.log`         |
-| 05    | dummy INVALID key in `.env.provider` → `spike.sh` runs and fails (`session diff missing notes.txt`), never passes; container still torn down                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `docs/evidence/1a/red/05-spike-end-to-end.log`        |
-| 06    | `q07.log` moved away → missing-evidence failure (in addition to the standing NOT PERFORMED failure)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `docs/evidence/1a/red/06-spike-answers-complete.log`  |
-| 07    | dummy value in `.env.provider` AND a scratch file under `docs/evidence/1a/` (removed after; never committed) → value found, FAIL. F1 rework: dummy literals in 03/04 moved to `$dummy_api_key` (no tracked line assigns a literal to `OPENCODE_API_KEY`; container still gets a non-empty dummy); throwaway dummy strings redacted as `[dummy-value-redacted]`/`[<check>-dummy]` in the QA accept log and `red-proofs.log` (values were never secrets; FAIL file:line refs kept). Re-proof: staged `redproof-07-sentinel.tmp` holding a sentinel assignment line for the provider-key variable (an obviously-fake REDPROOF-SENTINEL value with a random suffix, never committed) → FAIL exit 1 naming the file; unstaged and deleted → PASS exit 0. 07's regex and keyed branch untouched; keyed branch verified by code reading only (no key exists to test it with) | `docs/evidence/1a/red/07-no-secret-leak.log`          |
-| 08    | leftover stopped container `agency-spike-redproof` → detected                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `docs/evidence/1a/red/08-no-containers-left.log`      |
+| Check | Sabotage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Red log                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 01    | `.env.provider` absent (the fail-closed condition itself) → exit 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `docs/evidence/1a/red/01-preflight.log`               |
+| 02    | `versions.env` `UBUNTU_DIGEST` replaced with zeros → digest/record mismatch                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `docs/evidence/1a/red/02-base-image-pinned.log`       |
+| 03    | `OPENCODE_VERSION` pointed at nonexistent tag (image absent)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `docs/evidence/1a/red/03-entrypoint-fails-closed.log` |
+| 04    | same as 03                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `docs/evidence/1a/red/04-healthy-nonroot.log`         |
+| 05    | dummy INVALID key in `.env.provider` → `spike.sh` runs and fails (`session diff missing notes.txt`), never passes; container still torn down                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `docs/evidence/1a/red/05-spike-end-to-end.log`        |
+| 06    | `q07.log` moved away → missing-evidence failure (in addition to the standing NOT PERFORMED failure)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `docs/evidence/1a/red/06-spike-answers-complete.log`  |
+| 07    | dummy value in `.env.provider` AND a scratch file under `docs/evidence/1a/` (removed after; never committed) → value found, FAIL. F1 rework: dummy literals in 03/04 moved to `$dummy_api_key` (no tracked line assigns a literal to `OPENCODE_API_KEY`; container still gets a non-empty dummy); throwaway dummy strings redacted as `[dummy-value-redacted]`/`[<check>-dummy]` in the QA accept log and `red-proofs.log` (values were never secrets; FAIL file:line refs kept). Re-proof: staged `redproof-07-sentinel.tmp` holding a sentinel assignment line for the provider-key variable (an obviously-fake REDPROOF-SENTINEL value with a random suffix, never committed) → FAIL exit 1 naming the file; unstaged and deleted → PASS exit 0. 07's regex untouched; the close-out session later hardened the scan error handling and proved the keyed branch red/green with a dummy key (close-out proofs below) | `docs/evidence/1a/red/07-no-secret-leak.log`          |
+| 08    | leftover stopped container `agency-spike-redproof` → detected                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `docs/evidence/1a/red/08-no-containers-left.log`      |
+
+Close-out proofs (tasks 1-3), all under `docs/evidence/1a/red/`:
+
+- `06-no-donor-code-scope-proof.log` — a stray `docker run` and a stray
+  `bwrap` appended to the non-exempt `scripts/preflight.sh` each exit 1;
+  an unreadable scanned file fails the scan closed (it passed before the
+  rewrite); exact reverts return the check to PASS.
+- `07-keyed-branch-proof.log` — with a throwaway dummy key, a tracked
+  sentinel and an evidence-dir sentinel each exit 1, the dummy key alone
+  passes, and removing the key returns to the no-key branch PASS.
+  The keyed branch was previously only code-read; it is now exercised.
+- `08-docker-ps-failclosed.log` — a PATH shim failing `docker ps -a`
+  makes the check exit 1; the real docker passes.
+
+Behavior evidence added by the same work:
+`docs/evidence/1a/spike-parse/run.log` (synthetic echo-only transcript →
+exit 1, positive → exit 0, malformed → exit 2; real invalid-key transcript
+→ exit 1 with the echo ignored; the old greps match the same file) and
+`docs/evidence/1a/entrypoint-mcp-requirements-failclosed.log`
+(malformed requirements file → exit 64 naming the file).
 
 ## 4. Not performed
 
@@ -138,6 +186,9 @@ for the honest no-key reasons in section 4).
   (`.env.provider` absent). The script itself exits 1 keyless (fail-closed);
   only the acceptance check maps that to SKIP, which the stage prompt
   allows while stating plainly the stage is not complete.
+- The new fail-closed `docker ps` path inside check 05 is code-reviewed
+  only: without a key the check skips before reaching it. Its twin in
+  check 08 is proven with a PATH shim (`red/08-docker-ps-failclosed.log`).
 - Questions 1, 9, 10, 11 NOT PERFORMED (need a model): Q1 (API key pickup
   beyond dummy-key auth refusal + `AGENCY_MODEL` listing), Q9 (cost/token
   fill-in after a real run), Q10 (proxy + internal network provider/MCP
@@ -164,15 +215,40 @@ no per-expert images — all explicitly not in this stage.
   each), so the file no longer contradicts build notes.
 - Checks `02` and `06` fixed for genuine parsing bugs (see section 7);
   both re-verified red-capable after the fix.
-- Check `05`'s red run surfaced a spike-script weakness worth recording:
-  the `messages` assertions (`spike-shell-ok`, `## RESULT`) can match the
-  prompt's own echo text, since the prompt text contains both strings. The
-  invalid-key run still failed closed at the `diff` assertion
-  (`session diff missing notes.txt`), so gating holds; the messages grep
-  should be tightened to assistant-role content when the keyed run happens.
-- `bash -n` run over every script touched (entrypoint, spike, all eight
-  checks). `git status` of the base repo untouched; no push, no merge, no
-  tags.
+- `scripts/spike.sh` messages assertions (commit `ba64e84`): the greps
+  could match the user-role echo of the prompt, which contains both
+  markers, so those assertions could be vacuous. They are now structural
+  and role-aware — the shell marker must come from a shell message's
+  `output.output`, the RESULT block from assistant text — and any parse
+  problem fails the run closed. Evidence:
+  `docs/evidence/1a/spike-parse/` (synthetic echo-only/positive/malformed,
+  the real invalid-key transcript, and a full invalid-key run that exits 1
+  at the new assertion). The keyed positive run still awaits the user key.
+- Stage-0 `0/06-no-donor-code` (commit `0501a09`): scoped the `docker run`
+  scan to the prompt-sanctioned stage-1a harness (`scripts/spike.sh`,
+  `scripts/accept/**`) with an in-check comment, made the scan fail closed
+  on unreadable files, and aligned the D-06 register text. A `docker run`
+  in any other scanned file still fails; proof
+  `docs/evidence/1a/red/06-no-donor-code-scope-proof.log`.
+- Zero-stub sweep (commit `382aa7e`): checks `05`/`07`/`08` now fail closed
+  when their scans or `docker ps` fail, instead of treating an error as no
+  match; `07`'s keyed branch is proven red/green with a dummy key
+  (`red/07-keyed-branch-proof.log`, `red/08-docker-ps-failclosed.log`).
+  `03`/`04` cleanup tolerances are annotated as teardown-only.
+- Entrypoint addition (commit `3ccfd64`): a malformed
+  `mcp-requirements.json` now refuses to start with exit 64 naming the
+  file. Step 1's entrypoint spec did not state this case; fail-closed is
+  the choice, because serving would leave servers enabled that the overlay
+  was to disable. Evidence:
+  `docs/evidence/1a/entrypoint-mcp-requirements-failclosed.log`.
+- `scripts/preflight.sh` (commit `7e572d1`): the compose probe's tolerated
+  `|| true` became an explicit `|| compose_version=""`; behavior is
+  unchanged (empty → FAIL row), the intent is just visible. Check `01`
+  still fails only for the honest missing-key reason.
+- `bash -n` run over every script touched (entrypoint, preflight, spike,
+  all acceptance checks touched); `make check` exits 0 after the changes
+  (close-out re-run). `git status` of the base repo untouched; no push, no
+  merge, no tags.
 
 ## 7. Proposed corrections
 
@@ -189,6 +265,10 @@ no per-expert images — all explicitly not in this stage.
   once the row loop was fixed. All three patterns now allow padding; the
   check still fails while any question is NOT PERFORMED (red proof 06 and
   the standing honest failure).
+- Stage-0 check `06-no-donor-code` and the Stage 1a prompt contradicted
+  each other on `docker run` (see Deviations). The scan is now scoped to
+  exempt exactly the sanctioned stage-1a harness, the D-06 register row
+  describes that scope, and the change is recorded in build notes.
 - Prior build-notes corrections stand: `/api/info` unwrapped (not
   `{data}`); no built-in `general`/`explore` agents; turn-snapshot (not
   working-tree) diff semantics; environment PUT shape
