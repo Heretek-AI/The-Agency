@@ -21,13 +21,49 @@ for n in $(seq 1 15); do
     || fail "build-notes has no recorded answer row for question $n"
 done
 
+# --- structured negative-case marker (verify F3; cycle-2 rework R1) --------
+# Every shape-deciding question not recorded NOT PERFORMED must carry a
+# line `Negative case: <observation>` and the observation must not match a
+# known denial shape. The filter below rejects, case-insensitively: the
+# start-anchored absence words; contractions and inability (couldn't,
+# can't, cannot, unable); "not <possible|obtainable|...>"; absence-of-case
+# phrases ("no negative case/was", "none observed/...", "nothing
+# observed/obtained"); and "does/did not reproduce|occur|manifest" with
+# and without contractions. Curly apostrophes are normalized to straight
+# ones before matching, so a typographic "couldn't" is caught too. This
+# filter only rejects known denial shapes; whether the cited observation
+# is genuinely a negative case remains the independent verifier's read,
+# never the check's. A question recorded NOT PERFORMED cannot carry an
+# observed negative case and is failed by the count below.
+DENIAL_RE="^(none|no|not|never|nothing)\b"\
+"|\b(couldn'?t|can'?t|cannot|unable)\b"\
+"|\bnot[[:space:]]+(possible|obtainable|reproducible|reproduce|tested"\
+"|testable|attempted|attemptable|exercised|applicable|confirmable)\b"\
+"|\bunobtainable\b"\
+"|\bcould[[:space:]]+not[[:space:]]+(be|reproduce|occur|manifest)\b"\
+"|\bno[[:space:]]+negative[[:space:]]+(case|was)\b"\
+"|\bnone[[:space:]]+(else[[:space:]]+)?(observed|obtained|available|attempted|reproducible)\b"\
+"|\bnothing[[:space:]]+(else[[:space:]]+)?(observed|obtained)\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"
+
+# is_denial <text>: rc 0 = a known denial shape, rc 1 = none of the known
+# shapes. Any filter error fails the check instead of counting as an
+# observation.
+is_denial() {
+  local s rc
+  s=$(printf '%s' "$1" | sed "s/’/'/g; s/‘/'/g")
+  rc=$?
+  [ "$rc" -eq 0 ] || fail "negative-case filter: apostrophe normalization failed (exit $rc)"
+  printf '%s' "$s" | grep -qiE "$DENIAL_RE"
+  rc=$?
+  case "$rc" in
+    0 | 1) return "$rc" ;;
+    *) fail "negative-case filter failed (grep exit $rc)" ;;
+  esac
+}
+
 for n in 03 04 07 10 14 15; do
-  # The six shape-deciding questions must each carry a structured marker:
-  # a line `Negative case: <observation>` whose observation is not a denial
-  # that none could be obtained. The former `grep -qi 'negative'` accepted
-  # any sentence containing the word, including q10's "none obtainable
-  # without a key" (verify F3). A question recorded NOT PERFORMED cannot
-  # carry an observed negative case and is failed by the count below.
   q=$((10#$n))
   if grep -qE "^\| *$q +\| NOT PERFORMED" "$notes"; then
     continue
@@ -44,9 +80,7 @@ for n in 03 04 07 10 14 15; do
     [ -n "$m" ] || continue
     obs=${m#Negative case: }
     [ -n "$obs" ] || continue
-    # A denial ("none obtainable", "not obtainable", "could not be tested")
-    # says no negative case exists; only an actual observation counts.
-    if printf '%s' "$obs" | grep -qiE '^(none|no|not|never|nothing)\b|not[[:space:]]+obtainable|unobtainable|could[[:space:]]+not[[:space:]]+be'; then
+    if is_denial "$obs"; then
       continue
     fi
     observed=1
