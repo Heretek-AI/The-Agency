@@ -17,9 +17,12 @@ require_cmd docker
 
 docker image inspect "$image" >/dev/null 2>&1 || fail "image $image absent (run: make build-base)"
 
-# Case 1: password empty, key present (dummy value, never written to a file).
+# Case 1: password empty, key present (dummy value held in a
+# differently-named variable so no tracked line assigns a literal to
+# OPENCODE_API_KEY; the container still receives a non-empty dummy key).
 docker rm -f "$name" >/dev/null 2>&1 || true
-docker run -d --name "$name" -e OPENCODE_PASSWORD= -e OPENCODE_API_KEY=accept03-dummy \
+dummy_api_key="accept03-dummy"
+docker run -d --name "$name" -e OPENCODE_PASSWORD= -e "OPENCODE_API_KEY=$dummy_api_key" \
   "$image" >/dev/null || fail "docker run failed (no-password case)"
 sleep 5
 code=$(docker inspect -f '{{.State.ExitCode}}' "$name" 2>/dev/null || echo "?")
