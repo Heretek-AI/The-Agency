@@ -39,4 +39,20 @@ while IFS= read -r d; do
   [ -f "$d" ] || fail "salvage destination missing: $d"
 done <<<"$dests"
 
+# Step 0 gate (stage prompt Step 0 Accept): branch plus Preflight fields.
+# Folded into this check so the 01-10 numbering contract is preserved.
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+[ "$branch" = "stage-0-salvage" ] || fail "expected branch stage-0-salvage, on ${branch:-unknown}"
+grep -q '^## Preflight' docs/build-notes.md || fail "docs/build-notes.md has no Preflight section"
+for field in "Bun:" "Docker:" "SELinux:" "14f297a" "stage-0-salvage"; do
+  grep -qF "$field" docs/build-notes.md || fail "docs/build-notes.md Preflight missing $field"
+done
+
+# Step 11 gate (stage prompt Step 11): the handoff note for a human exists
+# and names the archive steps without running them.
+note="docs/handoff/heretek-opencode-archive.md"
+[ -f "$note" ] || fail "handoff note missing: $note"
+grep -qi "human" "$note" || fail "handoff note does not mark its steps for a human"
+grep -qF "gh repo archive" "$note" || fail "handoff note missing the archive command"
+
 pass
