@@ -1,0 +1,3 @@
+Sabotage: versions.env UBUNTU_DIGEST replaced with zeros (digest/record mismatch).
+CHECK ?/02-base-image-pinned: FAIL FROM digest not recorded in versions.env
+exit=1

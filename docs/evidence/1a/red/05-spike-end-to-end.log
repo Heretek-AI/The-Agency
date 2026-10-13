@@ -1,0 +1,3 @@
+Sabotage: .env.provider holds a dummy INVALID key (present-but-bad must fail closed, never pass). .env.provider removed after; dummy value in no tracked file.
+CHECK ?/05-spike-end-to-end: FAIL spike.sh failed: spike: session diff missing notes.txt 
+exit=1

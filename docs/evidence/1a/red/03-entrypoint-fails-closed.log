@@ -1,0 +1,3 @@
+Sabotage: versions.env OPENCODE_VERSION pointed at nonexistent image tag agency-base:9.9.9-redproof (required image absent).
+CHECK ?/03-entrypoint-fails-closed: FAIL image agency-base:9.9.9-redproof absent (run: make build-base)
+exit=1

@@ -1,0 +1,3 @@
+Sabotage: docs/evidence/1a/spike/q07.log temporarily moved away (evidence missing).
+CHECK ?/06-spike-answers-complete: FAIL evidence q07.log missing or empty
+exit=1

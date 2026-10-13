@@ -1,0 +1,3 @@
+Sabotage: leftover stopped container agency-spike-redproof left behind (spike name prefix).
+CHECK ?/08-no-containers-left: FAIL leftover container(s): agency-spike-redproof 
+exit=1

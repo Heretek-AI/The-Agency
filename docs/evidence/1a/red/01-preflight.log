@@ -1,0 +1,3 @@
+Sabotage: .env.provider absent (fail-closed: preflight requires a non-empty OPENCODE_API_KEY; this is the no-key state, not a contrivance).
+CHECK ?/01-preflight: FAIL preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+exit=1
