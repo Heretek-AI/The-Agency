@@ -189,6 +189,13 @@ and `qa/`:
   `q03.log` exits 1; replacing its observation with "none obtainable"
   exits 1; q10 marked answered while denial-only exits 1; restore → the
   standing 4-NOT-PERFORMED FAIL.
+- `red/r1-negative-denial-filter.log` — paraphrased denials ("couldn't be
+  reproduced", "unable to reproduce it", "does not reproduce") and a new
+  denial fail the broadened filter; a synthetic genuine phrasing passes
+  the marker filter and fails only on the standing count.
+- `red/h1-negative-signal.log` — "failed to reproduce" and "could not get
+  it to fail" fail the deny filter; a signal-less sentence fails for want
+  of an observed outcome; the five genuine markers pass both mechanisms.
 - `qa/f2-preflight-recorded.log` — the build-notes omission reproduced
   (grep rc=1), the preflight run, and the recorded table byte-identical to
   a fresh run.
@@ -293,6 +300,14 @@ no per-expert images — all explicitly not in this stage.
   01 FAIL, 05 SKIP, 06 FAIL 4 NOT PERFORMED) —
   `docs/evidence/1a/accept-20261013T192627Z.log`; stage-0 harness re-run
   with `0/06` PASS — `docs/evidence/0/accept-20261013T192640Z.log`.
+- R1/H1 rework (QA probes `docs/evidence/1a/qa/cycle2-f3-negative-probe.log`
+  and `cycle2b-r1-recheck.log`): check `06` rejects paraphrased denials
+  (contractions, inability, "failed to reproduce", "could not get ...
+  fail", "did(n't) manage", absence-of-case phrases) and requires an
+  observed-outcome signal in each surviving marker's paragraph, so an
+  unknown denial phrasing that states no outcome cannot count. Proofs:
+  `red/r1-negative-denial-filter.log`, `red/h1-negative-signal.log`; q10
+  gains no evidence and still fails the check honestly.
 
 ## 7. Proposed corrections
 

@@ -21,31 +21,47 @@ for n in $(seq 1 15); do
     || fail "build-notes has no recorded answer row for question $n"
 done
 
-# --- structured negative-case marker (verify F3; cycle-2 rework R1) --------
+# --- structured negative-case marker (verify F3; rework R1, H1) -----------
 # Every shape-deciding question not recorded NOT PERFORMED must carry a
-# line `Negative case: <observation>` and the observation must not match a
-# known denial shape. The filter below rejects, case-insensitively: the
-# start-anchored absence words; contractions and inability (couldn't,
-# can't, cannot, unable); "not <possible|obtainable|...>"; absence-of-case
-# phrases ("no negative case/was", "none observed/...", "nothing
-# observed/obtained"); and "does/did not reproduce|occur|manifest" with
-# and without contractions. Curly apostrophes are normalized to straight
-# ones before matching, so a typographic "couldn't" is caught too. This
-# filter only rejects known denial shapes; whether the cited observation
-# is genuinely a negative case remains the independent verifier's read,
-# never the check's. A question recorded NOT PERFORMED cannot carry an
-# observed negative case and is failed by the count below.
+# line `Negative case: <observation>` that (a) is not a known denial shape
+# and (b) states a checkable observed outcome. Mechanism (a): DENIAL_RE
+# rejects, case-insensitively, the start-anchored absence words;
+# contractions and inability (couldn't, can't, cannot, unable); "not
+# <possible|obtainable|...>"; absence-of-case phrases ("no negative
+# case/was", "none observed/...", "nothing observed/obtained"); "does/did
+# not reproduce|occur|manifest"; "fail(ed|s|ing) to reproduce"; "could not
+# get ... fail"; "did(n't) manage"; and "no <token> could be
+# produced|reproduced|observed|obtained". Curly apostrophes are normalized
+# to straight ones before matching. Mechanism (b): the marker's paragraph
+# (marker line through the next blank line) must carry an observed-outcome
+# signal (SIGNAL_RE). The deny list can never enumerate every way to say
+# "not reproduced"; (b) means an unknown phrasing still cannot count
+# unless its paragraph describes an observed outcome. Both mechanisms
+# judge shapes only; whether the cited evidence is genuinely a negative
+# case remains the independent verifier's read, never the check's. A
+# question recorded NOT PERFORMED cannot carry an observed negative case
+# and is failed by the count below.
 DENIAL_RE="^(none|no|not|never|nothing)\b"\
 "|\b(couldn'?t|can'?t|cannot|unable)\b"\
 "|\bnot[[:space:]]+(possible|obtainable|reproducible|reproduce|tested"\
 "|testable|attempted|attemptable|exercised|applicable|confirmable)\b"\
 "|\bunobtainable\b"\
 "|\bcould[[:space:]]+not[[:space:]]+(be|reproduce|occur|manifest)\b"\
+"|\bcould[[:space:]]+not[[:space:]]+get\b[^.]*\bfail"\
+"|\bfail(ed|s|ing)?[[:space:]]+to[[:space:]]+reproduce\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+manage\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+manage\b"\
+"|\bno[[:space:]]+[^[:space:]]+[[:space:]]+could[[:space:]]+be[[:space:]]+(produced|reproduced|observed|obtained)\b"\
 "|\bno[[:space:]]+negative[[:space:]]+(case|was)\b"\
 "|\bnone[[:space:]]+(else[[:space:]]+)?(observed|obtained|available|attempted|reproducible)\b"\
-"|\bnothing[[:space:]]+(else[[:space:]]+)?(observed|obtained)\b"\
+"|\bnothing[[:space:]]+(else[[:space:]]+|was[[:space:]]+)?(observed|obtained|produced|reproduced)\b"\
 "|\b(does|did|do)[[:space:]]+not[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"\
 "|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"
+
+# SIGNAL_RE: observed-outcome signals a marker paragraph may carry.
+SIGNAL_RE="fail|deny|denied|denies|refus(e|ed|es|al)|reject(ed|ion)?"\
+"|error|EROFS|EACCES|EPERM|SQLiteError|ConnectionRefused|timeout"\
+"|timed out|unset|non-zero|rc=[1-9]|exit(ed)?[ =][1-9]|4[0-9][0-9]|5[0-9][0-9]"
 
 # is_denial <text>: rc 0 = a known denial shape, rc 1 = none of the known
 # shapes. Any filter error fails the check instead of counting as an
@@ -63,29 +79,59 @@ is_denial() {
   esac
 }
 
+# has_signal <paragraph>: rc 0 = the paragraph carries an observed-outcome
+# signal, rc 1 = none. Any filter error fails the check instead of
+# rejecting silently.
+has_signal() {
+  local rc
+  printf '%s' "$1" | grep -qiE "$SIGNAL_RE"
+  rc=$?
+  case "$rc" in
+    0 | 1) return "$rc" ;;
+    *) fail "negative-case signal filter failed (grep exit $rc)" ;;
+  esac
+}
+
 for n in 03 04 07 10 14 15; do
   q=$((10#$n))
   if grep -qE "^\| *$q +\| NOT PERFORMED" "$notes"; then
     continue
   fi
-  markers=$(grep '^Negative case: ' "$ev/q$n.log")
+  markers_raw=$(grep -n '^Negative case: ' "$ev/q$n.log")
   rc=$?
   case "$rc" in
     0) ;;
     1) fail "q$n.log has no structured 'Negative case: <observation>' line" ;;
     *) fail "cannot read q$n.log (grep exit $rc)" ;;
   esac
+  marker_lns=$(printf '%s\n' "$markers_raw" | cut -d: -f1)
   observed=0
-  while IFS= read -r m; do
-    [ -n "$m" ] || continue
+  saw_signal_less=0
+  while IFS= read -r ln; do
+    [ -n "$ln" ] || continue
+    m=$(sed -n "${ln}p" "$ev/q$n.log")
     obs=${m#Negative case: }
     [ -n "$obs" ] || continue
     if is_denial "$obs"; then
       continue
     fi
+    # The marker's paragraph runs from its line through the following
+    # lines up to the next blank line (multi-line observations, e.g. q07).
+    para=$(sed -n "${ln},/^\$/p" "$ev/q$n.log")
+    rc=$?
+    [ "$rc" -eq 0 ] || fail "cannot read q$n.log paragraph at line $ln (sed exit $rc)"
+    if ! has_signal "$para"; then
+      saw_signal_less=1
+      continue
+    fi
     observed=1
-  done <<<"$markers"
-  [ "$observed" -eq 1 ] || fail "q$n.log: negative case is a denial, not an observation"
+  done <<<"$marker_lns"
+  if [ "$observed" -eq 0 ]; then
+    if [ "$saw_signal_less" -eq 1 ]; then
+      fail "q$n.log: negative case shows no observed outcome (no signal in its paragraph)"
+    fi
+    fail "q$n.log: negative case is a denial, not an observation"
+  fi
 done
 
 notdone=$(grep -cE '^\| *[0-9]+ +\| NOT PERFORMED' "$notes")
