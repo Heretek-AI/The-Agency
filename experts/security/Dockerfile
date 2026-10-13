@@ -34,7 +34,7 @@ RUN curl -fsSL -o /tmp/gitleaks.tar.gz \
 # osv-scanner v2.7.0 (GitHub release, sha256 checked).
 RUN curl -fsSL -o /usr/local/bin/osv-scanner \
       "https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64" \
-  && echo "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80f05fb0a6a913  /usr/local/bin/osv-scanner" | sha256sum -c - \
+  && echo "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  /usr/local/bin/osv-scanner" | sha256sum -c - \
   && chmod 755 /usr/local/bin/osv-scanner \
   && osv-scanner --version
 # syft v1.54.1 (GitHub release, sha256 checked).

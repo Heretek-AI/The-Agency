@@ -308,3 +308,19 @@ Stage 4a).
   is read as "its closing block from the fleet protocol".
 - Compose sets explicit `container_name: agency-<name>` and
   `image: agency-<name>:<tag>` per service so checks address stable names.
+
+### osv-scanner hash correction (fail-closed win, plus two harness lessons)
+
+The `OSV_SCANNER_SHA256` first recorded from the verification script was
+wrong in its last 12 characters, and every `sha256sum -c` gate rejected it
+(once in the image build, four times across retries) — the check did
+exactly its job and no bad binary ever landed. The true hash was
+established from six independent downloads plus a fresh one and all other
+22 recorded hashes were mechanically re-verified OK against their kept
+downloads. Two lessons for future stages: never eyeball-compare 64-char
+hex strings (the difference was invisible to the eye; only programmatic
+`cmp` caught it), and note that this agent's shell transport collapses
+literal double spaces in sent commands (proven with `od`), so spacing in
+`echo "hash  file"` lines must be constructed programmatically or written
+with the file tools (committed files are byte-exact; verified with
+hexdump).
