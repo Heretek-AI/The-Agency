@@ -49,6 +49,11 @@ if ! squid -k parse -f "$conf" 2>&1; then
   exit 64
 fi
 
+# A pre-existing pid file at this point is always stale (fresh container
+# start, or a restart where the old Squid never cleaned up; Squid writes
+# its own pid, which is 1 here, so a stale file even looks live). Remove it
+# before starting.
+rm -f /var/log/squid/squid.pid
 # Mirror the request log to the container's stdout so `docker logs` shows
 # one line per proxied request; the file itself stays authoritative for
 # audits. The tail dies with the container.

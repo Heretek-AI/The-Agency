@@ -40,6 +40,7 @@ for (const name of enabled) {
   }
   if ("ports" in svc) errors.push(`${name}: publishes ports`);
   if (svc["privileged"] === true) errors.push(`${name}: privileged`);
+  if ("cap_add" in svc) errors.push(`${name}: adds capabilities`);
   const vols = Array.isArray(svc["volumes"]) ? svc["volumes"] : [];
   for (const vol of vols) {
     if (typeof vol !== "string") continue;
@@ -73,6 +74,8 @@ if (egress === undefined) {
     errors.push("egress: networks != [fleet, outside]");
   }
   if ("ports" in egress) errors.push("egress: publishes ports");
+  if (egress["privileged"] === true) errors.push("egress: privileged");
+  if ("cap_add" in egress) errors.push("egress: adds capabilities");
 }
 
 if (errors.length > 0) {
