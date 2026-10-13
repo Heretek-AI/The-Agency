@@ -71,30 +71,39 @@ will apply.
 ## Spike
 
 Stage 1a, 2026-10-13, branch `stage-1a-spike`, image `agency-base:2.0.26`.
-No provider key exists anywhere (no `.env.provider`; `AGENCY_MODEL` unset),
-so model-dependent questions are recorded NOT PERFORMED, never answered.
-Dummy value `spike-invalid-key-stage1a-q08` was used ONLY as a throwaway
-container env var (Q8 calls for an invalid key); it appears in no tracked
-file. Evidence: `docs/evidence/1a/spike/q<nn>.log` (commands + trimmed
-output, credentials redacted).
+Provider key supplied by the user in `.env.provider` (mode `0600`,
+non-empty `OPENCODE_API_KEY`; value never shown or copied) and
+`AGENCY_MODEL=opencode-go/muse-spark-1.3-contributor` in `.env` (mode
+`0600`). Evidence: `docs/evidence/1a/spike/q<nn>.log` (commands + trimmed
+output, credentials redacted; Q11 raw transcripts held only in ephemeral
+container DBs, destroyed with the containers).
 
-| #   | Answer                  | Observation (one line)                                                                                                                                                                                                                                                                  |
-| --- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | NOT PERFORMED           | Serve reads OPENCODE_API_KEY from env (dummy key -> provider.auth, not missing-var); `opencode models --standalone` lists nothing keyless; AGENCY_MODEL unset.                                                                                                                          |
-| 2   | yes                     | Serve logs to stdout (`docker logs`); structured log at ~/.local/share/opencode/log/opencode.log; --print-logs exists for standalone.                                                                                                                                                   |
-| 3   | yes                     | Create/prompt/wait/messages/diff all 200 on a read-only /work mount; snapshots live in the data dir (snapshot.ts), not /work; writes fail EROFS; turn-diff is snapshot-based (host edits invisible by design).                                                                          |
-| 4   | yes                     | Healthy with read-only OPENCODE_CONFIG_DIR; writes to it fail EROFS while serving is unaffected.                                                                                                                                                                                        |
-| 5   | yes (premise corrected) | v2 has no built-in general/explore agents (observed: build, plan + hidden compaction/title/summary); disabling absent ids is a safe no-op.                                                                                                                                              |
-| 6   | yes                     | @opencode/client@2.0.26 installs under Bun 1.4.2 and drives server.info + agent.list; NOT better (mistypes unwrapped /api/info) -> keep salvaged client.                                                                                                                                |
-| 7   | yes                     | Permission matrix live: session ask pends, baseline shell allows, per-task edit notes.txt allows, edit other.txt denied; list/reject round-trip 204 + disappears. Race: agent rules resolve async per location; early checks fail closed (deny) — Stage 1c must tolerate, never weaken. |
-| 8   | yes                     | Invalid key -> assistant finish:error {type:provider.auth,message,status:401,response:{body}} then idle failed. Source maps quota/rate-limit to provider.quota/provider.rate-limit in the same envelope; schema has NO reset field -> probe-on-timer fallback adopted.                  |
-| 9   | NOT PERFORMED           | Fields exist (cost 0 + zeroed tokens pre-run); real fill-in untested.                                                                                                                                                                                                                   |
-| 10  | NOT PERFORMED           | Only websocket-constructor honors \*\_PROXY; no proxy support found in provider/MCP paths; internal-network test needs a key.                                                                                                                                                           |
-| 11  | NOT PERFORMED           | permission.asked/replied carry sessionID (+requestID); MCP tool-output SSE matching untested without a model.                                                                                                                                                                           |
-| 12  | no                      | Disabled -> repo AGENTS.md not loaded (zero watcher subscriptions vs /work/trees/t1/AGENTS.md subscribed when enabled); envelope already tells the expert to read it. Nothing to adopt.                                                                                                 |
-| 13  | yes                     | ?auth_token=base64("opencode:<pw>") -> 200 on /api/info; absent/bad -> 401. / serves the app shell publicly.                                                                                                                                                                            |
-| 14  | yes / yes               | Bun (SDK 1.32.1, node:http, per-connection McpServer) Streamable-HTTP server: "mcp connected" tools=1; down -> failed ConnectionRefused. bun:sqlite WAL works + reopens; ro dir fails closed (SQLiteError, rc=1); :z volume visible as agent. Bun stays; no Node fallback.              |
-| 15  | yes                     | PUT {variables} 204 -> session shell sees var; second session UNSET. Model shell tool shares Shell.Service + SessionEnvironment, so covered by construction.                                                                                                                            |
+Keyed account limits observed (all fail-fast, no spend): the account's Go
+monthly usage limit is exhausted (429 `GoUsageLimitError`, limitName
+monthly — AGENCY_MODEL turns fail), the free-tier rate limit is exhausted
+for `opencode/muse-spark-1.3-contributor-free` (429 `FreeUsageLimitError`),
+and the server default model has no funding (`Insufficient account funds`).
+`scripts/spike.sh` therefore pins the runnable free model
+`opencode/cat-jam-free` for the session-flow run (recorded as a Deviation);
+every assertion is unchanged and fail-closed.
+
+| #   | Answer                  | Observation (one line)                                                                                                                                                                                                                                                                                                       |
+| --- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | partly                  | Serve reads OPENCODE_API_KEY from env (Go-plan quota refusal for the exact AGENCY_MODEL id proves server-side resolution); `opencode models --standalone` lists nothing in 2.0.26, default form fails EROFS on ro config; host 2.0.28 lists the id. No fallback (`auth import` is Console-export migration, not env import). |
+| 2   | yes                     | Serve logs to stdout (`docker logs`); structured log at ~/.local/share/opencode/log/opencode.log; --print-logs exists for standalone.                                                                                                                                                                                        |
+| 3   | yes                     | Create/prompt/wait/messages/diff all 200 on a read-only /work mount; snapshots live in the data dir (snapshot.ts), not /work; writes fail EROFS; turn-diff is snapshot-based (host edits invisible by design).                                                                                                               |
+| 4   | yes                     | Healthy with read-only OPENCODE_CONFIG_DIR; writes to it fail EROFS while serving is unaffected.                                                                                                                                                                                                                             |
+| 5   | yes (premise corrected) | v2 has no built-in general/explore agents (observed: build, plan + hidden compaction/title/summary); disabling absent ids is a safe no-op.                                                                                                                                                                                   |
+| 6   | yes                     | @opencode/client@2.0.26 installs under Bun 1.4.2 and drives server.info + agent.list; NOT better (mistypes unwrapped /api/info) -> keep salvaged client.                                                                                                                                                                     |
+| 7   | yes                     | Permission matrix live: session ask pends, baseline shell allows, per-task edit notes.txt allows, edit other.txt denied; list/reject round-trip 204 + disappears. Race: agent rules resolve async per location; early checks fail closed (deny) — Stage 1c must tolerate, never weaken.                                      |
+| 8   | yes                     | Invalid key -> assistant finish:error {type:provider.auth,message,status:401,response:{body}} then idle failed. Source maps quota/rate-limit to provider.quota/provider.rate-limit in the same envelope; schema has NO reset field -> probe-on-timer fallback adopted.                                                       |
+| 9   | partly                  | Session.Info fills cost 0 + tokens (in 1814/out 4/reasoning 26/cache.read 896) after a real free-model run; AGENCY_MODEL leg fails on Go quota with zeros.                                                                                                                                                                   |
+| 10  | yes                     | Internal net + HTTPS_PROXY: provider turn succeeds (CONNECT opencode.ai) and internet MCP connects tools=2 (CONNECT context7); direct fails DNS rc=6. Code search missed the runtime proxy path. No fallback.                                                                                                                |
+| 11  | yes                     | session.tool.called/success carry sessionID + call id; success carries tool output (echo:hello-sse3). Needs bunprobe\_\* allow or the tool is filtered. Director-polls fallback not needed.                                                                                                                                  |
+| 12  | no                      | Disabled -> repo AGENTS.md not loaded (zero watcher subscriptions vs /work/trees/t1/AGENTS.md subscribed when enabled); envelope already tells the expert to read it. Nothing to adopt.                                                                                                                                      |
+| 13  | yes                     | ?auth_token=base64("opencode:<pw>") -> 200 on /api/info; absent/bad -> 401. / serves the app shell publicly.                                                                                                                                                                                                                 |
+| 14  | yes / yes               | Bun (SDK 1.32.1, node:http, per-connection McpServer) Streamable-HTTP server: "mcp connected" tools=1; down -> failed ConnectionRefused. bun:sqlite WAL works + reopens; ro dir fails closed (SQLiteError, rc=1); :z volume visible as agent. Bun stays; no Node fallback.                                                   |
+| 15  | yes                     | PUT {variables} 204 -> session shell sees var; second session UNSET. Model shell tool shares Shell.Service + SessionEnvironment, so covered by construction.                                                                                                                                                                 |
 
 Keyless instruction: `opencode models` (no --standalone) needs a WRITABLE
 config dir for service registration (EROFS on ro /etc/agency) — CLI-only
@@ -106,15 +115,50 @@ finding; serve itself is fine read-only.
   adopt `@opencode/client` (it mistypes the unwrapped `GET /api/info`).
 - Q8: treat any repeated provider refusal as a usage limit; the Dispatcher
   probes on a timer. (SessionError has no reset-time field.)
-- Q1/Q7/Q9/Q10/Q11/Q15-model-leg: no fallback adopted; pending provider key.
+- Q1/Q9-model-leg: no fallback adopted. Serve reads the env key (no
+  `auth import`: that imports Console `auth export` files, not env keys);
+  the AGENCY_MODEL id stands as-is (the server resolves it; quota, not
+  identity, refuses). Session.Info needs no tokens-only fallback.
   (The client's polling `wait` fallback on 404/501 only is specified
   behavior, not a spike fallback.)
-- Q3/Q4/Q5/Q12/Q13/Q14: no fallback needed (answers above).
+- Q10/Q11: no fallback needed (both yes). Q10 note for Stage 1b: set
+  NO_PROXY for fleet-internal hosts — without it every client HTTP request,
+  including same-net and localhost, goes to the proxy. Q11 confirms the 9.6
+  per-server MCP allow must be passed per task or the tools are filtered out.
+- Q3/Q4/Q5/Q7/Q12/Q13/Q14/Q15: no fallback needed (answers above).
 - (Stage 0 note kept: `make accept` cannot propagate exit 77 because GNU
   make normalizes failing recipes to exit 2, so the 0/1/77 contract lives
   in `scripts/accept.sh`.)
 
-## Proposed corrections
+## Proposed corrections (keyed session, 2026-10-13 — observed against 2.0.26)
+
+- Transcript shape: the `shell` TOOL's output lands as an assistant content
+  part (`{type: tool, name: shell, state.content[].text}`), never as a
+  standalone `type: shell` message — those are only produced for background
+  shells (`session.shell.started`, message-updater.ts). The spike transcript
+  parser now accepts both genuine run-output shapes and still ignores the
+  user echo (evidence `docs/evidence/1a/spike-parse/toolpart-positive.json`;
+  parser re-proof in `spike-parse/run.log`).
+- Proxy support: the keyless note ("no proxy support in provider/MCP paths",
+  from reading source) is superseded — on an internal network with
+  HTTPS_PROXY/HTTP_PROXY set, provider calls and remote MCP connect THROUGH
+  the proxy (CONNECT lines in the proxy log; model turn succeeds; internet
+  MCP lists tools). Only the websocket constructor shows proxy code in
+  source; the runtime fetch path honors the env.
+- Same-path mounts: a git worktree bind-mounted at a different container
+  path breaks git (absolute .git pointer) and empties session.diff;
+  `spike.sh` mounts the workspace at the identical path (as 9.1 mandates
+  for /work). Check 05's diff step is now a real assertion.
+- MCP tools to the model are named `<server>_<tool>` and are
+  permission-filtered: without the per-server allow the call fails with "No
+  tool named ... is currently available". Stage 1c must pass the 9.6
+  per-server allow per task (proven: `bunprobe_*` allow -> call completes).
+- Transcript hygiene: an unconstrained model dumps container env (including
+  provider secrets) into transcripts via shell. Evidence stays
+  hand-transcribed and redacted; raw transcripts live only in ephemeral
+  container DBs. Stages 1b/1c must redact transcripts before storing them.
+
+## Proposed corrections (earlier)
 
 - The fake OpenCode server must serve `GET /openapi.json` (the real spec file),
   but that path is not itself listed in the spec's 118 paths. The route
