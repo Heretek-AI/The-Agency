@@ -10,6 +10,7 @@ image="agency-base:$tag"
 name="agency-spike-accept04"
 
 cleanup() {
+  # Teardown tolerance only: a failed rm never masks the check's result.
   docker rm -f "$name" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
@@ -19,6 +20,8 @@ docker image inspect "$image" >/dev/null 2>&1 || fail "image $image absent (run:
 pw="accept04-pw-$RANDOM"
 # Dummy key held in a differently-named variable so no tracked line assigns
 # a literal to OPENCODE_API_KEY; the container still receives it non-empty.
+# Stale-name cleanup tolerance: the guarded docker run below fails if the
+# name is still taken.
 dummy_api_key="accept04-dummy"
 docker rm -f "$name" >/dev/null 2>&1 || true
 docker run -d --name "$name" -e "OPENCODE_PASSWORD=$pw" -e "OPENCODE_API_KEY=$dummy_api_key" \

@@ -13,6 +13,7 @@ key=$(sed -n 's/^OPENCODE_API_KEY=//p' "$root/.env.provider" 2>/dev/null | head 
 
 out=$(bash "$root/scripts/spike.sh" 2>&1) || fail "spike.sh failed: $(echo "$out" | tail -3 | tr '\n' ' ')"
 echo "$out" | grep -q '^SPIKE PASS' || fail "spike.sh exited 0 without SPIKE PASS"
-left=$(docker ps -a --format '{{.Names}}' | grep '^agency-spike')
+ps_out=$(docker ps -a --format '{{.Names}}') || fail "docker ps -a failed; cannot prove no container is left behind"
+left=$(printf '%s' "$ps_out" | grep '^agency-spike')
 [ -z "$left" ] || fail "spike left container(s) behind: $(echo "$left" | tr '\n' ' ')"
 pass

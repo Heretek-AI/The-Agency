@@ -1,0 +1,25 @@
+Proof: check 07's keyed branch (dummy key present in .env.provider) fails closed
+on the key value in tracked files and under docs/evidence/1a, and returns to the
+no-key branch cleanly. All dummy values are redacted below; .env.provider and the
+sentinel files are removed afterwards (nothing committed with a value).
+
+$ printf 'OPENCODE_API_KEY=<dummy>\n' > .env.provider; chmod 600 .env.provider
+$ bash scripts/accept/1a/07-no-secret-leak.sh   # dummy key appears nowhere
+CHECK ?/07-no-secret-leak: PASS
+exit=0
+
+$ printf 'OPENCODE_API_KEY=<dummy>\n' > redproof-07-keyed-sentinel.txt; git add redproof-07-keyed-sentinel.txt
+$ bash scripts/accept/1a/07-no-secret-leak.sh   # tracked-file branch
+CHECK ?/07-no-secret-leak: FAIL key value found in tracked files: redproof-07-keyed-sentinel.txt 
+exit=1
+
+$ git rm --cached -q redproof-07-keyed-sentinel.txt; rm redproof-07-keyed-sentinel.txt
+$ printf 'OPENCODE_API_KEY=<dummy>\n' > docs/evidence/1a/red/07-keyed-evidence-sentinel.txt
+$ bash scripts/accept/1a/07-no-secret-leak.sh   # evidence-dir branch
+CHECK ?/07-no-secret-leak: FAIL key value found under docs/evidence/1a
+exit=1
+
+$ rm docs/evidence/1a/red/07-keyed-evidence-sentinel.txt; rm .env.provider
+$ bash scripts/accept/1a/07-no-secret-leak.sh   # back to the no-key branch
+CHECK ?/07-no-secret-leak: PASS
+exit=0

@@ -15,14 +15,20 @@ key=$(sed -n 's/^OPENCODE_API_KEY=//p' "$root/.env.provider" 2>/dev/null | head 
 
 if [ -n "$key" ]; then
   hits=$(git -C "$root" grep -F -l -- "$key" -- . 2>/dev/null)
+  rc=$?
+  # git grep: 0 = match, 1 = no match, anything else = the scan itself failed.
+  [ "$rc" -le 1 ] || fail "git grep failed (exit $rc) while scanning tracked files for the key value"
   [ -z "$hits" ] || fail "key value found in tracked files: $(echo "$hits" | tr '\n' ' ')"
-  if grep -rF -q -- "$key" "$root/docs/evidence/1a" 2>/dev/null; then
-    fail "key value found under docs/evidence/1a"
-  fi
+  grep -rF -q -- "$key" "$root/docs/evidence/1a" 2>/dev/null
+  rc=$?
+  [ "$rc" -le 1 ] || fail "grep failed (exit $rc) while scanning docs/evidence/1a for the key value"
+  [ "$rc" -eq 1 ] || fail "key value found under docs/evidence/1a"
   if docker image inspect "$image" >/dev/null 2>&1; then
-    docker inspect "$image" | grep -F -q -- "$key" \
+    meta=$(docker inspect "$image") || fail "docker inspect $image failed; cannot scan image metadata"
+    printf '%s' "$meta" | grep -F -q -- "$key" \
       && fail "key value found in image inspect output"
-    docker history --no-trunc "$image" 2>/dev/null | grep -F -q -- "$key" \
+    hist=$(docker history --no-trunc "$image") || fail "docker history $image failed; cannot scan image history"
+    printf '%s' "$hist" | grep -F -q -- "$key" \
       && fail "key value found in image history"
   fi
   pass
@@ -32,5 +38,7 @@ fi
 # (value starting with alnum, optionally quoted; pattern literals such as
 # grep/sed expressions for reading .env.provider do not match).
 hits=$(git -C "$root" grep -nE -- '^[^#]*OPENCODE_API_KEY=["'"'"']?[A-Za-z0-9]' -- . 2>/dev/null)
+rc=$?
+[ "$rc" -le 1 ] || fail "git grep failed (exit $rc) while scanning tracked files for key assignments"
 [ -z "$hits" ] || fail "non-empty OPENCODE_API_KEY assignment in tracked files: $(echo "$hits" | tr '\n' ' ')"
 pass
