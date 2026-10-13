@@ -1,0 +1,2 @@
+Sabotage: removed row D-30 from docs/audit/defects.md so the register check fails
+CHECK 0/04-defect-register: FAIL row D-30 missing

@@ -1,0 +1,3 @@
+Sabotage: staged workspace/stray.ts (a .ts file under excluded workspace/) so ts-coverage fails
+CHECK 0/02-ts-coverage: FAIL ts-coverage: 1 tracked TypeScript file(s) outside the typecheck:
+  workspace/stray.ts

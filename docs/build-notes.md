@@ -41,8 +41,10 @@ Not in Stage 0. Recorded in Stage 1a.
 
 ## Fallbacks in force
 
-None yet. (Stage 0 builds no fallbacks; the polling `wait` fallback in the
-client is specified behavior, not a fallback under this heading.)
+None. (Stage 0 builds no production fallbacks. Notes: the client's polling
+`wait` fallback on 404/501 only is specified behavior; `make accept` cannot
+propagate exit 77 because GNU make normalizes failing recipes to exit 2, so
+the 0/1/77 contract lives in `scripts/accept.sh`.)
 
 ## Proposed corrections
 
@@ -51,3 +53,10 @@ client is specified behavior, not a fallback under this heading.)
   self-check therefore exempts exactly that one route and checks every other
   served route against the spec. Justification: a file cannot list itself as an
   API operation; the exemption is documented in the fake's source.
+- Shared context 5.2 ("JSON responses are wrapped as `{data}`") needs an
+  exception: `GET /api/info` returns `{version, ...}` unwrapped on the real
+  2.0.27 server (verified live with curl during Stage 0). The client and the
+  fake both model it unwrapped.
+- Stage-0 table vs Step-3 text: rows D-28/D-29 mandate the disposition
+  `fixed`, narrower than the three allowed values. Kept the mandated wording;
+  suggest accepting `fixed` as shorthand for `fixed in salvage`.

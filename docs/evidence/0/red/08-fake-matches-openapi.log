@@ -1,0 +1,2 @@
+Sabotage: renamed a fake route to /api/INFOES (absent from openapi.json) so the route self-check fails
+CHECK 0/08-fake-matches-openapi: FAIL fake-matches-openapi: missing from /home/john/Projects/The-Agency/review/opencode/packages/protocol/openapi.json: GET /api/INFOES

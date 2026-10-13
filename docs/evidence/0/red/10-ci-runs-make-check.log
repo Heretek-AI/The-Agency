@@ -1,0 +1,2 @@
+Sabotage: removed the make check line from .github/workflows/ci.yml so the CI check fails
+CHECK 0/10-ci-runs-make-check: FAIL workflow never invokes make check

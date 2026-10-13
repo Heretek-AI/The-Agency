@@ -6,5 +6,5 @@ set -u
 source "$(dirname "$0")/../lib.sh"
 require_cmd --optional opencode
 root="$(git rev-parse --show-toplevel)"
-out=$(bun --cwd "$root" test dispatcher/test/live/opencode.live.test.ts 2>&1) || fail "live test failed: $(echo "$out" | tail -5 | tr '\n' ' ')"
+out=$(cd "$root" && bun test dispatcher/test/live/opencode.live.test.ts 2>&1) || fail "live test failed: $(echo "$out" | tail -5 | tr '\n' ' ')"
 pass

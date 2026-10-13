@@ -1,0 +1,2 @@
+Sabotage: appended an always-failing test to scripts/accept/test/accept.test.ts so the harness self-test fails
+CHECK 0/03-harness-selftest: FAIL harness tests failed:  1 fail  20 expect() calls Ran 9 tests across 1 file. [1298.00ms] 
