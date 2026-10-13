@@ -1,0 +1,40 @@
+# Stage 1a spike transcript assertions — evidence
+Date: 2026-10-13 (UTC). Parser: scripts/spike-assert-messages.py (committed).
+Grounded in review/opencode/packages/protocol/openapi.json (2.0.26):
+  SessionMessagesResponse {data: [Session.Message.Info], cursor};
+  Session.Message.Shell stdout in output.output;
+  Session.Message.Assistant content[] parts {type: text, text};
+  Session.Message.User text is top-level; user messages are the prompt echo.
+
+## (b) same parse against synthetic transcripts that mirror the schema
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/echo-only.json
+spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 shell; user-role messages are ignored, not run output]
+exit=1
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/positive.json
+spike-assert-messages: PASS spike-shell-ok in shell output; ## RESULT block in assistant text
+exit=0
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/malformed.json
+spike-assert-messages: FAIL transcript is not valid JSON: Expecting property name enclosed in double quotes: line 6 column 1 (char 81)
+exit=2
+
+## real invalid-key transcript (captured from the 2.0.26 container; see
+## docs/evidence/1a/spike-parse/invalid-key-transcript.json — the user echo
+## carries both markers, the assistant content is empty, there is no shell
+## message): the same parse fails; the old grep assertions matched the echo.
+
+$ python3 scripts/spike-assert-messages.py < docs/evidence/1a/spike-parse/invalid-key-transcript.json
+spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 other; user-role messages are ignored, not run output]
+exit=1
+
+$ grep -c 'spike-shell-ok' docs/evidence/1a/spike-parse/invalid-key-transcript.json   # old behavior: echo matches
+1
+$ grep -c '## RESULT' docs/evidence/1a/spike-parse/invalid-key-transcript.json        # old behavior: echo matches
+1
+
+## (a) full spike run with a throwaway invalid dummy key in .env.provider
+## exited 1 at the transcript assertions (never a pass); see
+## docs/evidence/1a/spike-parse/invalid-key-run.log for the full run output.
+## The keyed positive run remains pending the user's real provider key.

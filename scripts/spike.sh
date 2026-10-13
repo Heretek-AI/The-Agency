@@ -10,6 +10,11 @@
 # Requires a provider key in .env.provider (fail-closed otherwise); the
 # acceptance check maps a missing key to SKIP, this script never does.
 #
+# The messages step parses the transcript structurally
+# (scripts/spike-assert-messages.py): the shell marker must come from a
+# shell message's output and the RESULT block from assistant text, never
+# from the user-role echo of the prompt.
+#
 # The permission sub-flow uses the real route
 # POST /api/session/{id}/permission (operationId session.permission.create,
 # review/opencode/packages/protocol/openapi.json). The spike session carries
@@ -80,7 +85,10 @@ docker run -d --name "$NAME" \
   -e OPENCODE_CONFIG_DIR=/etc/agency \
   -v "$ROOT/spike/config:/etc/agency:ro,z" \
   -v "$WORK:/work:z" \
-  "$IMAGE" >/dev/null
+  "$IMAGE" >/dev/null || {
+  echo "spike: docker run failed for $NAME" >&2
+  exit 1
+}
 
 # Wait until healthy (fail-closed on timeout).
 healthy=""
@@ -179,15 +187,17 @@ if [ "$code" != "204" ]; then
   exit 1
 fi
 
+# Transcript assertions are structural (scripts/spike-assert-messages.py):
+# the shell marker must come from a shell message's `output.output` and the
+# RESULT block from assistant text content. The prompt text itself contains
+# both markers and is echoed into the transcript as a `user` message, so a
+# plain grep would pass vacuously. The parser ignores every non-shell/
+# non-assistant message and fails closed on any parse problem.
 messages=$(api GET "/api/session/$sid/message")
-echo "$messages" | grep -q "spike-shell-ok" || {
-  echo "spike: model output missing shell marker" >&2
+if ! printf '%s' "$messages" | python3 "$ROOT/scripts/spike-assert-messages.py"; then
+  echo "spike: transcript assertion failed (see spike-assert-messages above)" >&2
   exit 1
-}
-echo "$messages" | grep -q "## RESULT" || {
-  echo "spike: model output missing RESULT block" >&2
-  exit 1
-}
+fi
 
 diff=$(api GET "/api/session/$sid/diff")
 echo "$diff" | grep -q "notes.txt" || {
