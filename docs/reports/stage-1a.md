@@ -196,6 +196,11 @@ and `qa/`:
 - `red/h1-negative-signal.log` — "failed to reproduce" and "could not get
   it to fail" fail the deny filter; a signal-less sentence fails for want
   of an observed outcome; the five genuine markers pass both mechanisms.
+- `red/h1b-boundary-tightening.log` — the last two boundary residuals
+  ("did not yield a failure", "never showed up") fail the deny filter; the
+  six genuine marker paragraphs still count; the marker area is frozen
+  with the keyword filter plus signal requirement as the bounded
+  structural enforcement.
 - `qa/f2-preflight-recorded.log` — the build-notes omission reproduced
   (grep rc=1), the preflight run, and the recorded table byte-identical to
   a fresh run.
@@ -300,13 +305,18 @@ no per-expert images — all explicitly not in this stage.
   01 FAIL, 05 SKIP, 06 FAIL 4 NOT PERFORMED) —
   `docs/evidence/1a/accept-20261013T192627Z.log`; stage-0 harness re-run
   with `0/06` PASS — `docs/evidence/0/accept-20261013T192640Z.log`.
-- R1/H1 rework (QA probes `docs/evidence/1a/qa/cycle2-f3-negative-probe.log`
-  and `cycle2b-r1-recheck.log`): check `06` rejects paraphrased denials
+- R1/H1/H1b rework (QA probes
+  `cycle2-f3-negative-probe.log`, `cycle2b-r1-recheck.log`,
+  `cycle2c-h1-recheck.log`): check `06` rejects paraphrased denials
   (contractions, inability, "failed to reproduce", "could not get ...
-  fail", "did(n't) manage", absence-of-case phrases) and requires an
-  observed-outcome signal in each surviving marker's paragraph, so an
-  unknown denial phrasing that states no outcome cannot count. Proofs:
-  `red/r1-negative-denial-filter.log`, `red/h1-negative-signal.log`; q10
+  fail", "did(n't) manage", "did(n't) yield", "never
+  showed/appeared/turned up/manifested/occurred/happened", absence-of-case
+  phrases) and requires an observed-outcome signal in each surviving
+  marker's paragraph, so a phrasing that states no outcome cannot count.
+  The area is frozen with those two mechanisms; keywords cannot decide
+  semantics, so genuineness remains the independent verification's read.
+  Proofs: `red/r1-negative-denial-filter.log`,
+  `red/h1-negative-signal.log`, `red/h1b-boundary-tightening.log`; q10
   gains no evidence and still fails the check honestly.
 
 ## 7. Proposed corrections

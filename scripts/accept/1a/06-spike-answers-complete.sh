@@ -21,7 +21,7 @@ for n in $(seq 1 15); do
     || fail "build-notes has no recorded answer row for question $n"
 done
 
-# --- structured negative-case marker (verify F3; rework R1, H1) -----------
+# --- structured negative-case marker (verify F3; rework R1, H1; frozen) ---
 # Every shape-deciding question not recorded NOT PERFORMED must carry a
 # line `Negative case: <observation>` that (a) is not a known denial shape
 # and (b) states a checkable observed outcome. Mechanism (a): DENIAL_RE
@@ -30,15 +30,17 @@ done
 # <possible|obtainable|...>"; absence-of-case phrases ("no negative
 # case/was", "none observed/...", "nothing observed/obtained"); "does/did
 # not reproduce|occur|manifest"; "fail(ed|s|ing) to reproduce"; "could not
-# get ... fail"; "did(n't) manage"; and "no <token> could be
-# produced|reproduced|observed|obtained". Curly apostrophes are normalized
-# to straight ones before matching. Mechanism (b): the marker's paragraph
-# (marker line through the next blank line) must carry an observed-outcome
-# signal (SIGNAL_RE). The deny list can never enumerate every way to say
-# "not reproduced"; (b) means an unknown phrasing still cannot count
-# unless its paragraph describes an observed outcome. Both mechanisms
-# judge shapes only; whether the cited evidence is genuinely a negative
-# case remains the independent verifier's read, never the check's. A
+# get ... fail"; "did(n't) manage"; "did(n't) yield"; "never
+# showed|appeared|turned up|manifested|occurred|happened"; and "no <token>
+# could be produced|reproduced|observed|obtained". Curly apostrophes are
+# normalized to straight ones before matching. Mechanism (b): the marker's
+# paragraph (marker line through the next blank line) must carry an
+# observed-outcome signal (SIGNAL_RE). This keyword filter plus the
+# observed-outcome signal requirement is the final bounded structural
+# enforcement for this check (frozen): keywords cannot decide semantics,
+# so the genuineness of each cited negative case is established by the
+# independent verification reading the logs (verify-stage.md), and the
+# filter only rejects known denial shapes and signal-less paragraphs. A
 # question recorded NOT PERFORMED cannot carry an observed negative case
 # and is failed by the count below.
 DENIAL_RE="^(none|no|not|never|nothing)\b"\
@@ -51,6 +53,9 @@ DENIAL_RE="^(none|no|not|never|nothing)\b"\
 "|\bfail(ed|s|ing)?[[:space:]]+to[[:space:]]+reproduce\b"\
 "|\b(does|did|do)[[:space:]]+not[[:space:]]+manage\b"\
 "|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+manage\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+yield\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+yield\b"\
+"|\bnever[[:space:]]+(showed|appeared|turned[[:space:]]+up|manifested|occurred|happened)\b"\
 "|\bno[[:space:]]+[^[:space:]]+[[:space:]]+could[[:space:]]+be[[:space:]]+(produced|reproduced|observed|obtained)\b"\
 "|\bno[[:space:]]+negative[[:space:]]+(case|was)\b"\
 "|\bnone[[:space:]]+(else[[:space:]]+)?(observed|obtained|available|attempted|reproducible)\b"\
