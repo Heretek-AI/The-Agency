@@ -1,0 +1,93 @@
+# H1 red proof — 1a/06 denies "failed to reproduce"/"could not get it to fail"
+# and requires an observed-outcome signal per marker paragraph
+# Date: 2026-10-13 (UTC), branch stage-1a-spike, cycle-2 rework follow-up.
+# Finding: docs/evidence/1a/qa/cycle2b-r1-recheck.log (commit 3fc5605) —
+# the R1 deny list still counted "failed to reproduce" and "could not get
+# it to fail" as observations; enumeration alone cannot close the class.
+#
+# Two mechanisms: (a) DENIAL_RE extended with fail(ed|s|ing) to reproduce,
+# could not get ... fail, did(n't) manage, no <token> could be
+# produced|reproduced|observed|obtained, nothing (was) produced|...;
+# (b) every marker surviving the deny filter must have an observed-outcome
+# signal (SIGNAL_RE) in its paragraph (marker line through the next blank
+# line). All scratch states restored with `git checkout --` (q03.log is
+# committed); q10.log never written.
+
+## Standing state (baseline)
+
+$ bash -n scripts/accept/1a/06-spike-answers-complete.sh && echo 'bash -n: ok'
+bash -n: ok
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+
+## Direct run of the extracted filters over the five genuine marker sets
+
+$ # DENIAL_RE, SIGNAL_RE, is_denial and has_signal extracted from the
+$ # committed check; paragraph extracted as the check does (marker line to
+$ # the next blank line).
+q03 line 47: counts(observation+signal)
+q04 line 24: counts(observation+signal)
+q07 line 24: counts(observation+signal)
+q14 line 42: counts(observation+signal)
+q14 line 44: counts(observation+signal)
+q15 line 20: counts(observation+signal)
+
+$ # samples through both mechanisms
+DENIAL                       | failed to reproduce
+DENIAL                       | could not get it to fail
+DENIAL                       | didn't manage to get a refusal
+NO-SIGNAL(does not count)    | the experiment was done twice
+counts(observation+signal)   | the blocked host’s request was refused with 403
+DENIAL                       | none obtainable without a key — no proxy egress was attempted.
+DENIAL                       | couldn't be reproduced
+DENIAL                       | unable to reproduce it
+DENIAL                       | does not reproduce
+DENIAL                       | no negative case could be produced
+DENIAL                       | cannot be triggered here
+DENIAL                       | fails to reproduce
+DENIAL                       | could not get the flaky test to fail
+DENIAL                       | nothing was reproduced
+
+## End-to-end scratch runs through the check (q03.log marker replaced)
+
+### phrase: "failed to reproduce"                (H1 slipping paraphrase 1)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "could not get it to fail"           (H1 slipping paraphrase 2)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "didn't manage to get a refusal"      (new no-signal denial)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "the experiment was done twice"       (signal-less sentence)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case shows no observed outcome (no signal in its paragraph)
+exit=1
+restore: exact
+
+### phrase: "the blocked host’s request was refused with 403"  (synthetic genuine)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+(no denial/no-signal failure: the marker filter passed; the standing
+NOT PERFORMED count is the only failure)
+
+## Restoration and final state
+
+$ git status --short docs/evidence/1a/spike/q03.log
+(no output: restored exactly)
+$ git diff HEAD --stat -- docs/evidence/1a/spike/q10.log
+(no output: q10.log untouched)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1

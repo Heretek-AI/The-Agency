@@ -1,0 +1,12 @@
+# Sabotage sample 1: check 02 — floating FROM (['@sha256' pin removed), verifier pass — 2026-10-13T19:07:46Z
+$ sed -i 's|^FROM ubuntu:24.04@sha256:[0-9a-f]* AS base$|FROM ubuntu:24.04 AS base|' images/base/Dockerfile
+19:FROM ubuntu:24.04 AS base
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/02-base-image-pinned.sh bash scripts/accept/1a/02-base-image-pinned.sh
+CHECK 1a/02-base-image-pinned: FAIL FROM is not digest-pinned: FROM ubuntu:24.04 AS base
+sabotaged exit=1
+--- restore ---
+git diff -- images/base/Dockerfile: clean
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/02-base-image-pinned.sh   (restored)
+CHECK 1a/02-base-image-pinned: PASS
+restored exit=0
+?? docs/evidence/1a/verify/

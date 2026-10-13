@@ -4,6 +4,9 @@
 BUN ?= bun
 STAGE ?= 0
 
+BASE_TAG ?= $(shell grep '^OPENCODE_VERSION=' versions.env | cut -d= -f2)
+BASE_IMAGE ?= agency-base:$(BASE_TAG)
+
 check: format-check lint typecheck ts-coverage render-check test
 
 format-check:
@@ -34,6 +37,12 @@ test:
 
 accept:
 	bash scripts/accept.sh $(STAGE)
+
+build-base:
+	docker build -f images/base/Dockerfile \
+		--build-arg AGENT_UID=$${AGENT_UID:-$$(id -u)} \
+		--build-arg AGENT_GID=$${AGENT_GID:-$$(id -g)} \
+		-t $(BASE_IMAGE) images/base
 
 init:
 	@echo "not built until stage 1b: init" >&2; exit 1

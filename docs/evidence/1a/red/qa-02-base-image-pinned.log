@@ -1,0 +1,14 @@
+Sabotage: `images/base/Dockerfile` FROM digest stripped to floating `FROM ubuntu:24.04` (differs from the builder's zeroed-UBUNTU_DIGEST proof); restored with `git checkout -- images/base/Dockerfile`.
+QA keyed re-verification on HEAD d25114b, 2026-10-13 UTC. Check invoked directly (no full accept run, no extra spike spend).
+
+$ sed -i 's|FROM ubuntu:24.04@sha256:[0-9a-f]*|FROM ubuntu:24.04|' images/base/Dockerfile; grep -n '^FROM' images/base/Dockerfile
+19:FROM ubuntu:24.04 AS base
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/02-base-image-pinned.sh bash scripts/accept/1a/02-base-image-pinned.sh
+CHECK 1a/02-base-image-pinned: FAIL FROM is not digest-pinned: FROM ubuntu:24.04 AS base
+exit=1
+
+restored: Y (`git checkout -- images/base/Dockerfile`; `git status --short -- images/base/Dockerfile` empty)
+$ grep -n '^FROM' images/base/Dockerfile
+19:FROM ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55 AS base
+image agency-base:2.0.26 present after restore (the check fails on the Dockerfile text before `make build-base`, so the good image was never overwritten and no rebuild was needed).
+note: the digest-pin guard fails closed on a floating tag; complements the builder's digest/record-mismatch proof.

@@ -1,0 +1,25 @@
+# Q13 — Web app accepts ?auth_token=base64("opencode:<password>")?
+Date: 2026-10-13. Container agency-spike-q. Token computed locally from the
+throwaway password (value never logged).
+
+## Commands + trimmed output
+
+$ curl -o /dev/null -w '%{http_code}' /api/info
+401                                            # no credential rejected
+$ curl -o /dev/null -w '%{http_code}' "/api/info?auth_token=<base64(opencode:PW)>"
+200                                            # POSITIVE: query token accepted
+$ curl -o /dev/null -w '%{http_code}' "/api/info?auth_token=<base64(nope:invalid)>"
+401                                            # NEGATIVE: bad token rejected
+$ curl / | head -c 120
+<!doctype html>...<title>OpenCod...            # / serves the app shell (200, public)
+
+Source: review/opencode/packages/server/src/middleware/authorization.ts:12,32-39
+  AUTH_TOKEN_QUERY = "auth_token"; query value decoded as Basic credentials.
+
+## Observation
+Yes. First navigation with ?auth_token=<base64("opencode:<password>")>
+authenticates API calls (200 on /api/info); absent/bad tokens get 401.
+The / document itself is public; auth gates /api/*. No manual-sign-in
+fallback needed.
+
+## Verdict: yes

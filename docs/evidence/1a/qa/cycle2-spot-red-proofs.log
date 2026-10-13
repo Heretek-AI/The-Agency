@@ -1,0 +1,70 @@
+# QA cycle-2 — spot red proofs on the final tree (02, 07, 08)
+# Date: 2026-10-13T19:34:14Z UTC
+# HEAD: 0e6b2e35be599ee12d4b6bd954a7b65566cd13f4  Branch: stage-1a-spike
+# Hygiene: the sentinel value in the 07 FAIL line below is redacted as
+# [redproof-sentinel-redacted]; it was an obviously-fake throwaway, staged only
+# for the probe and unstaged+deleted immediately. Redaction keeps this committed
+# log from tripping 07's own no-key assignment scan (fail file:line ref kept).
+
+=================== 1a/02-base-image-pinned ===================
+## Sabotage: zero the recorded UBUNTU_DIGEST in versions.env
+$ grep "^UBUNTU_DIGEST=" versions.env
+UBUNTU_DIGEST=sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+versions.env sabotaged: digest zeroed
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/02-base-image-pinned.sh
+CHECK 1a/02-base-image-pinned: FAIL FROM digest not recorded in versions.env
+exit=1
+$ cp /tmp/opencode/qa-spot/versions.env.orig versions.env && cmp versions.env /tmp/opencode/qa-spot/versions.env.orig && echo "restore: byte-identical"
+restore: byte-identical
+$ git diff --exit-code -- versions.env && echo "git diff: clean"
+git diff: clean
+$ git status --short -- versions.env
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/02-base-image-pinned.sh   # back to PASS (rebuilds image)
+CHECK 1a/02-base-image-pinned: PASS
+exit=0
+
+=================== 1a/07-no-secret-leak ===================
+## Sabotage: stage a sentinel file carrying a non-empty OPENCODE_API_KEY assignment
+$ git status --short -- docs/evidence/1a/qa/redproof-07-sentinel.tmp
+A  docs/evidence/1a/qa/redproof-07-sentinel.tmp
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/07-no-secret-leak.sh
+CHECK 1a/07-no-secret-leak: FAIL non-empty OPENCODE_API_KEY assignment in tracked files: docs/evidence/1a/qa/redproof-07-sentinel.tmp:1:OPENCODE_API_KEY=[redproof-sentinel-redacted] 
+exit=1
+$ git rm --cached -q -- "$SENT" && rm -f "$SENT"   # unstage and delete the sentinel
+$ git status --short -- docs/evidence/1a/qa/redproof-07-sentinel.tmp   # must be empty
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/07-no-secret-leak.sh   # back to PASS
+CHECK 1a/07-no-secret-leak: PASS
+exit=0
+
+=================== 1a/08-no-containers-left ===================
+## Sabotage: start a decoy container with the agency-spike name prefix
+$ docker run -d --name agency-spike-qa-decoy --entrypoint sleep agency-base:2.0.26 300
+5a1737707c5f9f970d0b90f92a0a728a04cbd77ccf999091974ec99341812702
+$ docker ps --filter name=agency-spike-qa-decoy --format "{{.Names}} {{.Status}}"
+agency-spike-qa-decoy Up Less than a second (health: starting)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/08-no-containers-left.sh
+CHECK 1a/08-no-containers-left: FAIL leftover container(s): agency-spike-qa-decoy 
+exit=1
+$ docker rm -f agency-spike-qa-decoy
+agency-spike-qa-decoy
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/08-no-containers-left.sh   # back to PASS
+CHECK 1a/08-no-containers-left: PASS
+exit=0
+$ docker ps -a --filter name=agency-spike --format "{{.Names}}"; echo "(no output = no agency-spike container)"
+(no output above = no agency-spike container)
+
+=================== Restoration state ===================
+$ git diff --exit-code && echo "tracked tree: clean"
+tracked tree: clean
+$ git status --short
+?? docs/evidence/1a/accept-20261013T193002Z.log
+?? docs/evidence/1a/accept-20261013T193033Z.log
+?? docs/evidence/1a/qa/cycle2-accept-standalone.log
+?? docs/evidence/1a/qa/cycle2-build-base.log
+?? docs/evidence/1a/qa/cycle2-f2f5-recheck.log
+?? docs/evidence/1a/qa/cycle2-f3-negative-probe.log
+?? docs/evidence/1a/qa/cycle2-f4-lsfiles-probe.log
+?? docs/evidence/1a/qa/cycle2-make-accept.log
+?? docs/evidence/1a/qa/cycle2-make-check.log
+?? docs/evidence/1a/qa/cycle2-spot-red-proofs.log
+(MM/AM/?? entries above are only this QA pass's new evidence outputs; no tracked file is modified)

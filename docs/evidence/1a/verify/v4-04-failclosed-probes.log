@@ -1,0 +1,9 @@
+== probe 1: empty OPENCODE_PASSWORD ==
+running=false
+exit=64
+entrypoint: refusing to start: OPENCODE_PASSWORD is empty
+
+== probe 2: empty OPENCODE_API_KEY ==
+running=false
+exit=64
+entrypoint: refusing to start: OPENCODE_API_KEY is empty

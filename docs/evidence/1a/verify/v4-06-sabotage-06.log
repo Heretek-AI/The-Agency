@@ -1,0 +1,7 @@
+Sabotage B: rename 'Negative case:' marker in q07.log (builder moved q06 file; QA renamed q10 marker)
+24:Negative case: an edit of other.txt outside the per-task grant is
+CHECK 1a/06-spike-answers-complete: FAIL q07.log has no structured 'Negative case: <observation>' line
+exit=1
+restore: diff clean
+CHECK 1a/06-spike-answers-complete: PASS
+reconfirm-exit=0

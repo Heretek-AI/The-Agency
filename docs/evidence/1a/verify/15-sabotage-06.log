@@ -1,0 +1,2 @@
+CHECK ?/06-spike-answers-complete: FAIL evidence q10.log missing or empty
+EXIT=1

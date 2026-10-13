@@ -1,0 +1,7 @@
+== host opencode version ==
+opencode v2.0.28
+== host models list contains AGENCY_MODEL id ==
+AGENCY_MODEL=opencode-go/muse-spark-1.3-contributor
+2
+== container standalone (expect empty) ==
+(end)

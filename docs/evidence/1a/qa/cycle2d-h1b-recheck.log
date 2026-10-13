@@ -1,0 +1,123 @@
+# QA cycle-2d — independent verification of P1/P2 closure (fix 1034740)
+# Date: 2026-10-13T19:57:41Z UTC
+# HEAD: 103474015a289d0828a356cdef0aed6f790f7e6b (fix(accept-1a): close the last two denial boundaries in 06 and freeze)
+# Branch: stage-1a-spike. Check: scripts/accept/1a/06-spike-answers-complete.sh.
+# q10.log is never written by any probe below.
+
+## 0. Standing state (baseline): the six genuine marker paragraphs must pass both mechanisms
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: standing state — count-only failure (expected on the unmodified tree)
+$ bash -n scripts/accept/1a/06-spike-answers-complete.sh && echo bash-n-ok
+bash-n-ok
+
+## 1. Extract the committed mechanisms and run them directly
+$ cat /tmp/opencode/qa-h1b/denial-re.txt
+DENIAL_RE="^(none|no|not|never|nothing)\b"\
+"|\b(couldn'?t|can'?t|cannot|unable)\b"\
+"|\bnot[[:space:]]+(possible|obtainable|reproducible|reproduce|tested"\
+"|testable|attempted|attemptable|exercised|applicable|confirmable)\b"\
+"|\bunobtainable\b"\
+"|\bcould[[:space:]]+not[[:space:]]+(be|reproduce|occur|manifest)\b"\
+"|\bcould[[:space:]]+not[[:space:]]+get\b[^.]*\bfail"\
+"|\bfail(ed|s|ing)?[[:space:]]+to[[:space:]]+reproduce\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+manage\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+manage\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+yield\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+yield\b"\
+"|\bnever[[:space:]]+(showed|appeared|turned[[:space:]]+up|manifested|occurred|happened)\b"\
+"|\bno[[:space:]]+[^[:space:]]+[[:space:]]+could[[:space:]]+be[[:space:]]+(produced|reproduced|observed|obtained)\b"\
+"|\bno[[:space:]]+negative[[:space:]]+(case|was)\b"\
+"|\bnone[[:space:]]+(else[[:space:]]+)?(observed|obtained|available|attempted|reproducible)\b"\
+"|\bnothing[[:space:]]+(else[[:space:]]+|was[[:space:]]+)?(observed|obtained|produced|reproduced)\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"
+$ cat /tmp/opencode/qa-h1b/signal-re.txt
+SIGNAL_RE="fail|deny|denied|denies|refus(e|ed|es|al)|reject(ed|ion)?"\
+"|error|EROFS|EACCES|EPERM|SQLiteError|ConnectionRefused|timeout"\
+"|timed out|unset|non-zero|rc=[1-9]|exit(ed)?[ =][1-9]|4[0-9][0-9]|5[0-9][0-9]"
+
+$ # harness over the extracted mechanisms (single-line phrases)
+--- P1/P2 residuals from cycle2c (must now DENIAL) ---
+P1                         DENIAL(rc=0)          | attempts to reproduce did not yield a failure
+P2                         DENIAL(rc=0)          | the error never showed up
+--- my variant (must DENIAL) ---
+VARIANT                    DENIAL(rc=0)          | the crash never occurred
+--- characterization: residual of the frozen class (expected counts+signal) ---
+CHARACTERIZATION           counts+signal(rc=1,0) | the error eluded us
+--- regression samples (previous rounds) ---
+regression                 DENIAL(rc=0)          | failed to reproduce
+regression                 DENIAL(rc=0)          | could not get it to fail
+regression                 NO-SIGNAL(rc=1,1)     | we saw nothing unusual
+regression                 NO-SIGNAL(rc=1,1)     | the experiment was done twice
+regression                 counts+signal(rc=1,0) | the blocked host's request was refused with 403
+q10-denial                 DENIAL(rc=0)          | none obtainable without a key — no proxy egress was attempted.
+--- six genuine marker paragraphs from the five committed q-logs (expect counts+signal) ---
+GENUINE-q03:47             counts+signal(rc=1,0) | a container-side write to the read-only /work mount fails
+GENUINE-q04:24             counts+signal(rc=1,0) | writing to the read-only config dir fails EROFS (rc=1)
+GENUINE-q07:24             counts+signal(rc=1,0) | an edit of other.txt outside the per-task grant is
+GENUINE-q14:42             counts+signal(rc=1,0) | with the Bun MCP server stopped, connect/list reports
+GENUINE-q14:44             counts+signal(rc=1,0) | a read-only database dir fails to open (SQLiteError,
+GENUINE-q15:20             counts+signal(rc=1,0) | a second session (S3) that never received the PUT sees
+
+## 2. End-to-end scratch runs through the actual check (q03 marker replaced)
+### phrase: "attempts to reproduce did not yield a failure"   (mode: denial)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+verdict: REJECTED — denial reason
+expect: MATCH (denial reason)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+### phrase: "the error never showed up"   (mode: denial)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+verdict: REJECTED — denial reason
+expect: MATCH (denial reason)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+### phrase: "the crash never occurred"   (mode: denial)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+verdict: REJECTED — denial reason
+expect: MATCH (denial reason)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+# --- characterization only: expected to remain accepted by the frozen keyword approach ---
+### phrase: "the error eluded us"   (mode: slip)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: ACCEPTED — failure is the standing count only
+characterization: ACCEPTED as observation — residual of the frozen keyword approach (note only)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+# --- synthetic genuine passes the marker filter; failure must be the count only ---
+### phrase: "the blocked host's request was refused with 403"   (mode: accepted)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: ACCEPTED — failure is the standing count only
+expect: MATCH (marker accepted; count-only)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+## 3. Standing failure, exact command as specified (no ACCEPT_STAGE override)
+$ bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK ?/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+
+## 4. Final restoration and q10 facts
+$ git status --short docs/evidence/1a/spike/q03.log docs/evidence/1a/spike/q10.log
+(no output = q03 restored, q10 untouched)
+$ grep -n "Negative" docs/evidence/1a/spike/q10.log
+25:Negative case: none obtainable without a key — no proxy egress was attempted.
+$ git diff HEAD --stat -- docs/evidence/1a/spike/q10.log
+(no output = q10.log untouched by this probe)

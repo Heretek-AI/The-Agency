@@ -1,0 +1,41 @@
+# Sabotage 01 — verifier pass 2, 2026-10-13T20:07:30Z, HEAD de88e01
+# Two red variants (empty key; wrong mode) then the dummy-key green counterfactual.
+
+## Variant A: .env.provider exists, mode 0600, OPENCODE_API_KEY empty
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    FAIL   .env.provider present but mode=600 key=absent (need 0600 + non-empty key)
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 4 pass, 1 fail
+exit=1
+CHECK 1a/01-preflight: FAIL preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+exit=1
+
+## Variant B: dummy key, mode 0644
+provider-file    FAIL   .env.provider present but mode=644 key=present (need 0600 + non-empty key)
+preflight exit=1
+CHECK 1a/01-preflight: FAIL preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+exit=1
+
+## Counterfactual: dummy key, mode 0600 (kept for the 05/07 probes; deleted there)
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    PASS   .env.provider present, mode 0600, OPENCODE_API_KEY present
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 5 pass, 0 fail
+exit=0
+CHECK 1a/01-preflight: PASS
+exit=0
+
+note: dummy value is a non-secret throwaway, generated locally, never printed in this log.
+tree clean apart from this pass's evidence (the .env.provider file is ignored)

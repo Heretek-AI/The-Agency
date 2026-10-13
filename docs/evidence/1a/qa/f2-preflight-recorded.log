@@ -1,0 +1,45 @@
+# F2 rework — stage 1a preflight table recorded in docs/build-notes.md
+# Date: 2026-10-13 (UTC), branch stage-1a-spike, cycle-2 rework.
+# Finding: docs/reports/stage-1a-verification.md F2 (prompt line 37 requires
+# the table in docs/build-notes.md; only the Stage-0 preflight section
+# existed). This is the proof the omission existed and is now recorded.
+
+## 1. Repro on the pre-fix tree: no stage-1a preflight rows
+
+$ grep -n 'Stage 1a preflight\|provider-file\|http-port\|AGENCY_HTTP_PORT\|compose\|selinux' docs/build-notes.md
+(no output)
+grep rc=1
+
+## 2. scripts/preflight.sh run on the final tree
+
+$ bash scripts/preflight.sh
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    FAIL   .env.provider absent (place OPENCODE_API_KEY there, mode 0600)
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 4 pass, 1 fail
+exit=1
+
+The exit is honest: `.env.provider` is absent, so the provider-file row
+fails. No key value is printed (present/absent only). Port 8081 is the
+chosen `AGENCY_HTTP_PORT` (8080 is taken on this host).
+
+## 3. Recorded table matches the run exactly
+
+$ grep -n 'Stage 1a preflight\|AGENCY_HTTP_PORT=8081' docs/build-notes.md
+16:### Stage 1a preflight
+22:- Chosen port: `AGENCY_HTTP_PORT=8081` (8080 is in use on the development
+34:http-port        PASS   AGENCY_HTTP_PORT=8081
+
+$ python3 # extract the fenced block under '### Stage 1a preflight' (docs/build-notes.md lines 28..37)
+$ bash scripts/preflight.sh > /tmp/opencode/f2-fresh.out 2>&1; echo "fresh exit=$?"
+fresh exit=1
+$ diff /tmp/opencode/f2-recorded.out /tmp/opencode/f2-fresh.out && echo IDENTICAL
+IDENTICAL
+
+No `.env.provider` was created and none exists at the end of this rework.

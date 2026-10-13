@@ -1,0 +1,86 @@
+# QA cycle-2 — F2 and F5 independent re-verification
+# Date: 2026-10-13T19:32:24Z UTC
+# HEAD: 0e6b2e35be599ee12d4b6bd954a7b65566cd13f4  Branch: stage-1a-spike
+
+## F2 — Stage 1a preflight table present in docs/build-notes.md and byte-equal to a fresh run
+$ bash scripts/preflight.sh
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    FAIL   .env.provider absent (place OPENCODE_API_KEY there, mode 0600)
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 4 pass, 1 fail
+fresh preflight exit=1   (1 = honest: .env.provider absent; no value printed)
+$ grep -n "Stage 1a preflight" docs/build-notes.md
+16:### Stage 1a preflight
+$ python3 — extract the fenced block under ### Stage 1a preflight
+PREFLIGHT
+runtime          PASS   Docker version 29.9.0, build 1.fc46
+compose          PASS   docker compose 5.6.0
+selinux          INFO   Enforcing
+provider-file    FAIL   .env.provider absent (place OPENCODE_API_KEY there, mode 0600)
+install-url      PASS   https://opencode.ai/v2/install reachable
+http-port        PASS   AGENCY_HTTP_PORT=8081
+userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+preflight: 4 pass, 1 fail
+$ diff /tmp/opencode/qa-f2-recorded.txt /tmp/opencode/qa-f2-fresh.txt
+--- /tmp/opencode/qa-f2-recorded.txt	2026-10-13 15:32:25.405254500 -0400
++++ /tmp/opencode/qa-f2-fresh.txt	2026-10-13 15:32:25.402254447 -0400
+@@ -7,4 +7,4 @@
+ http-port        PASS   AGENCY_HTTP_PORT=8081
+ userns           INFO   max_user_namespaces=255647 (stage 2b info only)
+ kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only)
+-preflight: 4 pass, 1 fail
++preflight: 4 pass, 1 fail
+\ No newline at end of file
+DIFFERS (unexpected)
+
+## F5 — report wording vs docker history / docker inspect of the rebuilt image
+$ docker images agency-base:2.0.26 --format "{{.Repository}}:{{.Tag}} {{.ID}}"
+agency-base:2.0.26 89f9c6d7ddaf
+$ grep -n "history" docs/reports/stage-1a.md | head -5
+35:  arg / `ENV` (`docker history --no-trunc` and `docker inspect` each show
+197:  history and in inspect, no value).
+290:  `docker history`/`docker inspect` (F5). F1 — the user's provider key —
+$ grep -n "docker history clean" docs/reports/stage-1a.md
+old claim absent: rc=1 (no match)
+$ docker history --no-trunc agency-base:2.0.26 | grep -c OPENCODE_PASSWORD
+1
+$ docker history --no-trunc agency-base:2.0.26 | grep OPENCODE_PASSWORD
+<missing>                                                                 59 minutes ago   HEALTHCHECK {Test:[CMD-SHELL curl -fsS --noproxy '*' -u "opencode:${OPENCODE_PASSWORD}" "http://127.0.0.1:4096/api/info" > /dev/null] Interval:30s Timeout:5s StartPeriod:15s StartInterval:0s Retries:3}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                0B        buildkit.dockerfile.v0
+$ docker inspect agency-base:2.0.26 | grep -c OPENCODE_PASSWORD
+1
+$ docker inspect agency-base:2.0.26 --format "{{json .Config.Env}}"   # value-free env check
+["PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin","DEBIAN_FRONTEND=noninteractive","OPENCODE_PORT=4096"]
+
+Value scan (no value can exist for a variable never set; check 07 scans literals):
+$ docker history --no-trunc agency-base:2.0.26 | grep -n OPENCODE_ ; echo "grep rc=$?"
+3:<missing>                                                                 59 minutes ago   HEALTHCHECK {Test:[CMD-SHELL curl -fsS --noproxy '*' -u "opencode:${OPENCODE_PASSWORD}" "http://127.0.0.1:4096/api/info" > /dev/null] Interval:30s Timeout:5s StartPeriod:15s StartInterval:0s Retries:3}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                0B        buildkit.dockerfile.v0
+7:<missing>                                                                 59 minutes ago   RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c chmod 755 /usr/local/bin/entrypoint.sh # buildkit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       0B        buildkit.dockerfile.v0
+9:<missing>                                                                 4 hours ago      RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c git config --system --add safe.directory '*' # buildkit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 4.1kB     buildkit.dockerfile.v0
+10:<missing>                                                                 4 hours ago      RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c set -eu;   if getent group "${AGENT_GID}" >/dev/null; then     oldg=$(getent group "${AGENT_GID}" | cut -d: -f1);     if [ "$oldg" != "agent" ]; then groupmod -n agent "$oldg"; fi;   else     groupadd -g "${AGENT_GID}" agent;   fi;   if getent passwd "${AGENT_UID}" >/dev/null; then     oldu=$(getent passwd "${AGENT_UID}" | cut -d: -f1);     if [ "$oldu" != "agent" ]; then usermod -l agent -d /home/agent -m "$oldu"; fi;     usermod -g agent agent;   else     useradd -m -u "${AGENT_UID}" -g agent agent;   fi;   mkdir -p /work /artifacts /etc/agency     /home/agent/.local/share/opencode     /home/agent/.local/state/opencode     /home/agent/.cache/opencode;   chown -R agent:agent /home/agent /work /artifacts /etc/agency;   chmod 755 /etc/agency;   id agent # buildkit   45.1kB    buildkit.dockerfile.v0
+11:<missing>                                                                 8 hours ago      RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c curl -fsSL https://opencode.ai/v2/install | bash -s -- --version "${OPENCODE_VERSION}"   && install -m755 /root/.opencode/bin/opencode /usr/local/bin/opencode   && rm -rf /root/.opencode   && opencode --version | grep -q "${OPENCODE_VERSION}"   && opencode --version # buildkit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   216MB     buildkit.dockerfile.v0
+12:<missing>                                                                 8 hours ago      RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c curl -fsSL -o /tmp/uv.tar.gz       "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz"   && echo "4e43dac0c82b12b66564d91d5649350377b771d1df84374d9be1b9e6c8dd8152  /tmp/uv.tar.gz" | sha256sum -c -   && tar -xzf /tmp/uv.tar.gz -C /tmp   && install -m755 /tmp/uv-x86_64-unknown-linux-gnu/uv /usr/local/bin/uv   && install -m755 /tmp/uv-x86_64-unknown-linux-gnu/uvx /usr/local/bin/uvx   && rm -rf /tmp/uv.tar.gz /tmp/uv-x86_64-unknown-linux-gnu   && uv --version | grep -q "${UV_VERSION}" # buildkit                                                                                                                                                                                                                                       54.3MB    buildkit.dockerfile.v0
+13:<missing>                                                                 8 hours ago      RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c curl -fsSL -o /tmp/node.tar.xz       "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz"   && echo "fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6  /tmp/node.tar.xz" | sha256sum -c -   && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1   && rm -f /tmp/node.tar.xz   && node --version | grep -q "v${NODE_VERSION}"   && npm --version # buildkit                                                                                                                                                                                                                                                                                                                                                                                     213MB     buildkit.dockerfile.v0
+14:<missing>                                                                 8 hours ago      RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c curl -fsSL -o /tmp/yq       "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64"   && echo "0ffc35320180d4911bc3a772934da508715e08af444cb33d4d43660065e25bcc  /tmp/yq" | sha256sum -c -   && install -m755 /tmp/yq /usr/local/bin/yq   && rm -f /tmp/yq   && yq --version | grep -q "${YQ_VERSION}" # buildkit                                                                                                                                                                                                                                                                                                                                                                                                                                                             11.5MB    buildkit.dockerfile.v0
+15:<missing>                                                                 8 hours ago      RUN |6 AGENT_UID=1000 AGENT_GID=1000 OPENCODE_VERSION=2.0.26 NODE_VERSION=24.21.0 YQ_VERSION=4.48.2 UV_VERSION=0.9.12 /bin/sh -c apt-get update   && apt-get install -y --no-install-recommends        ca-certificates=20260601~24.04.1        curl=8.5.0-2ubuntu10.15        git=1:2.43.0-1ubuntu7.3        jq=1.7.1-3ubuntu0.24.04.2        ripgrep=14.1.0-1        fd-find=9.0.0-1        tini=0.19.0-1        unzip=6.0-28ubuntu4.1        xz-utils=5.6.1+really5.4.5-1ubuntu0.3        openssh-client=1:9.6p1-3ubuntu13.19        python3=3.12.3-0ubuntu2.1        tar=1.35+dfsg-3ubuntu0.4   && rm -rf /var/lib/apt/lists/*   && ln -s /usr/bin/fdfind /usr/local/bin/fd # buildkit                                                                                                                                                                                                                                                147MB     buildkit.dockerfile.v0
+17:<missing>                                                                 8 hours ago      ENV DEBIAN_FRONTEND=noninteractive OPENCODE_PORT=4096 PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   0B        buildkit.dockerfile.v0
+21:<missing>                                                                 8 hours ago      ARG OPENCODE_VERSION=2.0.26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              0B        buildkit.dockerfile.v0
+grep rc=0
+$ docker inspect agency-base:2.0.26 | grep -n OPENCODE_
+20:                "OPENCODE_PORT=4096"
+36:                    "curl -fsS --noproxy '*' -u \"opencode:${OPENCODE_PASSWORD}\" \"http://127.0.0.1:4096/api/info\" > /dev/null"
+
+## F2 addendum — the diff above flagged ONLY a trailing-newline artifact of $(...) capture
+# (command substitution strips the final newline; the recorded block in the file ends with one).
+# Corrected comparison, both sides read from files:
+$ bash scripts/preflight.sh > /tmp/opencode/qa-f2-fresh-raw.txt 2>&1; echo exit=$?
+exit=1
+$ python3 — compare line lists of the recorded fenced block and the fresh run
+recorded lines: 10  fresh lines: 10
+IDENTICAL

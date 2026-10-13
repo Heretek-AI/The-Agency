@@ -1,0 +1,10 @@
+# Sabotage 02 — verifier pass 2, 2026-10-13T20:06:06Z, HEAD de88e01
+# Sabotage: FROM digest hex changed to a well-formed but different digest (still pinned, no latest).
+FROM ubuntu:24.04@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa AS base
+CHECK 1a/02-base-image-pinned: FAIL FROM digest not recorded in versions.env
+exit=1
+
+# Restore + re-run
+git diff clean
+CHECK 1a/02-base-image-pinned: PASS
+exit=0

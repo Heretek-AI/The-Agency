@@ -1,0 +1,18 @@
+Sabotage: `.env.provider` mode loosened to 0644 (key present, wrong mode) — differs from the builder's absent-file proof; restored with `chmod 600`.
+QA keyed re-verification on HEAD d25114b, 2026-10-13 UTC. Check invoked directly (no full accept run, no extra spike spend).
+
+$ chmod 644 .env.provider; stat -c '%a' .env.provider
+644
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/01-preflight.sh bash scripts/accept/1a/01-preflight.sh
+CHECK 1a/01-preflight: FAIL preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail
+exit=1
+
+$ bash scripts/preflight.sh 2>&1 | grep -E 'provider-file|preflight:'
+provider-file    FAIL   .env.provider present but mode=644 key=present (need 0600 + non-empty key)
+preflight: 4 pass, 1 fail
+
+restored: Y (`chmod 600 .env.provider`; stat shows 600)
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/01-preflight.sh bash scripts/accept/1a/01-preflight.sh
+CHECK 1a/01-preflight: PASS
+exit=0
+note: the mode row fails closed (present-but-0644 is not accepted); the red isolates the mode guard, complementing the builder's absent-file proof.

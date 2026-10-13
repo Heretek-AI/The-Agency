@@ -1,0 +1,9 @@
+# make down / make up stubs (stage-1b targets, expected to refuse) — 2026-10-13T19:03:45Z
+$ make down
+not built until stage 1b: down
+make: *** [Makefile:63: down] Error 1
+exit=2
+$ make up
+not built until stage 1b: up
+make: *** [Makefile:60: up] Error 1
+exit=2

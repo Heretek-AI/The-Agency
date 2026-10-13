@@ -1,0 +1,16 @@
+# Probe 05 (stage goal) — verifier pass 2, 2026-10-13T20:07:40Z, HEAD de88e01
+# Present-but-invalid dummy key: spike.sh must run and fail (never pass); check maps it to exit 1.
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/05-spike-end-to-end.sh
+CHECK 1a/05-spike-end-to-end: FAIL spike.sh failed: spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 other; user-role messages are ignored, not run output] spike: transcript assertion failed (see spike-assert-messages above) 
+exit=1
+
+# Container cleanup check
+(no agency-spike container left)
+
+# Keyless: .env.provider removed; check must SKIP (77); spike.sh itself must exit 1 and name the missing key
+CHECK 1a/05-spike-end-to-end: SKIP .env.provider has no usable OPENCODE_API_KEY
+exit=77
+$ bash scripts/spike.sh
+spike: no provider key (.env.provider with non-empty OPENCODE_API_KEY)
+exit=1
+tree clean apart from this pass's evidence

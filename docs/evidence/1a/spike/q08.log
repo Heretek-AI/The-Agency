@@ -1,0 +1,36 @@
+# Q8 — Provider-refusal shape; quota/rate-limit + reset time?
+Date: 2026-10-13. Container agency-spike-q with dummy INVALID key (the
+experiment this question calls for). No real key exists anywhere.
+
+## Commands + trimmed output
+
+$ POST /api/session {"title":"q8invalid","agent":"spike",...}  -> HTTP 200
+$ POST /api/session/<id>/prompt {"text":"Reply with exactly: q8-marker"}
+{"data":{"id":"msg_...","type":"user",...}}                     # HTTP 200
+$ POST /api/experimental/session/<id>/wait -> HTTP 204 (fast, already idle)
+$ GET /api/session/<id>/message (trimmed, newest first)
+idle |  | "failed"
+assistant | error | {"type":"provider.auth",
+  "message":"Reconnect OpenCode Console to continue.","status":401,
+  "response":{"body":"{\"error\":{\"type\":\"authentication_error\",...}}"}},
+  "model":{"id":"cat-jam-free","providerID":"opencode"},"content":[],"finish":"error"
+user |  | "Reply with exactly: q8-marker"
+
+Source: review/opencode/packages/schema/src/session-error.ts
+  Error = { type, message, status?: 100-599, response?: { body } }  # NO reset field
+Source: review/opencode/packages/core/src/session/to-session-error.ts:28-60
+  RateLimit->provider.rate-limit | Authentication->provider.auth
+  QuotaExceeded->provider.quota  | ... (same envelope, status+body passthrough)
+
+## Observation
+Invalid key yields: assistant message finish:"error", empty content, typed
+error {type:"provider.auth",message,status:401,response:{body}}, then idle
+outcome:"failed". Quota/rate-limit share the envelope with types
+provider.quota / provider.rate-limit (source-mapped), but NO reset-time
+field exists anywhere in the schema — a reset instant, if present at all,
+is buried in response.body text. So the Dispatcher cannot rely on a reset
+timestamp: adopt the fallback — treat any repeated provider refusal as a
+usage limit and probe on a timer.
+
+## Verdict: yes (shape observed; quota/reset mapped from source) /
+fallback ADOPTED: repeated provider refusal = limit, probe on timer

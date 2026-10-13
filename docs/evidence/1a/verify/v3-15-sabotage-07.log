@@ -1,0 +1,31 @@
+# Probe 07 (no-secret-leak) — verifier pass 2, 2026-10-13T20:08:04Z, HEAD de88e01
+# Keyed branch first (dummy key), then the no-key branch. Sentinel values are throwaway and redacted.
+
+## Keyed clean baseline
+CHECK 1a/07-no-secret-leak: PASS
+exit=0
+
+## Keyed: staged tracked sentinel holds the key value
+CHECK 1a/07-no-secret-leak: FAIL key value found in tracked files: v3-07-keyed-sentinel.tmp 
+exit=1
+
+## Keyed: evidence-dir sentinel holds the key value
+CHECK 1a/07-no-secret-leak: FAIL key value found under docs/evidence/1a
+exit=1
+
+## Keyed clean again
+CHECK 1a/07-no-secret-leak: PASS
+exit=0
+
+## No-key branch: staged sentinel with a non-empty assignment (obviously fake value)
+CHECK 1a/07-no-secret-leak: FAIL non-empty OPENCODE_API_KEY assignment in tracked files: v3-07-nokey-sentinel.tmp:1:OPENCODE_API_KEY=v3nokey-sentinel-value-not-a-key 
+exit=1
+
+## No-key clean (standing PASS)
+CHECK 1a/07-no-secret-leak: PASS
+exit=0
+
+# Sentinel cleanup and tree state
+(no sentinel files remain)
+tree clean apart from this pass's evidence
+.env.provider absent

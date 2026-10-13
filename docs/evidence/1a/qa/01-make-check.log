@@ -1,0 +1,20 @@
+=== make check on 3f0592334adb6616153e877c850e5522c3f76984 (2026-10-13T18:47:28Z) ===
+bunx prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+bunx oxlint
+lint: process.env is read only in config.ts
+lint: task/mission status lists live only in model.ts
+lint: RESULT/VERDICT schemas are defined only in protocol.ts
+lint: no placeholder successes in first-party source
+bunx tsc --noEmit
+bun scripts/check-ts-coverage.ts
+ts-coverage: 31 tracked file(s), all inside the typecheck
+render-check: nothing to render yet (renderer arrives in stage 1b)
+bun test v1.4.2 (744846f84)
+
+ 78 pass
+ 0 fail
+ 204 expect() calls
+Ran 78 tests across 13 files. [4.28s]
+=== make check exit=0 ===

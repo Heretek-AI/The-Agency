@@ -1,0 +1,25 @@
+# Sabotage sample 4: check 07 — keyed branch (clean PASS, evidence sentinel FAIL, clean PASS), no-key branch (staged sentinel FAIL, clean PASS) — 2026-10-13T19:09:53Z
+# (dummy value never echoed; sentinel files removed and unstaged afterwards)
+$ printf 'OPENCODE_API_KEY=%s\n' "<dummy-07>" > .env.provider && chmod 600 .env.provider
+$ run check 07, dummy key present, nothing contains it   (want PASS)
+CHECK 1a/07-no-secret-leak: PASS
+clean-keyed exit=0
+
+$ printf the dummy key value into docs/evidence/1a/verify/v2-07-keyed-sentinel.tmp; run check 07
+CHECK 1a/07-no-secret-leak: FAIL key value found under docs/evidence/1a
+evidence-sentinel exit=1
+CHECK 1a/07-no-secret-leak: PASS
+removed-sentinel exit=0
+
+--- no-key branch ---
+$ printf 'OPENCODE_API_KEY=%s\n' "<sentinel>" > v2-07-nokey-sentinel.tmp; git add
+CHECK 1a/07-no-secret-leak: FAIL non-empty OPENCODE_API_KEY assignment in tracked files: docs/evidence/1a/verify/v2-07-nokey-sentinel.tmp:1:OPENCODE_API_KEY=[redacted-dummy] 
+staged-sentinel exit=1
+$ run check 07 after removing the sentinel   (want PASS)
+CHECK 1a/07-no-secret-leak: PASS
+restored exit=0
+--- restoration ---
+.env.provider absent
+(no sentinel files)
+?? docs/evidence/1a/verify/
+git diff: clean

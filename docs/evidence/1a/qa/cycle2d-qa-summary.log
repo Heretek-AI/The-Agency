@@ -1,0 +1,57 @@
+# QA cycle-2d summary — P1/P2 boundary closure verification (fix 1034740)
+# Date: 2026-10-13 (UTC). Branch: stage-1a-spike. Re-verified HEAD: 103474015a289d0828a356cdef0aed6f790f7e6b.
+# Role: QA Agent (Triad role 2). Independent probes only; QA fixed nothing and weakened no check.
+
+## Scope
+Verification of the closure of the two boundary residuals recorded in
+cycle2c-qa-summary.log (P1 "attempts to reproduce did not yield a failure",
+P2 "the error never showed up"), fixed by 1034740 which extends DENIAL_RE
+with did(n't)/does(n't) not yield and "never
+showed|appeared|turned up|manifested|occurred|happened" and freezes the
+keyword approach. Verified against the committed check; its red proof read
+but not trusted.
+
+## Mandated probes (end-to-end, scratch q03.log; all as expected)
+- "attempts to reproduce did not yield a failure" -> FAIL q03.log: negative
+  case is a denial, not an observation; exit 1  [MATCH]
+- "the error never showed up" -> FAIL q03.log: negative case is a denial,
+  not an observation; exit 1  [MATCH]
+- my variant "the crash never occurred" -> FAIL q03.log: negative case is a
+  denial, not an observation; exit 1  [MATCH]
+
+Direct extraction harness confirms: P1/P2/variant all DENIAL(rc=0);
+regression samples unchanged ("failed to reproduce", "could not get it to
+fail" DENIAL; "we saw nothing unusual", "the experiment was done twice"
+NO-SIGNAL; synthetic genuine counts+signal; q10 line DENIAL).
+
+## Six genuine marker paragraphs (both mechanisms)
+Baseline fails only on the NOT PERFORMED count; all six marker lines pass
+both mechanisms (is_denial rc=1, has_signal rc=0):
+  q03:47, q04:24, q07:24, q14:42, q14:44, q15:20.
+q10.log untouched (git status/diff empty).
+Standing failure unchanged, exact command:
+  bash scripts/accept/1a/06-spike-answers-complete.sh
+  -> exit 1, "4 question(s) NOT PERFORMED (no provider key); stage incomplete".
+
+## Residual note (note only, not a fix request)
+One characterization probe: "the error eluded us" is still ACCEPTED as an
+observation (signal word "error" rescues it; "eluded" is not an enumerated
+denial shape). This is the acknowledged bound of the frozen keyword
+approach: any denial phrased outside the enumerated shapes whose paragraph
+contains a signal word can pass; the check's comment records the freeze and
+defers semantic genuineness to the independent verification reading the
+logs (verify-stage.md). The two previously reported boundary phrases are
+closed.
+
+## Gates
+- make check                 -> exit 0 (78 pass, 0 fail)   [cycle2d-make-check.log]
+- bash scripts/accept.sh 1a  -> exit 1; unchanged honest split:
+  01 FAIL, 02 PASS, 03 PASS, 04 PASS, 05 SKIP, 06 FAIL "4 question(s) NOT PERFORMED",
+  07 PASS, 08 PASS (5 pass / 1 skip / 2 fail)  [cycle2d-accept-standalone.log;
+  log docs/evidence/1a/accept-20261013T195832Z.log]
+
+## Restoration and final state
+- Every scratch q03 swap restored byte-identical (cmp + git diff --exit-code).
+- q10.log never written; .env.provider absent (F1 stands); no agency-spike*
+  containers; docs/evidence/1a/verify/ untouched; no push.
+- Only additions are this pass's evidence logs; no tracked file modified by QA.

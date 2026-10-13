@@ -1,0 +1,19 @@
+Sabotage: `images/base/Dockerfile` HEALTHCHECK block deleted (builder's proof flipped `USER agent` to `USER root` instead) + `make build-base`; restored with `git checkout -- images/base/Dockerfile` + rebuild.
+QA keyed re-verification on HEAD d25114b, 2026-10-13 UTC. Check invoked directly (dummy keys only, no real spike spend, no full accept run).
+
+$ python3 # delete from the HEALTHCHECK line through (not including) the ENTRYPOINT line
+$ grep -n 'HEALTHCHECK' images/base/Dockerfile; echo "grep-exit:$? (1 means HEALTHCHECK deleted)"
+grep-exit:1 (1 means HEALTHCHECK deleted)
+$ make build-base 2>&1 | tail -n 2
+BUILD_EXIT:0
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/04-healthy-nonroot.sh bash scripts/accept/1a/04-healthy-nonroot.sh
+CHECK 1a/04-healthy-nonroot: FAIL container never healthy (status=unknown)
+exit=1
+(note: the first attempt exceeded the 120s tool window because the check polls up to 24x5s for health; the re-run with a 300s window captured the FAIL above. Without a HEALTHCHECK the container reports no health status, so the check exhausts its poll loop and fails closed.)
+
+restored: Y (`git checkout -- images/base/Dockerfile`; status clean for the path; HEALTHCHECK line 119 back; `make build-base` exit 0)
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/04-healthy-nonroot.sh bash scripts/accept/1a/04-healthy-nonroot.sh
+CHECK 1a/04-healthy-nonroot: PASS
+exit=0
+`docker ps -a` shows no agency-spike container left afterwards.
+note: the healthy-gate fails closed when the image carries no HEALTHCHECK; complements the builder's runs-as-root proof.

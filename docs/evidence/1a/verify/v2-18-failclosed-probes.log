@@ -1,0 +1,15 @@
+# Fail-closed probes: unreadable file in 0/06 scan; git grep failure in 07 scan — 2026-10-13T19:11:44Z
+real git: /usr/bin/git
+
+## 0/06-no-donor-code: unreadable scanned file
+CHECK 0/06-no-donor-code: FAIL cannot scan scripts/audit-repair.ts for 'bwrap' (grep exit 2)
+unreadable exit=1
+CHECK 0/06-no-donor-code: PASS
+restored exit=0
+
+## 1a/07-no-secret-leak: git grep failure (PATH shim)
+CHECK 1a/07-no-secret-leak: FAIL git grep failed (exit 128) while scanning tracked files for key assignments
+shim exit=1
+CHECK 1a/07-no-secret-leak: PASS
+restored exit=0
+?? docs/evidence/1a/verify/

@@ -1,0 +1,28 @@
+# Q15 — PUT environment visible to session shell, isolated from others?
+Date: 2026-10-13. Container agency-spike-q. No model needed: direct route
+POST /api/session/{id}/shell executes in the session; it shares Shell.Service
+with the model shell tool (tool/plugin/shell.ts imports Shell from
+../../shell.js), which reads SessionEnvironment.Service (shell.ts:129).
+
+## Commands + trimmed output
+
+$ PUT /api/session/S2/environment {"variables":{"SPIKE_Q15_VAR":"q15-value-1"}}
+PUT=204                                        # shape {"variables":{...}}; bare object 400s
+$ POST /api/session/S2/shell {"command":"echo VAR-was:${SPIKE_Q15_VAR:-UNSET}"}
+SHELL=204
+$ GET /api/session/S2/message (shell message, trimmed)
+"command":"echo VAR-was:${SPIKE_Q15_VAR:-UNSET}","status":"exited","exit":0,
+"output":{"output":"VAR-was:q15-value-1\n",...}   # POSITIVE: sees the variable
+$ POST /api/session/S3/shell (same command, no PUT ever) -> 204
+$ GET /api/session/S3/message (trimmed)
+"output":{"output":"VAR-was:UNSET\n",...}          # NEGATIVE: isolated
+
+Negative case: a second session (S3) that never received the PUT sees
+SPIKE_Q15_VAR as UNSET.
+
+## Observation
+Yes. One PUT replaces the session's process environment; that session's
+shell sees it, a second session does not. Same service feeds model tool
+calls, so the envelope/env-file fallback is unnecessary.
+
+## Verdict: yes (no fallback)

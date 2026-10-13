@@ -1,0 +1,16 @@
+Sabotage: a stray `docker run` line appended to the non-exempt scanned script `scripts/preflight.sh`; reverted exactly afterwards. (Complements the builder's `red/06-no-donor-code-scope-proof.log`.)
+QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+
+$ printf '\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n' >> scripts/preflight.sh
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh
+exit=1
+
+$ git checkout -- scripts/preflight.sh && git diff --stat -- scripts/preflight.sh
+(empty)
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: PASS
+exit=0
+
+restored: Y (exact revert, no diff)
+note: the stage-1a exemption covers only scripts/spike.sh and scripts/accept/**; a `docker run` anywhere else still fails the scan.

@@ -1,0 +1,76 @@
+# Q10 — With HTTPS_PROXY set and no direct route out, do provider calls and remote MCP servers work?
+Date: 2026-10-13. Network q10-int (`docker network create --internal`).
+Proxy q10-proxy: throwaway CONNECT logger on q10-int + bridge (untracked
+/tmp script, ~90 lines; logs every REQ line to stdout/file).
+Spike container agency-spike-q10 (agency-base:2.0.26) on q10-int ONLY with
+HTTPS_PROXY=http://q10-proxy:3128, HTTP_PROXY=http://q10-proxy:3128 and NO
+NO_PROXY. Config: q10config (bunprobe -> same-net q10-mcp:8377 node MCP,
+inetprobe -> https://mcp.context7.com/mcp), SPIKE_MCP_ENABLE=1, SPIKE_INET_ENABLE=1.
+
+Code search first (review/opencode 2.0.26): only
+packages/core/src/effect/websocket-constructor.ts honors *_PROXY/NO_PROXY;
+no NODE_USE_ENV_PROXY-style switch anywhere in core/ai source. The behavior
+below shows the runtime (Bun fetch) honors the proxy env for provider and
+MCP HTTPS traffic anyway — the old "no proxy support found" note is
+superseded by this run.
+
+## Commands + trimmed output
+
+$ docker exec agency-spike-q10 curl --noproxy '*' --max-time 25 https://opencode.ai/
+curl: (6) Could not resolve host: opencode.ai      (egress:000, real 0.1s)
+Negative case: direct egress without the proxy fails — curl --noproxy '*'
+https://opencode.ai/ returns Could not resolve host (rc=6, egress:000), and
+the proxy log shows no CONNECT for that attempt.
+$ # (control: the same curl WITH proxy env honored by curl returns 200 via
+$ #  CONNECT opencode.ai:443 — the proxy itself has upstream.)
+
+$ curl -X POST /api/session {"title":"q10","agent":"spike",
+  "model":{"providerID":"opencode","id":"cat-jam-free"},"location":{...}}
+{"data":{"id":"ses_ec8f31794ffenlwNlbScRw2vrM",...}}          # HTTP 200
+$ curl -X POST /api/session/<id>/prompt {"text":"Reply with exactly: q10-marker"}
+HTTP 200
+$ curl -X POST /api/experimental/session/<id>/wait
+HTTP 204
+$ curl /api/session/<id>/message  (assistant text, trimmed)
+TEXT: q10-marker   (finish: stop, error: null)
+idle: succeeded
+$ # proxy log during the turn:
+PROXY REQ: CONNECT opencode.ai:443 HTTP/1.1
+# (boot also logged CONNECT models.opencode.ai:443 — catalog/config fetch.)
+# -> provider call SUCCEEDS with no direct route, via the proxy.
+
+$ curl -X POST /api/experimental/mcp/inetprobe/connect   # retry after lazy 404
+HTTP 204
+$ curl /api/mcp
+{"data":[{"name":"bunprobe",...},{"name":"inetprobe","status":{"status":"connected"}},...]}
+# server log: "mcp connected" server=inetprobe tools=2
+$ # proxy log:
+PROXY REQ: CONNECT mcp.context7.com:443 HTTP/1.1   (x2)
+# -> remote (internet) MCP server connects and lists 2 tools via the proxy.
+
+$ curl /api/mcp  (bunprobe leg)
+{"name":"bunprobe","status":{"status":"failed",
+  "error":"Error POSTing to endpoint:  (HTTP 501)"}}
+# then, after the throwaway proxy gained plain-HTTP forwarding:
+# "socket connection was closed unexpectedly (ECONNRESET)".
+# Both failures are limits of the throwaway proxy (it 501'd absolute-URI
+# HTTP, then broke SSE streaming), not of the client: the log shows the
+# client DID send same-net HTTP (POST http://q10-mcp:8377/mcp) to the proxy.
+# Same-net MCP reachability itself was proven on the bridge network (q14)
+# and on q10-int's sibling runs; the tunneled-HTTPS case above is the
+# question's remote leg.
+
+No-NO_PROXY note: with NO_PROXY unset, ALL client HTTP goes to the proxy —
+the log also shows local provider probes (GET 127.0.0.1:1234/11434/8000)
+and same-net MCP POSTs arriving at the proxy. Stage 1b's egress design must
+set NO_PROXY for fleet-internal hosts (dispatcher, same-net MCP).
+
+## Observation
+Yes. On an internal network with no direct route (DNS fails, rc=6), both
+the provider call (model turn succeeds, CONNECT opencode.ai:443 in the
+proxy log) and a remote internet MCP server (connected, tools=2, CONNECT
+mcp.context7.com:443) work through HTTPS_PROXY. No NODE_USE_ENV_PROXY-style
+switch was needed and none exists in source; the routed-exception fallback
+is not needed.
+
+## Verdict: yes (no fallback needed)

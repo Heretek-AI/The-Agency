@@ -1,0 +1,12 @@
+# F2 re-verification: build-notes preflight table vs a fresh run — verifier pass 2, 2026-10-13T20:11:30Z
+# (Keyless tree, as the recorded table was taken: .env.provider absent.)
+fresh preflight exit=1
+$ diff /tmp/opencode/v3-f2-recorded.txt /tmp/opencode/v3-f2-fresh.txt
+IDENTICAL (byte-for-byte)
+
+# Chosen port recorded: 
+.env.example:AGENCY_HTTP_PORT=8081
+docs/build-notes.md:- Chosen port: `AGENCY_HTTP_PORT=8081` (8080 is in use on the development
+docs/build-notes.md:http-port        PASS   AGENCY_HTTP_PORT=8081
+
+# .env.provider state: absent

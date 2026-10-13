@@ -1,0 +1,24 @@
+# AGENT_UID/AGENT_GID wiring — verifier pass 2, 2026-10-13T20:04:12Z, HEAD de88e01
+# Default image (tag from versions.env): runs as agent, uid 1000 (host id -u), dirs owned by agent.
+$ docker run --rm --entrypoint bash agency-base:2.0.26 -c 'id; whoami; stat -c "%U %G %a" /work /artifacts /etc/agency /home/agent/.local/share/opencode'
+uid=1000(agent) gid=1000(agent) groups=1000(agent),4(adm),20(dialout),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev)
+agent
+agent agent 755
+agent agent 755
+agent agent 755
+agent agent 755
+default-image exit=0
+
+# Variant build with a different AGENT_UID/AGENT_GID (1234), separate tag; never retags the pinned image.
+$ docker build -f images/base/Dockerfile --build-arg AGENT_UID=1234 --build-arg AGENT_GID=1234 -t agency-base-uidcheck:v3 images/base
+build exit=0
+uid=1234(agent) gid=1234(agent) groups=1234(agent)
+agent
+agent agent 755
+agent agent 755
+agent agent 755
+variant exit=0
+
+# Cleanup variant image + any container from it
+rmi exit=0
+(no agency-* containers)

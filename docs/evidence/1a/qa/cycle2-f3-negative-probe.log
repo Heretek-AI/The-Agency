@@ -1,0 +1,85 @@
+# QA cycle-2 — F3 adversarial re-verification: 1a/06 requires an OBSERVED negative case
+# Date: 2026-10-13T19:33:29Z UTC
+# HEAD: 0e6b2e35be599ee12d4b6bd954a7b65566cd13f4  Branch: stage-1a-spike
+# Check under test: scripts/accept/1a/06-spike-answers-complete.sh (verification finding F3).
+# The check must FAIL when an answered question replaces the 'Negative case:'
+# observation with a denial, and must keep failing on the 4 NOT PERFORMED rows.
+
+## Standing state (baseline)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+$ grep -cE "\| [0-9]+ +\| NOT PERFORMED" docs/build-notes.md
+4
+
+## q10: marker-shaped but denial-only, and NOT touched by the rework
+$ grep -n "Negative" docs/evidence/1a/spike/q10.log
+25:Negative case: none obtainable without a key — no proxy egress was attempted.
+$ git diff --stat 6c58cb6..HEAD -- docs/evidence/1a/spike/q10.log
+(no output = q10.log unchanged by cycle-2 rework)
+$ grep -n "^Negative case: " docs/evidence/1a/spike/q03.log
+47:Negative case: a container-side write to the read-only /work mount fails
+
+## Probe 1: scratch q03.log with the observed marker STRIPPED -> must FAIL on the missing marker
+scratch written: marker + continuation removed
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log has no structured 'Negative case: <observation>' line
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+## Probe 2: each denial phrasing as the observation in a scratch q03.log -> each must FAIL
+### phrase: "none obtainable"
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+### phrase: "nothing observed"
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+### phrase: "could not be reproduced"
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+## Probe 3: q10 with a FAKE answered row (row 10 NOT PERFORMED -> partly), q10.log keeps its denial
+scratch build-notes written: row 10 -> partly
+$ grep -nE "^\| *10 +\|" docs/build-notes.md
+92:| 10  | partly           | Only websocket-constructor honors \*\_PROXY; no proxy support found in provider/MCP paths; internal-network test needs a key.                                                                                                                                                           |
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q10.log: negative case is a denial, not an observation
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+## Probe 4 (adversarial extension): paraphrased denials in a scratch q03.log
+# The check's denial filter is a regex allowlist; any phrasing it does not
+# recognise is treated as an observed case (failure then comes only from the
+# NOT PERFORMED count, not from q03). Recorded here for the report.
+### phrase: "couldn't be reproduced"
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+### phrase: "unable to reproduce it"
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+### phrase: "does not reproduce"
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+restore: q03.log, q10.log, build-notes.md byte-identical
+
+## Restored standing state
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+$ git status --short docs/evidence/1a/spike/q03.log docs/evidence/1a/spike/q10.log docs/build-notes.md
+(no output = all three restored)

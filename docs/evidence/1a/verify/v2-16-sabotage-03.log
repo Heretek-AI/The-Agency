@@ -1,0 +1,29 @@
+# Sabotage sample 6: check 03 — OPENCODE_API_KEY refusal block deleted from entrypoint.sh, image rebuilt — 2026-10-13T19:10:36Z
+$ sed -i '/^if \[ -z "${OPENCODE_API_KEY:-}" \]; then$/,/^fi$/d' images/base/entrypoint.sh
+set -u
+
+if [ -z "${OPENCODE_PASSWORD:-}" ]; then
+  echo "entrypoint: refusing to start: OPENCODE_PASSWORD is empty" >&2
+  exit 64
+fi
+
+expert="${AGENCY_EXPERT:-agent}"
+git config --global user.name "$expert (The Agency)"
+git config --global user.email "$expert@agency.invalid"
+
+$ make build-base   (sabotaged image)
+build exit=0
+$ bash scripts/accept/1a/03-entrypoint-fails-closed.sh ACCEPT_STAGE=1a   (want FAIL on the no-key case)
+CHECK 1a/03-entrypoint-fails-closed: FAIL no-key container still running
+sabotaged exit=1
+--- restore ---
+git diff -- entrypoint.sh: clean
+rebuild exit=0
+$ bash scripts/accept/1a/03-entrypoint-fails-closed.sh   (restored, want PASS)
+CHECK 1a/03-entrypoint-fails-closed: PASS
+restored exit=0
+$ sha256sum images/base/entrypoint.sh; docker run --rm --entrypoint sha256sum agency-base:2.0.26 /usr/local/bin/entrypoint.sh
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  images/base/entrypoint.sh
+e520f6c1c964721a1d72359d03c1d625cecaf4cfb818b27ee234b41986a2d84b  /usr/local/bin/entrypoint.sh
+(no agency-spike containers)
+?? docs/evidence/1a/verify/

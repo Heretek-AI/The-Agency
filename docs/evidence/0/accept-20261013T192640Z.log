@@ -1,0 +1,33 @@
+accept stage 0 (2026-10-13T19:26:27Z), timeout 120s per check
+===== 0/01-make-check (exit 0) =====
+CHECK 0/01-make-check: PASS
+===== 0/02-ts-coverage (exit 0) =====
+CHECK 0/02-ts-coverage: PASS
+===== 0/03-harness-selftest (exit 0) =====
+CHECK 0/03-harness-selftest: PASS
+===== 0/04-defect-register (exit 0) =====
+CHECK 0/04-defect-register: PASS
+===== 0/05-salvage-provenance (exit 1) =====
+CHECK 0/05-salvage-provenance: FAIL expected branch stage-0-salvage, on stage-1a-spike
+===== 0/06-no-donor-code (exit 0) =====
+CHECK 0/06-no-donor-code: PASS
+===== 0/07-no-skips (exit 0) =====
+CHECK 0/07-no-skips: PASS
+===== 0/08-fake-matches-openapi (exit 0) =====
+CHECK 0/08-fake-matches-openapi: PASS
+===== 0/09-opencode-live (exit 0) =====
+CHECK 0/09-opencode-live: PASS
+===== 0/10-ci-runs-make-check (exit 0) =====
+CHECK 0/10-ci-runs-make-check: PASS
+CHECKS for stage 0
+0/01-make-check              PASS   
+0/02-ts-coverage             PASS   
+0/03-harness-selftest        PASS   
+0/04-defect-register         PASS   
+0/05-salvage-provenance      FAIL   expected branch stage-0-salvage, on stage-1a-spike
+0/06-no-donor-code           PASS   
+0/07-no-skips                PASS   
+0/08-fake-matches-openapi    PASS   
+0/09-opencode-live           PASS   
+0/10-ci-runs-make-check      PASS   
+stage 0: 9 pass, 0 skip, 1 fail (10 checks)

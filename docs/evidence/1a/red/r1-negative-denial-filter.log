@@ -1,0 +1,95 @@
+# R1 red proof — 1a/06 denial filter rejects paraphrased denials
+# Date: 2026-10-13 (UTC), branch stage-1a-spike, cycle-2 rework follow-up.
+# Finding: docs/evidence/1a/qa/cycle2-f3-negative-probe.log probe 4 — the
+# denial filter was an allowlist that missed paraphrases ("couldn't be
+# reproduced", "unable to reproduce it", "does not reproduce") and let
+# them count as observations.
+#
+# Sabotages: each slipping paraphrase and one newly invented denial as the
+# observation in a scratch q03.log (real marker block removed) -> each must
+# FAIL with the denial reason. A synthetic genuine phrasing in the same
+# scratch shape must pass the marker filter (the check then fails only on
+# the standing 4 NOT PERFORMED rows). A curly-apostrophe variant proves the
+# normalization. Every scratch state restored with `git checkout --`
+# (q03.log is committed) and `git diff --exit-code` clean.
+
+## Standing state (baseline)
+
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+
+## Filter logic run directly over the five genuine markers and denials
+
+$ # DENIAL_RE and is_denial extracted from the committed check script
+$ # (awk takes the whole DENIAL_RE assignment through its last continuation
+$ # line; sed takes the function body; fail() stubbed in the harness)
+q03 | observation(rc=1) | a container-side write to the read-only /work mount fails
+q04 | observation(rc=1) | writing to the read-only config dir fails EROFS (rc=1)
+q07 | observation(rc=1) | an edit of other.txt outside the per-task grant is
+q14 | observation(rc=1) | with the Bun MCP server stopped, connect/list reports
+q14 | observation(rc=1) | a read-only database dir fails to open (SQLiteError,
+q15 | observation(rc=1) | a second session (S3) that never received the PUT sees
+(rc=1 = none of the known denial shapes; "never" mid-sentence does not reject)
+
+DENIAL(rc=0) | couldn't be reproduced
+DENIAL(rc=0) | unable to reproduce it
+DENIAL(rc=0) | does not reproduce
+DENIAL(rc=0) | no negative case could be produced
+DENIAL(rc=0) | couldn’t be reproduced
+DENIAL(rc=0) | none obtainable without a key — no proxy egress was attempted.
+
+observation(rc=1) | the blocked host’s request was refused with 403
+observation(rc=1) | the container-side write fails EROFS (rc=1)
+
+## End-to-end scratch runs through the check (q03.log marker replaced)
+
+### phrase: "couldn't be reproduced"          (QA paraphrase 1)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+$ git checkout -- docs/evidence/1a/spike/q03.log && git diff --exit-code -- docs/evidence/1a/spike/q03.log
+restore: exact
+
+### phrase: "unable to reproduce it"          (QA paraphrase 2)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "does not reproduce"              (QA paraphrase 3)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "no negative case could be produced"  (newly invented denial)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "couldn’t be reproduced"          (curly apostrophe; normalization)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "the blocked host’s request was refused with 403"  (synthetic genuine)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+(no denial message: the marker filter passed; the standing count is the
+only failure)
+
+## Restoration and final state
+
+$ git status --short docs/evidence/1a/spike/q03.log
+(no output: restored exactly)
+$ git diff HEAD --stat -- docs/evidence/1a/spike/q10.log
+(no output: q10.log untouched)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+$ bash -n scripts/accept/1a/06-spike-answers-complete.sh && echo 'bash -n: ok'
+bash -n: ok

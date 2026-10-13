@@ -1,0 +1,19 @@
+# AGENT_UID wiring verification: variant build AGENT_UID=2000/GID=2000, separate tag — 2026-10-13T19:05:26Z
+$ docker build -f images/base/Dockerfile --build-arg AGENT_UID=2000 --build-arg AGENT_GID=2000 -t agency-base-uidcheck:verify images/base
+sha256:753353cc6dd5f94eca0e5e48ff3332b2fc4e3ca896e8af8c5a2ef62b173c175f
+build exit=0
+run exit=0
+$ docker inspect -f '{{.State.Running}}' agency-verify-uid
+true
+$ docker exec agency-verify-uid id -u   (want 2000)
+2000
+$ docker exec agency-verify-uid whoami   (want agent)
+agent
+$ docker exec agency-verify-uid id agent   (want uid=2000 gid=2000)
+uid=2000(agent) gid=2000(agent) groups=2000(agent)
+--- cleanup ---
+agency-verify-uid
+Untagged: agency-base-uidcheck:verify
+Deleted: sha256:753353cc6dd5f94eca0e5e48ff3332b2fc4e3ca896e8af8c5a2ef62b173c175f
+$ docker ps -a | grep agency-verify || true
+(no agency-verify containers)

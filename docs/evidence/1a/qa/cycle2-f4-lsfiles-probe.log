@@ -1,0 +1,58 @@
+# QA cycle-2 — F4 adversarial re-verification: 0/06-no-donor-code fail-closed on git ls-files
+# Date: 2026-10-13T19:32:01Z UTC
+# HEAD: 0e6b2e35be599ee12d4b6bd954a7b65566cd13f4  Branch: stage-1a-spike
+# Check under test: scripts/accept/0/06-no-donor-code.sh (verification finding F4).
+# Expected: exit 1 for every list-source sabotage; exit 0 with real git.
+
+## Setup: PATH shim — `git ls-files` exits 128, every other git subcommand delegates
+$ command -v git
+/usr/bin/git
+$ PATH=/tmp/opencode/qa-f4/shim1:$PATH git rev-parse --show-toplevel   # premise: rev-parse works through the shim
+/home/john/Projects/The-Agency/worktrees/wave-1a-spike
+
+## Probe 1: ls-files shim (exit 128) -> the check MUST exit 1
+$ PATH=/tmp/opencode/qa-f4/shim1:$PATH ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+shim: git ls-files unavailable
+CHECK 0/06-no-donor-code: FAIL git ls-files *.patch failed (exit 128); cannot enumerate tracked files
+exit=1
+
+## Probe 2: variant — shim prints a bogus tracked line then exits 1
+$ PATH=/tmp/opencode/qa-f4/shim2:$PATH ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: FAIL git ls-files *.patch failed (exit 1); cannot enumerate tracked files
+exit=1
+
+## Probe 3: variant — git entirely absent from PATH
+$ ls /tmp/opencode/qa-f4/nogit-bin
+basename
+bash
+dirname
+grep
+head
+printf
+tr
+$ PATH=/tmp/opencode/qa-f4/nogit-bin ACCEPT_STAGE=0 /usr/bin/bash scripts/accept/0/06-no-donor-code.sh
+scripts/accept/0/06-no-donor-code.sh: line 8: git: command not found
+scripts/accept/0/06-no-donor-code.sh: line 9: cd: null directory
+CHECK 0/06-no-donor-code: FAIL cannot cd to 
+exit=1
+
+## Restore: real git -> the check MUST exit 0
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: PASS
+exit=0
+
+## Re-confirm: existing docker-run sabotage still goes red
+$ printf "\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n" >> scripts/preflight.sh
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh 
+exit=1
+$ git checkout -- scripts/preflight.sh && git diff --exit-code -- scripts/preflight.sh && echo "revert: clean"
+revert: clean
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh   # back to PASS
+CHECK 0/06-no-donor-code: PASS
+exit=0
+
+## Restoration state
+$ git status --short -- scripts/preflight.sh
+$ git diff --stat
+(no output above = worktree unchanged by these probes)

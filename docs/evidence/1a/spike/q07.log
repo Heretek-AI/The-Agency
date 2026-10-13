@@ -1,0 +1,44 @@
+# Q7 — Session-create permissions evaluated after agent rules?
+Date: 2026-10-13. Container agency-spike-q. Session with per-task grants:
+  "permissions":[{"action":"edit","resource":"notes.txt","effect":"allow"},
+                 {"action":"spikeprobe","resource":"*","effect":"ask"}]
+
+## Commands + trimmed output (real route POST /api/session/{id}/permission)
+
+$ # session S3 created with the grants above: HTTP 200, permissions echoed
+$ POST /api/session/S3/permission {"action":"spikeprobe","resources":["probe-1"]}
+{"data":{"id":"per_...","effect":"ask"}}        # session ask-rule wins -> pends
+$ POST ... {"action":"shell","resources":["echo hi"]}
+{"data":{"id":"per_...","effect":"allow"}}      # baseline `shell *` allow stands
+$ POST ... {"action":"edit","resources":["notes.txt"]}
+{"data":{"id":"per_...","effect":"allow"}}      # POSITIVE: per-task allow over deny-all
+$ POST ... {"action":"edit","resources":["other.txt"]}
+{"data":{"id":"per_...","effect":"deny"}}       # NEGATIVE: outside the grant refused
+$ GET /api/session/S3/permission
+{"data":[{...spikeprobe request...}]}           # ask pends and is listed
+$ POST /api/session/S3/permission/<rid>/reply {"decision":"reject",...}
+HTTP 204
+$ GET /api/session/S3/permission
+{"data":[]}                                     # rejected request disappears
+
+Negative case: an edit of other.txt outside the per-task grant is
+refused (effect deny), and the rejected permission request disappears
+from the session's permission list.
+
+Source: review/opencode/packages/core/src/permission.ts:158-163,87-97
+  configured = merge(agent?.permissions ?? [deny-all], session.permissions)
+  evaluate = findLast match; unmatched -> ask.
+
+Race note: a permission check ~1 min after boot on a fresh session location
+returned deny for shell, then allow on retry. Agent rules resolve
+asynchronously per location; early checks fail CLOSED (deny). The
+Dispatcher (Stage 1c) must create-then-use with tolerance for this, never
+by weakening the check.
+
+## Observation
+Yes. All four matrix cells observed live, plus list/reject round-trip.
+Session rules evaluate after (and override) agent rules; the deny-all
+baseline holds everywhere else. Model-driven edit allow/refuse rides the
+same evaluator; scripts/spike.sh covers it end to end once keyed.
+
+## Verdict: yes (fallback "static globs" not needed)

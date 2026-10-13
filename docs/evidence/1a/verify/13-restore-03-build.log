@@ -1,0 +1,75 @@
+docker build -f images/base/Dockerfile \
+	--build-arg AGENT_UID=${AGENT_UID:-$(id -u)} \
+	--build-arg AGENT_GID=${AGENT_GID:-$(id -g)} \
+	-t agency-base:2.0.26 images/base
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 5.31kB done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 0.2s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#3 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/library/ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+#4 DONE 0.0s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 DONE 0.0s
+
+#7 [ 1/11] FROM docker.io/library/ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+#7 resolve docker.io/library/ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+#7 resolve docker.io/library/ubuntu:24.04@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55 0.0s done
+#7 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 2.27kB done
+#6 DONE 0.0s
+
+#8 [ 7/11] RUN set -eu;   if getent group "1000" >/dev/null; then     oldg=$(getent group "1000" | cut -d: -f1);     if [ "$oldg" != "agent" ]; then groupmod -n agent "$oldg"; fi;   else     groupadd -g "1000" agent;   fi;   if getent passwd "1000" >/dev/null; then     oldu=$(getent passwd "1000" | cut -d: -f1);     if [ "$oldu" != "agent" ]; then usermod -l agent -d /home/agent -m "$oldu"; fi;     usermod -g agent agent;   else     useradd -m -u "1000" -g agent agent;   fi;   mkdir -p /work /artifacts /etc/agency     /home/agent/.local/share/opencode     /home/agent/.local/state/opencode     /home/agent/.cache/opencode;   chown -R agent:agent /home/agent /work /artifacts /etc/agency;   chmod 755 /etc/agency;   id agent
+#8 CACHED
+
+#9 [ 2/11] RUN apt-get update   && apt-get install -y --no-install-recommends        ca-certificates=20260601~24.04.1        curl=8.5.0-2ubuntu10.15        git=1:2.43.0-1ubuntu7.3        jq=1.7.1-3ubuntu0.24.04.2        ripgrep=14.1.0-1        fd-find=9.0.0-1        tini=0.19.0-1        unzip=6.0-28ubuntu4.1        xz-utils=5.6.1+really5.4.5-1ubuntu0.3        openssh-client=1:9.6p1-3ubuntu13.19        python3=3.12.3-0ubuntu2.1        tar=1.35+dfsg-3ubuntu0.4   && rm -rf /var/lib/apt/lists/*   && ln -s /usr/bin/fdfind /usr/local/bin/fd
+#9 CACHED
+
+#10 [ 3/11] RUN curl -fsSL -o /tmp/yq       "https://github.com/mikefarah/yq/releases/download/v4.48.2/yq_linux_amd64"   && echo "0ffc35320180d4911bc3a772934da508715e08af444cb33d4d43660065e25bcc  /tmp/yq" | sha256sum -c -   && install -m755 /tmp/yq /usr/local/bin/yq   && rm -f /tmp/yq   && yq --version | grep -q "4.48.2"
+#10 CACHED
+
+#11 [ 4/11] RUN curl -fsSL -o /tmp/node.tar.xz       "https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.xz"   && echo "fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6  /tmp/node.tar.xz" | sha256sum -c -   && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1   && rm -f /tmp/node.tar.xz   && node --version | grep -q "v24.21.0"   && npm --version
+#11 CACHED
+
+#12 [ 6/11] RUN curl -fsSL https://opencode.ai/v2/install | bash -s -- --version "2.0.26"   && install -m755 /root/.opencode/bin/opencode /usr/local/bin/opencode   && rm -rf /root/.opencode   && opencode --version | grep -q "2.0.26"   && opencode --version
+#12 CACHED
+
+#13 [ 8/11] RUN git config --system --add safe.directory '*'
+#13 CACHED
+
+#14 [10/11] RUN chmod 755 /usr/local/bin/entrypoint.sh
+#14 CACHED
+
+#15 [ 5/11] RUN curl -fsSL -o /tmp/uv.tar.gz       "https://github.com/astral-sh/uv/releases/download/0.9.12/uv-x86_64-unknown-linux-gnu.tar.gz"   && echo "4e43dac0c82b12b66564d91d5649350377b771d1df84374d9be1b9e6c8dd8152  /tmp/uv.tar.gz" | sha256sum -c -   && tar -xzf /tmp/uv.tar.gz -C /tmp   && install -m755 /tmp/uv-x86_64-unknown-linux-gnu/uv /usr/local/bin/uv   && install -m755 /tmp/uv-x86_64-unknown-linux-gnu/uvx /usr/local/bin/uvx   && rm -rf /tmp/uv.tar.gz /tmp/uv-x86_64-unknown-linux-gnu   && uv --version | grep -q "0.9.12"
+#15 CACHED
+
+#16 [ 9/11] COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+#16 CACHED
+
+#17 [11/11] WORKDIR /work
+#17 CACHED
+
+#18 exporting to image
+#18 exporting layers done
+#18 exporting manifest sha256:dce489c62ca4dadc4cde5c09b0f659d825d57065d06b4abc45b08437cfd1f8f7 done
+#18 exporting config sha256:721286eaf2eab763b60bb9a79a2542ac75f8fba8daec5e273c54f6595d303b4f done
+#18 exporting attestation manifest sha256:f80bb223ba9a912fbabcf3d01ff9b72b81ba77a83d58963a9002d451753c4d31 0.0s done
+#18 exporting manifest list sha256:210c901ec5807f0a1a19e392049013e4d3db68fab8e84c7e9dbae340f78f8f5b 0.0s done
+#18 naming to docker.io/library/agency-base:2.0.26 done
+#18 unpacking to docker.io/library/agency-base:2.0.26 0.1s done
+#18 DONE 0.2s

@@ -1,0 +1,80 @@
+# Q1 — Does `opencode serve` pick up OPENCODE_API_KEY from env; is AGENCY_MODEL listed by `opencode models`?
+Date: 2026-10-13. Key: .env.provider present, mode 0600, non-empty OPENCODE_API_KEY
+(value never shown, never copied here). .env: AGENCY_MODEL=opencode-go/muse-spark-1.3-contributor.
+
+## Commands + trimmed output
+
+$ opencode --version
+opencode v2.0.28            # host binary; image pin stays 2.0.26 (see Verdict)
+
+$ opencode models 2>/dev/null | grep -i "muse-spark"
+opencode-go/muse-spark-1.2-contributor
+opencode-go/muse-spark-1.3-contributor
+opencode/muse-spark-1.2
+opencode/muse-spark-1.3
+opencode/muse-spark-1.3-contributor-free
+$ opencode models --standalone 2>/dev/null | grep -ic "muse-spark"
+5
+$ opencode models 2>/dev/null | wc -l
+75
+# -> host lists AGENCY_MODEL exactly (both default and --standalone).
+
+$ docker exec agency-spike-q <container agency-base:2.0.26> opencode models
+Error: Server process exited with code 1
+PlatformError: Unknown: FileSystem.writeFile (/etc/agency/service.json.tmp)
+  [cause]: Error: EROFS: read-only file system, open '/etc/agency/service.json.tmp'
+$ docker exec agency-spike-q <same> opencode models --standalone
+(rc=0, no output — empty model list)
+# -> 2.0.26 CLI lists nothing standalone; default form needs a writable
+# config dir (service registration), which the ro /etc/agency mount denies.
+
+$ # serve pickup: session with the exact AGENCY_MODEL ref, real key in env
+$ curl -X POST /api/session {"title":"q9-go","agent":"spike",
+  "model":{"providerID":"opencode-go","id":"muse-spark-1.3-contributor"},...}
+{"data":{"id":"ses_ec8f65cb6ffetZq4wYr275l5EN",...}}          # HTTP 200: id accepted
+$ curl -X POST /api/session/<id>/prompt {"text":"Reply with exactly: q9-marker"}
+HTTP 200
+$ curl -X POST /api/experimental/session/<id>/wait
+HTTP 204
+$ curl /api/session/<id>/message  (assistant part, trimmed)
+{"type":"assistant","agent":"spike",
+ "model":{"id":"muse-spark-1.3-contributor","providerID":"opencode-go","variant":"default"},
+ "content":[],"finish":"error",
+ "error":{"type":"provider.quota","message":"Go usage limit exceeded","status":429,
+  "response":{"body":"{\"type\":\"error\",\"error\":{\"type\":\"GoUsageLimitError\",...},\"metadata\":{...\"limitName\":\"monthly\"}}"}}}
+idle | failed
+# -> serve resolved the exact AGENCY_MODEL id server-side (via the Console
+# remote config fetched with the env key) and attempted upstream; the
+# refusal names the Go monthly plan limit. An unknown id would not reach a
+# Go-plan quota error.
+
+$ # server default model (session created with no model ref), same key
+assistant finish:error {"type":...,"message":"Insufficient account funds",...}
+idle | failed
+# -> the default model has no funding on this account (contrast: quota, not funds).
+
+$ opencode auth import --help  (host, no secret involved)
+DESCRIPTION
+  import credentials exported by auth export
+# -> `auth import` migrates Console `auth export` files; it is not an env-key
+# importer, so the prompt's fallback does not apply to an env-supplied key.
+
+Source: review/opencode/packages/core/src/plugin/provider/opencode.ts:332,344
+(OPENCODE_API_KEY read as credentials); :180-260 (model catalog fetched from
+the Console with that credential — which is why the 2.0.26 CLI, with no local
+opencode-go catalog, lists nothing standalone while serve resolves the id).
+
+## Observation
+- Serve DOES pick up OPENCODE_API_KEY from the environment: with the key,
+  the provider attempts authentication upstream (Go-plan quota refusal for
+  the exact AGENCY_MODEL id), and the entrypoint refuses to start without
+  it (exit 64, checks 03). No `auth import` step is needed.
+- `opencode models` in the 2.0.26 container does NOT list AGENCY_MODEL:
+  --standalone prints nothing (rc=0); the default form fails EROFS on the
+  read-only config dir. The host 2.0.28 CLI lists it (5 muse-spark lines).
+  Server-side resolution is proven by the quota error above, so the CLI
+  listing is a display quirk, and the fleet (Stage 1c) uses HTTP, never it.
+- The model id needs no correction: the server accepted it verbatim.
+
+## Verdict: partly (env pickup yes; container CLI listing no, host CLI yes,
+server-side resolution yes; no fallback adopted)

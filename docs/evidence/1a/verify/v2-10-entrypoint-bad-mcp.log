@@ -1,0 +1,9 @@
+# Fail-closed probe: entrypoint with malformed /etc/agency/mcp-requirements.json — 2026-10-13T19:06:41Z
+$ docker run --name agency-verify-badmcp -e OPENCODE_PASSWORD=<dummy-pw> -e OPENCODE_API_KEY=<dummy-value> -v /tmp/opencode/v2-verify/bad-mcp/mcp-requirements.json:/etc/agency/mcp-requirements.json:ro,z agency-base:2.0.26
+# (command echo redacted at write time to <dummy-...> so no non-empty OPENCODE_API_KEY assignment line exists in verifier evidence; the actual container received throwaway dummy values)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 19 (char 18)
+entrypoint: refusing to start: cannot read MCP requirements from /etc/agency/mcp-requirements.json
+run exit=0
+$ docker inspect -f '{{.State.ExitCode}}' agency-verify-badmcp
+64

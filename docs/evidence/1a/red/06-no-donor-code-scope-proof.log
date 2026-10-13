@@ -1,0 +1,40 @@
+Sabotage: stray 'docker run' and stray 'bwrap' additions to the non-exempt
+scripts/preflight.sh, plus an unreadable scanned file; all restored immediately.
+Proves: the Stage 1a exemption (scripts/spike.sh, scripts/accept/**) does not
+weaken the guard, the bwrap clause is intact, and the rewritten scan fails
+closed when grep cannot read a file.
+
+## 1. docker run in a non-exempt scanned file
+
+$ printf '\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n' >> scripts/preflight.sh
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK ?/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh 
+exit=1
+$ git checkout -- scripts/preflight.sh && git diff --exit-code -- scripts/preflight.sh && echo 'exact revert: yes'
+exact revert: yes
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK ?/06-no-donor-code: PASS
+exit=0
+
+## 2. bwrap clause (unchanged intent) still fires
+
+$ printf '\n# sabotage probe\nbwrap --ro-bind / / true\n' >> scripts/preflight.sh
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK ?/06-no-donor-code: FAIL bwrap in first-party source: scripts/preflight.sh  
+exit=1
+$ git checkout -- scripts/preflight.sh && git diff --exit-code -- scripts/preflight.sh && echo 'exact revert: yes'
+exact revert: yes
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK ?/06-no-donor-code: PASS
+exit=0
+
+## 3. scan fails closed on an unreadable scanned file
+
+$ chmod 000 scripts/audit-repair.ts
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK ?/06-no-donor-code: FAIL cannot scan scripts/audit-repair.ts for 'bwrap' (grep exit 2)
+exit=1
+$ chmod 644 scripts/audit-repair.ts
+$ bash scripts/accept/0/06-no-donor-code.sh
+CHECK ?/06-no-donor-code: PASS
+exit=0

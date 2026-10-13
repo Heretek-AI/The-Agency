@@ -1,0 +1,32 @@
+# Q12 — Project config disabled: is the repo's AGENTS.md still loaded?
+Date: 2026-10-13. A=agency-spike-q (project enabled), B=agency-spike-q12
+(+OPENCODE_DISABLE_PROJECT_CONFIG=1). Worktree has AGENTS.md with
+SPIKE_AGENTS_MARKER. Sessions created at /work/trees/t1 on both.
+
+## Commands + trimmed output
+
+$ # A (enabled): log after session-location boot
+$ docker exec agency-spike-q grep AGENTS.md .../log/opencode.log
+... "watcher subscribe" path=/work/trees/t1/AGENTS.md type=file ...
+... "watcher started"   path=/work/trees/t1/AGENTS.md type=file ...
+$ # B (disabled): same greps after two sessions + settle delay
+$ docker exec agency-spike-q12 grep -i "agents.md|instruction" .../log/opencode.log
+(no output, rc=1; 5-line log: cli starting, schema bootstrap, git rev-parse only)
+
+Source: review/opencode/packages/server/src/routes.ts:131
+  InstructionDiscovery.configured({ project: options.config?.project })
+Source: .../config/plugin/instruction.ts:69-79
+  projectSource(): if (!project) return []   # no walk, no AGENTS.md files
+Source: .../instance.ts:121-130 comment: boot-time AGENTS.md discovery off
+  in vanilla mode, but "reading a file still injects nested AGENTS.md
+  instructions — that is session-time context, not boot-time population."
+
+## Observation
+No. With project config disabled the repo's AGENTS.md is NOT loaded at
+boot (no subscriptions, no discovery); enabled, the session worktree's
+AGENTS.md IS subscribed on location boot (positive vs negative pair).
+No fallback needed: the task envelope (shared context 9.7) already tells
+the expert "If AGENTS.md exists at the worktree root, read it first", and
+file reads inject nested AGENTS.md as session-time context anyway.
+
+## Verdict: no (envelope covers it; nothing to adopt)

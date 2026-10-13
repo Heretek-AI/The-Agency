@@ -1,0 +1,79 @@
+# F4 red proof — 0/06-no-donor-code fails closed when `git ls-files` fails
+# Date: 2026-10-13 (UTC), branch stage-1a-spike, cycle-2 rework.
+# Finding: docs/reports/stage-1a-verification.md F4 (proof there:
+# docs/evidence/1a/verify/v2-19-probe-06-git-lsfiles.log, untouched).
+#
+# Sabotage 1: PATH shim where `git ls-files` exits 128 and every other git
+# subcommand delegates to /usr/bin/git (the verifier's probe shape).
+# Before the fix (unfixed tree, same shim): CHECK PASS, exit 0 — fail open.
+# After the fix: the check must exit 1.
+
+$ command -v git
+/usr/bin/git
+$ cat /tmp/opencode/f4-shim/git    # shim, never committed
+#!/usr/bin/env bash
+if [ "${1:-}" = "ls-files" ]; then
+  echo "shim: git ls-files unavailable" >&2
+  exit 128
+fi
+exec /usr/bin/git "$@"
+$ chmod +x /tmp/opencode/f4-shim/git
+
+## 0. Pre-fix repro (tree before this rework, HEAD 6c58cb6)
+
+$ PATH=/tmp/opencode/f4-shim:$PATH ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+shim: git ls-files unavailable
+shim: git ls-files unavailable
+shim: git ls-files unavailable
+shim: git ls-files unavailable
+CHECK 0/06-no-donor-code: PASS
+exit=0
+
+## 1. Post-fix: shim -> FAIL (the red proof)
+
+$ bash -n scripts/accept/0/06-no-donor-code.sh && echo 'bash -n: ok'
+bash -n: ok
+$ PATH=/tmp/opencode/f4-shim:$PATH ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+shim: git ls-files unavailable
+CHECK 0/06-no-donor-code: FAIL git ls-files *.patch failed (exit 128); cannot enumerate tracked files
+exit=1
+
+## 2. Post-fix: real git -> PASS, restored exactly
+
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: PASS
+exit=0
+
+## 3. Existing sabotage classes re-confirmed on the reworked tree
+
+$ printf '\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n' >> scripts/preflight.sh
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh
+exit=1
+$ git checkout -- scripts/preflight.sh && git diff --exit-code -- scripts/preflight.sh && echo 'revert: clean'
+revert: clean
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: PASS
+exit=0
+
+$ printf '\n# sabotage probe\nbwrap --ro-bind / / true\n' >> scripts/preflight.sh
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: FAIL bwrap in first-party source: scripts/preflight.sh
+exit=1
+$ git checkout -- scripts/preflight.sh && git diff --exit-code -- scripts/preflight.sh && echo 'revert: clean'
+revert: clean
+
+$ chmod 000 scripts/audit-repair.ts
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: FAIL cannot scan scripts/audit-repair.ts for 'bwrap' (grep exit 2)
+exit=1
+$ chmod 644 scripts/audit-repair.ts
+$ ACCEPT_STAGE=0 bash scripts/accept/0/06-no-donor-code.sh
+CHECK 0/06-no-donor-code: PASS
+exit=0
+
+## Restoration
+
+$ git status --short scripts/preflight.sh scripts/audit-repair.ts
+(no output: both restored; only the intended edit to
+scripts/accept/0/06-no-donor-code.sh remains, plus this evidence file)

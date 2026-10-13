@@ -1,0 +1,12 @@
+Sabotage: the `OPENCODE_PASSWORD` refusal block deleted from `images/base/entrypoint.sh` (the `OPENCODE_API_KEY` refusal left intact) and the image rebuilt; the container then serves with an invented password instead of exiting non-zero.
+QA pass on the frozen tree, 2026-10-13, HEAD 3f05923.
+
+$ sed -i '/^if \[ -z "${OPENCODE_PASSWORD:-}" \]; then$/,/^fi$/d' images/base/entrypoint.sh && make build-base
+$ bash scripts/accept/1a/03-entrypoint-fails-closed.sh
+CHECK 1a/03-entrypoint-fails-closed: FAIL no-password container still running
+exit=1
+(no agency-spike container left behind: the check's EXIT trap removed agency-spike-accept03)
+
+restored: Y (`git checkout -- images/base/entrypoint.sh`; `git diff --stat` empty; image rebuilt; re-run:
+  CHECK 1a/03-entrypoint-fails-closed: PASS
+  exit=0)

@@ -1,0 +1,154 @@
+# 4.6 pattern scan — verifier pass 2, 2026-10-13T20:09:01Z, HEAD de88e01
+# Changed files: 168; scanning the changed set + whole tree for the first four patterns.
+
+## grep hits across changed files (pattern: matches)
+\|\| true:                               
+    docs/evidence/1a/verify/v2-08-agent-uid-wiring.log:18:$ docker ps -a | grep agency-verify || true
+    docs/evidence/1a/verify/v2-20-image-metadata.log:2:$ docker history --no-trunc agency-base:2.0.26 | grep -c 'OPENCODE_API_KEY\|OPENCODE_PASSWORD' || true
+    docs/reports/stage-1a-verification.md:58:- What: with a PATH shim where `git ls-files` exits 128 but `git rev-parse` works, the check exits **0** — four shim invocations, empty lists, zero files scanned (`v2-19-probe-06-git-lsfiles.log`). The close-out hardened `docker ps`, `git grep` and the per-file grep, but not the file-list source; lines 15/18 compound it with `|| true`.
+    docs/reports/stage-1a-verification.md:60:- Fix: capture and test the exit status of every `git ls-files` (fail on rc≠0) before the emptiness tests; drop the `|| true` on lines 15/18 in favour of explicit rc handling.
+    docs/reports/stage-1a-verification.md:118:- `|| true` sites: only teardown (`spike.sh:35`, `03:14,26,40`, `04:14,26`) and the two `ls-files | grep` lines now reported under F4. All `2>/dev/null` sites on judged paths are paired with fail-closed fallbacks (`?`/`unknown` → fail, empty → FAIL row, rc checks in 07).
+    docs/reports/stage-1a.md:53:  `docker rm -f ... || true` is kept with the explanatory comment:
+    docs/reports/stage-1a.md:286:  `|| true` became an explicit `|| compose_version=""`; behavior is
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:14:  docker rm -f "$name" >/dev/null 2>&1 || true
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:26:docker rm -f "$name" >/dev/null 2>&1 || true
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:40:docker rm -f "$name" >/dev/null 2>&1 || true
+    scripts/accept/1a/04-healthy-nonroot.sh:14:  docker rm -f "$name" >/dev/null 2>&1 || true
+    scripts/accept/1a/04-healthy-nonroot.sh:26:docker rm -f "$name" >/dev/null 2>&1 || true
+    scripts/spike.sh:35:  docker rm -f "$NAME" >/dev/null 2>&1 || true
+set +e:                                  0
+2>/dev/null:                             
+    docs/reports/stage-1a-verification.md:118:- `|| true` sites: only teardown (`spike.sh:35`, `03:14,26,40`, `04:14,26`) and the two `ls-files | grep` lines now reported under F4. All `2>/dev/null` sites on judged paths are paired with fail-closed fallbacks (`?`/`unknown` → fail, empty → FAIL row, rc checks in 07).
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:31:code=$(docker inspect -f '{{.State.ExitCode}}' "$name" 2>/dev/null || echo "?")
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:32:running=$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null || echo "?")
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:45:code=$(docker inspect -f '{{.State.ExitCode}}' "$name" 2>/dev/null || echo "?")
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:46:running=$(docker inspect -f '{{.State.Running}}' "$name" 2>/dev/null || echo "?")
+    scripts/accept/1a/04-healthy-nonroot.sh:32:  healthy=$(docker inspect -f '{{.State.Health.Status}}' "$name" 2>/dev/null || echo "unknown")
+    scripts/accept/1a/04-healthy-nonroot.sh:39:got_uid=$(docker exec "$name" id -u 2>/dev/null || echo "?")
+    scripts/accept/1a/04-healthy-nonroot.sh:41:who=$(docker exec "$name" whoami 2>/dev/null || echo "?")
+    scripts/accept/1a/04-healthy-nonroot.sh:43:ver=$(docker exec "$name" opencode --version 2>/dev/null || echo "?")
+    scripts/accept/1a/05-spike-end-to-end.sh:11:key=$(sed -n 's/^OPENCODE_API_KEY=//p' "$root/.env.provider" 2>/dev/null | head -1 | sed 's/[[:space:]]*#.*//;s/^[[:space:]]*//;s/[[:space:]]*$//')
+    scripts/accept/1a/07-no-secret-leak.sh:14:key=$(sed -n 's/^OPENCODE_API_KEY=//p' "$root/.env.provider" 2>/dev/null | head -1 | sed 's/[[:space:]]*#.*//;s/^[[:space:]]*//;s/[[:space:]]*$//')
+    scripts/accept/1a/07-no-secret-leak.sh:17:  hits=$(git -C "$root" grep -F -l -- "$key" -- . 2>/dev/null)
+    scripts/accept/1a/07-no-secret-leak.sh:22:  grep -rF -q -- "$key" "$root/docs/evidence/1a" 2>/dev/null
+    scripts/accept/1a/07-no-secret-leak.sh:40:hits=$(git -C "$root" grep -nE -- '^[^#]*OPENCODE_API_KEY=["'"'"']?[A-Za-z0-9]' -- . 2>/dev/null)
+    scripts/preflight.sh:30:  runtime_version=$(docker --version 2>/dev/null | head -1)
+    scripts/preflight.sh:33:  runtime_version=$(podman --version 2>/dev/null | head -1)
+    scripts/preflight.sh:46:  compose_version=$($runtime compose version --short 2>/dev/null) || compose_version=""
+    scripts/preflight.sh:53:  if [ "$major" -gt 2 ] 2>/dev/null || { [ "$major" -eq 2 ] 2>/dev/null && [ "$minor" -ge 24 ] 2>/dev/null; }; then
+    scripts/preflight.sh:63:  selinux=$(getenforce 2>/dev/null || echo "unknown")
+    scripts/preflight.sh:65:  case "$(cat /sys/fs/selinux/enforce 2>/dev/null)" in
+    scripts/preflight.sh:73:root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    scripts/preflight.sh:78:  mode=$(stat -c %a "$provider_file" 2>/dev/null || echo "?")
+    scripts/preflight.sh:80:  if grep -qE '^OPENCODE_API_KEY=[^[:space:]#]+' "$provider_file" 2>/dev/null; then
+    scripts/preflight.sh:109:    if python3 -c "import socket,sys; s=socket.socket(); s.bind(('127.0.0.1', $port)); s.close()" 2>/dev/null; then
+    scripts/preflight.sh:114:    if ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
+    scripts/spike.sh:58:key=$(sed -n 's/^OPENCODE_API_KEY=//p' "$ROOT/.env.provider" 2>/dev/null | head -1 | sed 's/[[:space:]]*#.*//;s/^[[:space:]]*//;s/[[:space:]]*$//')
+    scripts/spike.sh:96:  healthy=$(docker inspect -f '{{.State.Health.Status}}' "$NAME" 2>/dev/null || echo "unknown")
+example\.(com|org):                      0
+not implemented|TODO|FIXME|placeholder:  
+    Makefile:23:	@echo "lint: no placeholder successes in first-party source"
+    Makefile:24:	@! grep -rniE "todo|fixme|placeholder|invented result|hard-coded (outcome|success|pass)" dispatcher/src verifier/src --include='*.ts'
+    docs/audit/defects.md:33:| D-23 | `opencode-gateway/apps/gateway/src/server.ts:244-262,343` | Gateway returns invented results as success | not carried over: rule 4.1.5 | scan for placeholder returns; the Stage 4c stub is named a fake | 0, 4c |
+    docs/evidence/1a/qa/01-make-check.log:9:lint: no placeholder successes in first-party source
+    docs/evidence/1a/qa/07-make-check-final.log:9:lint: no placeholder successes in first-party source
+    docs/evidence/1a/qa/cycle2-make-check.log:13:lint: no placeholder successes in first-party source
+    docs/evidence/1a/qa/cycle2-qa-summary.log:66:- `docker history --no-trunc` : 1 match (HEALTHCHECK placeholder).
+    docs/evidence/1a/qa/cycle2b-make-check.log:13:lint: no placeholder successes in first-party source
+    docs/evidence/1a/qa/cycle2c-make-check.log:13:lint: no placeholder successes in first-party source
+    docs/evidence/1a/qa/cycle2d-make-check.log:13:lint: no placeholder successes in first-party source
+    docs/evidence/1a/qa/f5-image-metadata-wording.log:21:placeholder; no key or password value appears anywhere (check 07 remains
+    docs/evidence/1a/verify/01-make-check.log:8:lint: no placeholder successes in first-party source
+    docs/evidence/1a/verify/v2-01-make-check.log:9:lint: no placeholder successes in first-party source
+    docs/evidence/1a/verify/v2-20-image-metadata.log:7:(count of NAME references in inspect; these are the HEALTHCHECK's runtime ${OPENCODE_PASSWORD} placeholder, not a value)
+    docs/evidence/1a/verify/v2-21-make-check-final.log:9:lint: no placeholder successes in first-party source
+    docs/reports/stage-1a-verification.md:79:- What: `docker history --no-trunc` contains one matching line (the HEALTHCHECK metadata with the literal `${OPENCODE_PASSWORD}` placeholder) and `docker inspect` contains the same; neither contains a value. The report claims "docker history clean; the single docker inspect hit…".
+    docs/reports/stage-1a.md:208:  sentence now describes (one `${OPENCODE_PASSWORD}` placeholder in
+0\.0\.0\.0:                              
+    docs/evidence/1a/spike/q02.log:7:server listening on http://0.0.0.0:4096
+    docs/reports/stage-1a.md:43:serve --hostname 0.0.0.0 --port 4096`.
+    images/base/entrypoint.sh:67:exec opencode serve --hostname 0.0.0.0 --port 4096
+:?latest:                                
+    docs/evidence/1a/verify/v2-20-image-metadata.log:11:$ Dockerfile FROM / latest scan
+    docs/reports/stage-1a.md:37:  once; no value appears in either), no `latest`, single pinned `FROM`.
+    scripts/accept/1a/02-base-image-pinned.sh:14:echo "$from" | grep -qi 'latest' && fail "FROM floats on latest"
+    scripts/accept/1a/02-base-image-pinned.sh:20:grep -nE 'FROM [^ ]*:(latest|[0-9]+\.[0-9]+$|[0-9]+$)' "$df" && fail "floating image tag in Dockerfile"
+    versions.env:1:# Exact pins for every toolchain and dependency. No `latest`, no ranges.
+docker run:                              
+    docs/audit/defects.md:16:| D-06 | `opencode-fleet/src/lanes/runner.ts:32,47-60,75-86`, `lanes/tiers.ts:50-76` | Sandbox lanes expose host files, environment, network | not carried over: no lanes (section 6) | scan: no `bwrap`, no `docker run` outside `envrunner/`, `lifecycle/`, and the Stage 1a harness (`scripts/spike.sh`, `scripts/accept/**`) that the stage prompt requires to start containers | 0 |
+    docs/build-notes.md:157:- Stage 0 check `06-no-donor-code` scanned `scripts/**` for `docker run`
+    docs/evidence/0/accept-20261013T175814Z.log:13:CHECK 0/06-no-donor-code: FAIL docker run outside envrunner/ and lifecycle/: scripts/accept/1a/03-entrypoint-fails-closed.sh scripts/accept/1a/04-healthy-nonroot.sh scripts/spike.sh 
+    docs/evidence/0/accept-20261013T175814Z.log:28:0/06-no-donor-code           FAIL   docker run outside envrunner/ and lifecycle/: scripts/accept/1a/03-entrypoint-fails-closed.sh scripts/accept/1a/04-healthy-nonroot.sh scripts/spike.sh 
+    docs/evidence/1a/accept-20261013T173413Z.log:15:CHECK 1a/07-no-secret-leak: FAIL non-empty OPENCODE_API_KEY assignment in tracked files: scripts/accept/1a/03-entrypoint-fails-closed.sh:22:docker run -d --name "$name" -e OPENCODE_PASSWORD= -e OPENCODE_API_KEY=[dummy-value-redacted] \ scripts/accept/1a/04-healthy-nonroot.sh:21:docker run -d --name "$name" -e "OPENCODE_PASSWORD=$pw" -e OPENCODE_API_KEY=[dummy-value-redacted] \ 
+    docs/evidence/1a/accept-20261013T173413Z.log:25:1a/07-no-secret-leak         FAIL   non-empty OPENCODE_API_KEY assignment in tracked files: scripts/accept/1a/03-entrypoint-fails-closed.sh:22:docker run -d --name "$name" -e OPENCODE_PASSWORD= -e OPENCODE_API_KEY=[dummy-value-redacted] \ scripts/accept/1a/04-healthy-nonroot.sh:21:docker run -d --name "$name" -e "OPENCODE_PASSWORD=$pw" -e OPENCODE_API_KEY=[dummy-value-redacted] \ 
+    docs/evidence/1a/entrypoint-mcp-requirements-failclosed.log:7:$ docker run -d --name agency-spike-badreq -e OPENCODE_PASSWORD=<dummy> \
+    docs/evidence/1a/qa/cycle2-f4-lsfiles-probe.log:45:$ printf "\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n" >> scripts/preflight.sh
+    docs/evidence/1a/qa/cycle2-f4-lsfiles-probe.log:47:CHECK 0/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh 
+    docs/evidence/1a/qa/cycle2-spot-red-proofs.log:41:$ docker run -d --name agency-spike-qa-decoy --entrypoint sleep agency-base:2.0.26 300
+    docs/evidence/1a/red-proofs.log:27:0/06 | 0/06-no-donor-code | stray `docker run` appended to scripts/preflight.sh → exit 1 | red/0-06-no-donor-code-qa.log | restored Y (exact revert; re-run PASS)
+    docs/evidence/1a/red-proofs.log:36:  - red/06-no-donor-code-scope-proof.log — stray docker run / bwrap / unreadable scanned file → FAIL; exact revert → PASS. Complemented by 0-06-no-donor-code-qa.log.
+    docs/evidence/1a/red/0-06-no-donor-code-qa.log:1:Sabotage: a stray `docker run` line appended to the non-exempt scanned script `scripts/preflight.sh`; reverted exactly afterwards. (Complements the builder's `red/06-no-donor-code-scope-proof.log`.)
+    docs/evidence/1a/red/0-06-no-donor-code-qa.log:4:$ printf '\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n' >> scripts/preflight.sh
+    docs/evidence/1a/red/0-06-no-donor-code-qa.log:6:CHECK 0/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh
+    docs/evidence/1a/red/0-06-no-donor-code-qa.log:16:note: the stage-1a exemption covers only scripts/spike.sh and scripts/accept/**; a `docker run` anywhere else still fails the scan.
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:1:Sabotage: stray 'docker run' and stray 'bwrap' additions to the non-exempt
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:7:## 1. docker run in a non-exempt scanned file
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:9:$ printf '\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n' >> scripts/preflight.sh
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:11:CHECK ?/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh 
+    docs/evidence/1a/red/f4-no-donor-code-lsfiles.log:49:$ printf '\n# sabotage probe\ndocker run --rm ubuntu:24.04 true\n' >> scripts/preflight.sh
+    docs/evidence/1a/red/f4-no-donor-code-lsfiles.log:51:CHECK 0/06-no-donor-code: FAIL docker run outside envrunner/, lifecycle/, scripts/spike.sh and scripts/accept/**: scripts/preflight.sh
+    docs/evidence/1a/spike-parse/run.log:43:## spike.sh, not committed as a script): docker run agency-base:2.0.26 with
+    docs/evidence/1a/spike/q14.log:14:$ docker run -d --name agency-spike-q14 ... -e SPIKE_MCP_ENABLE=1 \
+    docs/evidence/1a/spike/q14.log:39:$ docker run --rm --entrypoint id -v /tmp/opencode/q14db:/db:z agency-base:2.0.26
+    docs/evidence/1a/verify/21-accept-stage0.log:7:0/06-no-donor-code           FAIL   docker run outside envrunner/ and lifecycle/: scripts/accept/1a/03-entrypoint-fails-closed.sh scripts/accept/1a/04-healthy-nonroot.sh scripts/spike.sh 
+    docs/evidence/1a/verify/v2-10-entrypoint-bad-mcp.log:2:$ docker run --name agency-verify-badmcp -e OPENCODE_PASSWORD=<dummy-pw> -e OPENCODE_API_KEY=<dummy-value> -v /tmp/opencode/v2-verify/bad-mcp/mcp-requirements.json:/etc/agency/mcp-requirements.json:ro,z agency-base:2.0.26
+    docs/evidence/1a/verify/v2-16-sabotage-03.log:25:$ sha256sum images/base/entrypoint.sh; docker run --rm --entrypoint sha256sum agency-base:2.0.26 /usr/local/bin/entrypoint.sh
+    docs/reports/stage-1a.md:69:  `spike.sh` checks its own `docker run`.
+    docs/reports/stage-1a.md:140:stage-1a `docker run` calls); the one failure is `0/05-salvage-provenance`,
+bwrap:                                   
+    docs/audit/defects.md:16:| D-06 | `opencode-fleet/src/lanes/runner.ts:32,47-60,75-86`, `lanes/tiers.ts:50-76` | Sandbox lanes expose host files, environment, network | not carried over: no lanes (section 6) | scan: no `bwrap`, no `docker run` outside `envrunner/`, `lifecycle/`, and the Stage 1a harness (`scripts/spike.sh`, `scripts/accept/**`) that the stage prompt requires to start containers | 0 |
+    docs/evidence/1a/red-proofs.log:36:  - red/06-no-donor-code-scope-proof.log — stray docker run / bwrap / unreadable scanned file → FAIL; exact revert → PASS. Complemented by 0-06-no-donor-code-qa.log.
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:1:Sabotage: stray 'docker run' and stray 'bwrap' additions to the non-exempt
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:4:weaken the guard, the bwrap clause is intact, and the rewritten scan fails
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:19:## 2. bwrap clause (unchanged intent) still fires
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:21:$ printf '\n# sabotage probe\nbwrap --ro-bind / / true\n' >> scripts/preflight.sh
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:23:CHECK ?/06-no-donor-code: FAIL bwrap in first-party source: scripts/preflight.sh  
+    docs/evidence/1a/red/06-no-donor-code-scope-proof.log:35:CHECK ?/06-no-donor-code: FAIL cannot scan scripts/audit-repair.ts for 'bwrap' (grep exit 2)
+    docs/evidence/1a/red/f4-no-donor-code-lsfiles.log:59:$ printf '\n# sabotage probe\nbwrap --ro-bind / / true\n' >> scripts/preflight.sh
+    docs/evidence/1a/red/f4-no-donor-code-lsfiles.log:61:CHECK 0/06-no-donor-code: FAIL bwrap in first-party source: scripts/preflight.sh
+    docs/evidence/1a/red/f4-no-donor-code-lsfiles.log:68:CHECK 0/06-no-donor-code: FAIL cannot scan scripts/audit-repair.ts for 'bwrap' (grep exit 2)
+    docs/evidence/1a/verify/v2-18-failclosed-probes.log:5:CHECK 0/06-no-donor-code: FAIL cannot scan scripts/audit-repair.ts for 'bwrap' (grep exit 2)
+    docs/reports/stage-1a.md:171:  `bwrap` appended to the non-exempt `scripts/preflight.sh` each exit 1;
+    docs/reports/stage-1a.md:186:  the fix); stray `docker run` / `bwrap` / unreadable-file sabotages still
+    scripts/accept/0/06-no-donor-code.sh:78:scan "bwrap"
+    scripts/accept/0/06-no-donor-code.sh:79:bwraps="$SCAN_HITS"
+    scripts/accept/0/06-no-donor-code.sh:80:[ -z "$bwraps" ] || fail "bwrap in first-party source: $(echo "$bwraps" | head -3 | tr '\n' ' ')"
+process\.env:                            
+    Makefile:17:	@echo "lint: process.env is read only in config.ts"
+    docs/evidence/1a/qa/01-make-check.log:6:lint: process.env is read only in config.ts
+    docs/evidence/1a/qa/07-make-check-final.log:6:lint: process.env is read only in config.ts
+    docs/evidence/1a/qa/cycle2-make-check.log:10:lint: process.env is read only in config.ts
+    docs/evidence/1a/qa/cycle2b-make-check.log:10:lint: process.env is read only in config.ts
+    docs/evidence/1a/qa/cycle2c-make-check.log:10:lint: process.env is read only in config.ts
+    docs/evidence/1a/qa/cycle2d-make-check.log:10:lint: process.env is read only in config.ts
+    docs/evidence/1a/verify/01-make-check.log:5:lint: process.env is read only in config.ts
+    docs/evidence/1a/verify/v2-01-make-check.log:6:lint: process.env is read only in config.ts
+    docs/evidence/1a/verify/v2-21-make-check-final.log:6:lint: process.env is read only in config.ts
+    docs/reports/stage-1a-verification.md:119:- `process.env` first-party: only `dispatcher/src/config.ts` (allowed) and the stage-0 harness self-test fixture `scripts/accept/test/accept.test.ts:59,63` (outside the lint guard's `dispatcher/src`+`verifier/src` scope) — justified.
+test\.skip|it\.skip|describe\.skip|\.todo\(: 0
+sleep [0-9]:                             
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:30:sleep 5
+    scripts/accept/1a/03-entrypoint-fails-closed.sh:44:sleep 5
+    scripts/accept/1a/04-healthy-nonroot.sh:34:  sleep 5
+    scripts/spike.sh:100:  sleep 5
+
+## Whole-tree: credential defaults (grep for :- default on credential vars)
+./images/base/entrypoint.sh:14:if [ -z "${OPENCODE_PASSWORD:-}" ]; then
+./images/base/entrypoint.sh:18:if [ -z "${OPENCODE_API_KEY:-}" ]; then
+
+## Whole-tree: constant 'ready'/'healthy'/'pass' returns outside test fakes
+dispatcher/test/live/opencode.live.test.ts:6: * FAILURE, never an early-return pass: requireLive() throws so a sabotaged
+
+## Whole-tree: example URLs / fabricated output markers in first-party source
+
+## Unit-test skip scan

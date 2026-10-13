@@ -1,0 +1,16 @@
+# Register guard names resolved in this tree — verifier pass 2, 2026-10-13T20:09:46Z
+# (Stage-0 rows due by stage 1a; each name below must exist in a unit test, check, or script.)
+
+defect: empty check list is an error                           FOUND: verifier/test/run-checks.test.ts 
+defect: timeout kills the whole process group                  FOUND: dispatcher/test/util/exec.test.ts 
+defect: child sees only the explicit environment               FOUND: dispatcher/test/util/exec.test.ts 
+defect: retry keeps commits on the task branch                 FOUND: dispatcher/test/worktrees.test.ts 
+defect: a rewritten log of equal length is detected            FOUND: dispatcher/test/audit.test.ts 
+append never changes earlier bytes                             FOUND: dispatcher/test/audit.test.ts 
+a second writer is refused                                     FOUND: dispatcher/test/audit.test.ts 
+every operation the client uses exists in openapi.json         FOUND: dispatcher/test/opencode.test.ts 
+createSession sends agent, location, permissions, metadata     FOUND: dispatcher/test/opencode.test.ts 
+a pass with a blocker is invalid                               FOUND: dispatcher/src/protocol.ts dispatcher/test/protocol.test.ts 
+
+# Stage-0 checks re-run this pass (v3-05): 01/02/03/04/06/07/08/09/10 PASS; 05 FAIL only on the branch-name gate ('expected branch stage-0-salvage, on stage-1a-spike') — expected when stage-0 checks run from the stage-1a branch, unchanged from pass 1.
+# Unit tests: make check ran 78 pass / 0 fail (v3-01) covering the D-03/08/09/10/14/15/16/17/18 tests above.

@@ -1,0 +1,27 @@
+# Q4 — Does serve start with a read-only OPENCODE_CONFIG_DIR?
+Date: 2026-10-13. All spike containers mount spike/config at /etc/agency:ro
+with OPENCODE_CONFIG_DIR=/etc/agency. agency-spike-q3 also read-only.
+
+## Commands + trimmed output
+
+$ docker inspect -f '{{.State.Health.Status}}' agency-spike-q3
+healthy
+$ docker exec agency-spike-q3 touch /etc/agency/probe
+touch: cannot touch '/etc/agency/probe': Read-only file system  (rc=1)
+$ curl /api/info   (Basic auth, inside container)
+{"version":"2.0.26",...}                 # HTTP 200 while config stays ro
+$ docker exec agency-spike-q sh -c 'echo CONFIG_DIR=$OPENCODE_CONFIG_DIR'
+CONFIG_DIR=/etc/agency
+$ curl /api/agent/spike | python3 -c '...data.id...'
+spike                                # agent from the ro dir loads
+
+## Observation
+Yes. Serve boots healthy, serves /api/info, and loads agents/permissions
+from a read-only config dir; writes to it fail EROFS while serving is
+unaffected (negative case). Hot-reload watches are subscribed (see q12.log
+watcher lines); config changes would arrive via remount/recreate, which is
+already the fleet's update path (per-expert config rendered at deploy).
+Negative case: writing to the read-only config dir fails EROFS (rc=1)
+while serve stays healthy and /api/info keeps returning 200.
+
+## Verdict: yes (fallback "bake into image" not needed)

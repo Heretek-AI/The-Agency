@@ -1,0 +1,30 @@
+{
+  "data": [
+    {
+      "id": "msg_user_echo",
+      "time": { "created": 1 },
+      "type": "user",
+      "text": "Append exactly the line spike-ok to notes.txt in your session directory using the edit tool, then run `echo spike-shell-ok` with the shell tool. End with a ## RESULT fenced JSON block {\"status\":\"done\",\"summary\":\"spike edit and shell\"}."
+    },
+    {
+      "id": "msg_assistant_no_markers",
+      "time": { "created": 2, "completed": 3 },
+      "type": "assistant",
+      "agent": "spike",
+      "model": { "id": "spike-model", "providerID": "opencode" },
+      "content": [{ "type": "text", "text": "I could not run the tools." }],
+      "finish": "stop"
+    },
+    {
+      "id": "msg_shell_no_marker",
+      "time": { "created": 4, "completed": 5 },
+      "type": "shell",
+      "shellID": "sh_probe",
+      "command": "echo unrelated",
+      "status": "exited",
+      "exit": 0,
+      "output": { "output": "unrelated\n", "cursor": 0, "size": 10, "truncated": false }
+    }
+  ],
+  "cursor": { "previous": null, "next": null }
+}

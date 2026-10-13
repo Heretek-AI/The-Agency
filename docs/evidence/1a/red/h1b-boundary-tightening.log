@@ -1,0 +1,84 @@
+# H1b red proof — final boundary tightening: "did not yield" / "never showed up"
+# Date: 2026-10-13 (UTC), branch stage-1a-spike, cycle-2 rework follow-up.
+# Finding: docs/evidence/1a/qa/cycle2c-h1-recheck.log (commit 0910053) —
+# two boundary residuals: "attempts to reproduce did not yield a failure"
+# and "the error never showed up" still passed the marker filter.
+#
+# This round closes exactly those two known boundaries and freezes the
+# area: DENIAL_RE gains did(n't)/does(n't) not yield and "never
+# showed|appeared|turned up|manifested|occurred|happened". Keywords cannot
+# decide semantics; genuineness remains the independent verification's
+# read (verify-stage.md). All scratch states restored with `git checkout`
+# (q03.log is committed); q10.log never written.
+
+## Standing state (baseline)
+
+$ bash -n scripts/accept/1a/06-spike-answers-complete.sh && echo 'bash -n: ok'
+bash -n: ok
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+
+## Direct run of the extracted filters
+
+$ # DENIAL_RE, SIGNAL_RE, is_denial, has_signal extracted from the
+$ # committed check; paragraphs extracted as the check does.
+--- six genuine marker paragraphs (must count as observations) ---
+q03 line 47: counts(observation+signal)
+q04 line 24: counts(observation+signal)
+q07 line 24: counts(observation+signal)
+q14 line 42: counts(observation+signal)
+q14 line 44: counts(observation+signal)
+q15 line 20: counts(observation+signal)
+
+--- the two boundary residuals and their close inflections (must DENIAL) ---
+DENIAL | attempts to reproduce did not yield a failure
+DENIAL | the error never showed up
+DENIAL | does not yield
+DENIAL | didn't yield
+DENIAL | doesn't yield
+DENIAL | never appeared
+DENIAL | never turned up
+DENIAL | never manifested
+DENIAL | never occurred
+DENIAL | never happened
+
+--- regression samples (previous rounds) ---
+DENIAL                       | failed to reproduce
+DENIAL                       | could not get it to fail
+DENIAL                       | didn't manage to get a refusal
+NO-SIGNAL(does not count)    | the experiment was done twice
+counts(observation+signal)   | the blocked host’s request was refused with 403
+DENIAL                       | none obtainable without a key — no proxy egress was attempted.
+
+(For q15 the signal "UNSET" sits on the marker's continuation line, so the
+paragraph — not the single line — is what classifies; q15 line 20 counts.)
+
+## End-to-end scratch runs through the check (q03.log marker replaced)
+
+### phrase: "attempts to reproduce did not yield a failure"  (boundary 1)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "the error never showed up"                      (boundary 2)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+restore: exact
+
+### phrase: "the blocked host’s request was refused with 403"  (synthetic genuine)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+(no denial/no-signal failure: the marker filter passed; the standing
+NOT PERFORMED count is the only failure)
+
+## Restoration and final state
+
+$ git diff HEAD --exit-code -- docs/evidence/1a/spike/q03.log docs/evidence/1a/spike/q10.log
+q03/q10: unchanged vs HEAD
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1

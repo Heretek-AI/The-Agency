@@ -1,0 +1,3 @@
+CHECK ?/07-no-secret-leak: FAIL non-empty OPENCODE_API_KEY assignment in tracked files: verify-07-sentinel.tmp:1:OPENCODE_API_KEY="[sentinel-redacted]" 
+EXIT=1
+NOTE: raw FAIL line contained the obviously-fake sentinel value; redacted here to [sentinel-redacted]. Value was never a real secret; file staged-then-removed, never committed.

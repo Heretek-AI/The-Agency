@@ -1,0 +1,180 @@
+# QA cycle-2c — independent re-check of H1 (denial list + observed-outcome signal)
+# Date: 2026-10-13T19:53:32Z UTC
+# HEAD: 50756eaeee3f7de9d2f08641d3841662a0c3f28b (fix(accept-1a): deny paraphrased failures and require a signal in 06)
+# Branch: stage-1a-spike. Check: scripts/accept/1a/06-spike-answers-complete.sh (fix 50756ea, verified independently).
+# q10.log is never written by any probe below.
+
+## 0. Standing state (baseline): the five genuine marker sets must pass BOTH mechanisms
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: standing state — count-only failure (expected on the unmodified tree)
+$ bash -n scripts/accept/1a/06-spike-answers-complete.sh && echo bash-n-ok
+bash-n-ok
+
+## 1. Extract the committed mechanisms and run them directly
+$ cat /tmp/opencode/qa-h1/denial-re.txt
+DENIAL_RE="^(none|no|not|never|nothing)\b"\
+"|\b(couldn'?t|can'?t|cannot|unable)\b"\
+"|\bnot[[:space:]]+(possible|obtainable|reproducible|reproduce|tested"\
+"|testable|attempted|attemptable|exercised|applicable|confirmable)\b"\
+"|\bunobtainable\b"\
+"|\bcould[[:space:]]+not[[:space:]]+(be|reproduce|occur|manifest)\b"\
+"|\bcould[[:space:]]+not[[:space:]]+get\b[^.]*\bfail"\
+"|\bfail(ed|s|ing)?[[:space:]]+to[[:space:]]+reproduce\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+manage\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+manage\b"\
+"|\bno[[:space:]]+[^[:space:]]+[[:space:]]+could[[:space:]]+be[[:space:]]+(produced|reproduced|observed|obtained)\b"\
+"|\bno[[:space:]]+negative[[:space:]]+(case|was)\b"\
+"|\bnone[[:space:]]+(else[[:space:]]+)?(observed|obtained|available|attempted|reproducible)\b"\
+"|\bnothing[[:space:]]+(else[[:space:]]+|was[[:space:]]+)?(observed|obtained|produced|reproduced)\b"\
+"|\b(does|did|do)[[:space:]]+not[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"\
+"|\b(doesn'?t|didn'?t|don'?t)[[:space:]]+(seem[[:space:]]+to[[:space:]]+)?(reproduce|occur|manifest)\b"
+$ cat /tmp/opencode/qa-h1/signal-re.txt
+SIGNAL_RE="fail|deny|denied|denies|refus(e|ed|es|al)|reject(ed|ion)?"\
+"|error|EROFS|EACCES|EPERM|SQLiteError|ConnectionRefused|timeout"\
+"|timed out|unset|non-zero|rc=[1-9]|exit(ed)?[ =][1-9]|4[0-9][0-9]|5[0-9][0-9]"
+$ cat /tmp/opencode/qa-h1/is-denial.txt /tmp/opencode/qa-h1/has-signal.txt
+is_denial() {
+  local s rc
+  s=$(printf '%s' "$1" | sed "s/’/'/g; s/‘/'/g")
+  rc=$?
+  [ "$rc" -eq 0 ] || fail "negative-case filter: apostrophe normalization failed (exit $rc)"
+  printf '%s' "$s" | grep -qiE "$DENIAL_RE"
+  rc=$?
+  case "$rc" in
+    0 | 1) return "$rc" ;;
+    *) fail "negative-case filter failed (grep exit $rc)" ;;
+  esac
+}
+has_signal() {
+  local rc
+  printf '%s' "$1" | grep -qiE "$SIGNAL_RE"
+  rc=$?
+  case "$rc" in
+    0 | 1) return "$rc" ;;
+    *) fail "negative-case signal filter failed (grep exit $rc)" ;;
+  esac
+}
+
+$ # harness over the extracted mechanisms (single-line phrases)
+--- mandated H1 paraphrases (expect DENIAL) ---
+H1-paraphrase-1          DENIAL(rc=0)          | failed to reproduce
+H1-paraphrase-2          DENIAL(rc=0)          | could not get it to fail
+--- my novel no-signal denial (expect NO-SIGNAL) ---
+NOVEL-no-signal          NO-SIGNAL(rc=1,1)     | we saw nothing unusual
+--- signal-less sentence (expect NO-SIGNAL) ---
+SIGNAL-LESS              NO-SIGNAL(rc=1,1)     | the experiment was done twice
+--- adversarial boundary probes (report precisely) ---
+BOUNDARY-1               counts+signal(rc=1,0) | attempts to reproduce did not yield a failure
+BOUNDARY-2               NO-SIGNAL(rc=1,1)     | the disallowed edit did not succeed but was recorded
+BOUNDARY-3               counts+signal(rc=1,0) | the error never showed up
+--- other known members (cross-check) ---
+prior-R1                 DENIAL(rc=0)          | couldn't be reproduced
+prior-R1                 DENIAL(rc=0)          | unable to reproduce it
+prior-R1                 DENIAL(rc=0)          | does not reproduce
+prior-R1                 DENIAL(rc=0)          | no negative case could be produced
+prior-R1                 DENIAL(rc=0)          | cannot be triggered here
+q10-denial               DENIAL(rc=0)          | none obtainable without a key — no proxy egress was attempted.
+genuine-synth            counts+signal(rc=1,0) | the blocked host's request was refused with 403
+--- genuine marker paragraphs from the five committed q-logs (expect counts+signal) ---
+GENUINE-q03:47           counts+signal(rc=1,0) | a container-side write to the read-only /work mount fails
+GENUINE-q04:24           counts+signal(rc=1,0) | writing to the read-only config dir fails EROFS (rc=1)
+GENUINE-q07:24           counts+signal(rc=1,0) | an edit of other.txt outside the per-task grant is
+GENUINE-q14:42           counts+signal(rc=1,0) | with the Bun MCP server stopped, connect/list reports
+GENUINE-q14:44           counts+signal(rc=1,0) | a read-only database dir fails to open (SQLiteError,
+GENUINE-q15:20           counts+signal(rc=1,0) | a second session (S3) that never received the PUT sees
+
+## 2. End-to-end scratch runs through the actual check (q03 marker replaced)
+### phrase: "failed to reproduce"   (expect: denial)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+verdict: REJECTED — denial reason
+expect: MATCH (denial reason)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+### phrase: "could not get it to fail"   (expect: denial)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case is a denial, not an observation
+exit=1
+verdict: REJECTED — denial reason
+expect: MATCH (denial reason)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+### phrase: "we saw nothing unusual"   (expect: nosig)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case shows no observed outcome (no signal in its paragraph)
+exit=1
+verdict: REJECTED — no-observed-outcome reason
+expect: MATCH (no-observed-outcome reason)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+### phrase: "the experiment was done twice"   (expect: nosig)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case shows no observed outcome (no signal in its paragraph)
+exit=1
+verdict: REJECTED — no-observed-outcome reason
+expect: MATCH (no-observed-outcome reason)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+# --- boundary probes: report the actual outcome, expect neither fix nor pass-through ---
+### phrase: "attempts to reproduce did not yield a failure"   (expect: slip)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: ACCEPTED — failure is the standing count only
+boundary: ACCEPTED — residual (neither mechanism rejected this phrasing)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+### phrase: "the disallowed edit did not succeed but was recorded"   (expect: slip)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL q03.log: negative case shows no observed outcome (no signal in its paragraph)
+exit=1
+verdict: REJECTED — no-observed-outcome reason
+boundary: REJECTED — see verdict above
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+### phrase: "the error never showed up"   (expect: slip)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: ACCEPTED — failure is the standing count only
+boundary: ACCEPTED — residual (neither mechanism rejected this phrasing)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+# --- synthetic genuine passes the marker filter; failure must be the count only ---
+### phrase: "the blocked host's request was refused with 403"   (expect: accepted)
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: ACCEPTED — failure is the standing count only
+expect: MATCH (marker accepted; count-only)
+restore: q03.log byte-identical
+git diff --exit-code: clean
+
+## 3. Restored standing state
+$ ACCEPT_STAGE=1a bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1
+verdict: standing state — count-only failure (expected on the unmodified tree)
+
+## 4. Final restoration and q10 facts
+$ git status --short docs/evidence/1a/spike/q03.log docs/evidence/1a/spike/q10.log
+(no output = q03 restored, q10 untouched)
+$ grep -n "Negative" docs/evidence/1a/spike/q10.log
+25:Negative case: none obtainable without a key — no proxy egress was attempted.
+$ git diff HEAD --stat -- docs/evidence/1a/spike/q10.log
+(no output = q10.log untouched by this probe)
+
+## 5. Standing failure, exact command as specified (no ACCEPT_STAGE override)
+$ bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK ?/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+exit=1

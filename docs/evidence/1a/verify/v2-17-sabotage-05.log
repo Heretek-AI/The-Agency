@@ -1,0 +1,13 @@
+# Sabotage sample 7: check 05 — present-but-invalid key runs spike.sh and fails closed; keyless maps to SKIP — 2026-10-13T19:11:14Z
+$ printf 'OPENCODE_API_KEY=%s\n' "<dummy-05>" > .env.provider && chmod 600 .env.provider
+$ ACCEPT_STAGE=1a ACCEPT_CHECK=scripts/accept/1a/05-spike-end-to-end.sh bash scripts/accept/1a/05-spike-end-to-end.sh   (want FAIL, never pass)
+CHECK 1a/05-spike-end-to-end: FAIL spike.sh failed: spike-assert-messages: FAIL missing shell marker spike-shell-ok in a shell message output.output; ## RESULT heading in assistant text content [transcript: 1 user, 1 assistant, 1 other; user-role messages are ignored, not run output] spike: transcript assertion failed (see spike-assert-messages above) 
+keyed-invalid exit=1
+(no agency-spike containers after the keyed run)
+
+--- restore: delete .env.provider ---
+$ bash scripts/accept/1a/05-spike-end-to-end.sh   (want SKIP exit 77)
+CHECK 1a/05-spike-end-to-end: SKIP .env.provider has no usable OPENCODE_API_KEY
+keyless exit=77
+.env.provider absent after restore
+?? docs/evidence/1a/verify/

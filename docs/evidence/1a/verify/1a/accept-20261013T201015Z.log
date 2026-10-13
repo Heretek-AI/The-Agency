@@ -1,0 +1,27 @@
+accept stage 1a (2026-10-13T20:09:49Z), timeout 120s per check
+===== 1a/01-preflight (exit 1) =====
+CHECK 1a/01-preflight: FAIL preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+===== 1a/02-base-image-pinned (exit 0) =====
+CHECK 1a/02-base-image-pinned: PASS
+===== 1a/03-entrypoint-fails-closed (exit 0) =====
+CHECK 1a/03-entrypoint-fails-closed: PASS
+===== 1a/04-healthy-nonroot (exit 0) =====
+CHECK 1a/04-healthy-nonroot: PASS
+===== 1a/05-spike-end-to-end (exit 77) =====
+CHECK 1a/05-spike-end-to-end: SKIP .env.provider has no usable OPENCODE_API_KEY
+===== 1a/06-spike-answers-complete (exit 1) =====
+CHECK 1a/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete
+===== 1a/07-no-secret-leak (exit 0) =====
+CHECK 1a/07-no-secret-leak: PASS
+===== 1a/08-no-containers-left (exit 0) =====
+CHECK 1a/08-no-containers-left: PASS
+CHECKS for stage 1a
+1a/01-preflight              FAIL   preflight exited non-zero: kernel           INFO   Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail 
+1a/02-base-image-pinned      PASS   
+1a/03-entrypoint-fails-closed PASS   
+1a/04-healthy-nonroot        PASS   
+1a/05-spike-end-to-end       SKIP   .env.provider has no usable OPENCODE_API_KEY
+1a/06-spike-answers-complete FAIL   4 question(s) NOT PERFORMED (no provider key); stage incomplete
+1a/07-no-secret-leak         PASS   
+1a/08-no-containers-left     PASS   
+stage 1a: 5 pass, 1 skip, 2 fail (8 checks)
