@@ -1,0 +1,3 @@
+Sabotage: N/A — no provider key exists in this environment (.env.provider absent), so no model-backed spike run is possible and no red-proof sabotage of the spike path can be performed. The standing `make accept STAGE=1a` run already records CHECK 1a/05-spike-end-to-end: SKIP .env.provider has no usable OPENCODE_API_KEY. Builder's red proof (dummy INVALID key -> spike fails closed) is preserved at docs/evidence/1a/red/05-spike-end-to-end.log and is not repeated here to avoid another model-less container run that cannot add signal.
+exit: N/A (skip, prompt-allowed)
+restored: N/A (tree untouched for this check)

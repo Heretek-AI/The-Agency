@@ -1,0 +1,5 @@
+Sabotage: images/base/Dockerfile `USER agent` -> `USER root`, image rebuilt (differs from builder's nonexistent-tag sabotage).
+cmd: make build-base && bash scripts/accept/1a/04-healthy-nonroot.sh
+CHECK ?/04-healthy-nonroot: FAIL runs as uid 0, want AGENT_UID 1000
+exit=1
+restored: Y (Dockerfile restored from backup, `git diff --stat -- images/base/Dockerfile` empty; image rebuilt green afterwards, check 04 re-confirmed PASS)

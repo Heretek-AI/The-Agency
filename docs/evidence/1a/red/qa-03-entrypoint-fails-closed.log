@@ -1,0 +1,5 @@
+Sabotage: images/base/entrypoint.sh OPENCODE_PASSWORD refusal block (lines 12-15) deleted, image rebuilt; API-key refusal left intact (differs from builder's nonexistent-tag sabotage).
+cmd: make build-base && bash scripts/accept/1a/03-entrypoint-fails-closed.sh
+CHECK ?/03-entrypoint-fails-closed: FAIL no-password container still running
+exit=1
+restored: Y (entrypoint.sh restored from backup, `git diff --stat -- images/base/entrypoint.sh` empty; image rebuilt green afterwards, check 03 re-confirmed PASS)

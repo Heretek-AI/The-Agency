@@ -1,0 +1,5 @@
+Sabotage: images/base/Dockerfile FROM unpinned (`FROM ubuntu:24.04 AS base`, digest stripped; differs from builder's zeros-digest in versions.env).
+cmd: bash scripts/accept/1a/02-base-image-pinned.sh
+CHECK ?/02-base-image-pinned: FAIL FROM is not digest-pinned: FROM ubuntu:24.04 AS base
+exit=1
+restored: Y (Dockerfile restored from backup, `git diff --stat -- images/base/Dockerfile` empty)

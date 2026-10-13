@@ -1,0 +1,5 @@
+Sabotage: docs/evidence/1a/spike/q04.log blanked to 0 bytes (differs from builder's moved-away q07.log).
+cmd: bash scripts/accept/1a/06-spike-answers-complete.sh
+CHECK ?/06-spike-answers-complete: FAIL evidence q04.log missing or empty
+exit=1
+restored: Y (q04.log restored from backup, `git diff --stat` empty for the file, size back to 1216 bytes; re-run shows the standing honest failure: CHECK ?/06-spike-answers-complete: FAIL 4 question(s) NOT PERFORMED (no provider key); stage incomplete, exit 1)

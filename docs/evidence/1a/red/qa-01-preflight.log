@@ -1,0 +1,6 @@
+Sabotage: scripts/preflight.sh compose requirement raised to impossible major>99/minor>=99 (differs from builder's absent-provider sabotage); .env.provider held an ignored dummy key (mode 0600, removed after) so the failure isolates to the compose row.
+cmd: bash scripts/accept/1a/01-preflight.sh
+CHECK ?/01-preflight: FAIL preflight exited non-zero: kernel INFO Linux 7.3.0-0.rc6.261009gaf32da41b032.55.fc46.x86_64 x86_64 (stage 2b info only) preflight: 4 pass, 1 fail
+exit=1
+restored: Y (scripts/preflight.sh restored from backup, `git diff --stat -- scripts/preflight.sh` empty; .env.provider removed; `git status` shows no preflight modification)
+note: first attempt (`-ge 24` -> `-ge 99` only) still PASSED because compose 5.6.0 satisfies `major -gt 2`; the comparison treats any major>2 as >= 2.24. Breaking both `-gt 2` and `-ge 24` was required.
