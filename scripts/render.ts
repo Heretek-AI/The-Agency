@@ -369,6 +369,7 @@ function renderCompose(fleet: FleetConfig, inputs: RenderInputs): string {
         OPENCODE_CLIENT: "agency",
         OPENCODE_PASSWORD: `\${PW_${upper(name)}}`,
         AGENCY_MODEL: "${AGENCY_MODEL}",
+        ...(name === "director" ? { FLEET_MCP_TOKEN: "${FLEET_MCP_TOKEN}" } : {}),
         HTTP_PROXY: `http://${name}:\${PROXY_PW_${upper(name)}}@egress:3128`,
         HTTPS_PROXY: `http://${name}:\${PROXY_PW_${upper(name)}}@egress:3128`,
         http_proxy: `http://${name}:\${PROXY_PW_${upper(name)}}@egress:3128`,
@@ -530,8 +531,14 @@ function renderCompose(fleet: FleetConfig, inputs: RenderInputs): string {
     cpus: 1,
     mem_limit: "512m",
     depends_on: { dispatcher: { condition: "service_healthy" } },
+    // agency.localhost resolves inside the container so the healthcheck
+    // exercises the same host routing as outside traffic.
+    extra_hosts: ["agency.localhost:127.0.0.1"],
     healthcheck: {
-      test: ["CMD-SHELL", "curl -fsS --noproxy '*' http://127.0.0.1:8080/healthz >/dev/null"],
+      test: [
+        "CMD-SHELL",
+        "curl -fsS --noproxy '*' http://agency.localhost:8080/healthz >/dev/null",
+      ],
       interval: "15s",
       timeout: "5s",
       retries: 10,

@@ -19,3 +19,4 @@ swarm_prompts/
 # into code (proven by a red format-check cycle); like every *.sh helper it
 # is checked by `bash -n` and shellcheck instead.
 scripts/accept/1c/engine-live.inc
+scripts/accept/1d/rest.inc

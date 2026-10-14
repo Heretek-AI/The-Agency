@@ -37,6 +37,7 @@ services:
       OPENCODE_CLIENT: agency
       OPENCODE_PASSWORD: ${PW_DIRECTOR}
       AGENCY_MODEL: ${AGENCY_MODEL}
+      FLEET_MCP_TOKEN: ${FLEET_MCP_TOKEN}
       HTTP_PROXY: http://director:${PROXY_PW_DIRECTOR}@egress:3128
       HTTPS_PROXY: http://director:${PROXY_PW_DIRECTOR}@egress:3128
       http_proxy: http://director:${PROXY_PW_DIRECTOR}@egress:3128
@@ -843,10 +844,12 @@ services:
     depends_on:
       dispatcher:
         condition: service_healthy
+    extra_hosts:
+      - agency.localhost:127.0.0.1
     healthcheck:
       test:
         - CMD-SHELL
-        - curl -fsS --noproxy '*' http://127.0.0.1:8080/healthz >/dev/null
+        - curl -fsS --noproxy '*' http://agency.localhost:8080/healthz >/dev/null
       interval: 15s
       timeout: 5s
       retries: 10

@@ -71,7 +71,7 @@ async function seedEnv(): Promise<{ dir: string; restore: () => void; experts: s
 }
 
 describe("dispatcher startup", () => {
-  test("refuses to start when any credential is missing, naming it", async () => {
+  test("Dispatcher refuses to start without each credential", async () => {
     const seed = await seedEnv();
     try {
       const names = [
