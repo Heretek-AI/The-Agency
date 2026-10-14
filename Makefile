@@ -75,7 +75,7 @@ engine-live:
 	bash scripts/accept/1c/engine-live.inc both
 
 e2e:
-	@echo "not built until stage 4c: e2e" >&2; exit 1
+	bash scripts/e2e.sh
 
 gc:
-	@echo "not built until stage 3b: gc" >&2; exit 1
+	bash scripts/gc.sh

@@ -1,7 +1,8 @@
-# The Agency dispatcher image (Stage 1c). FROM the pinned base image, plus
-# Bun sources for driveway engine runs. Runs as `agent`, attaches to the
-# `fleet` network. Mounts `/work`, `/artifacts`, the registry, and `/data`
-# at run time. It has no server entrypoint yet: Stage 1d adds one.
+# The Agency dispatcher image (Stage 1d). FROM the pinned base image, plus
+# Bun sources for the service. Runs as `agent`, attaches to the `fleet`
+# network. Mounts `/work`, `/artifacts`, and `/data` (state, registry,
+# audit) at run time. The server is dispatcher/src/main.ts: REST, SSE,
+# and the fleet MCP endpoint on port 8080.
 ARG OPENCODE_VERSION=2.0.26
 ARG AGENT_UID=1000
 ARG AGENT_GID=1000
@@ -28,4 +29,4 @@ USER agent
 WORKDIR /app
 # The base image's OpenCode entrypoint does not apply here.
 ENTRYPOINT ["tini", "--"]
-CMD ["bun", "--version"]
+CMD ["bun", "dispatcher/src/main.ts"]

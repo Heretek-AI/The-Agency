@@ -84,6 +84,7 @@ async function fixtureRoot(
     allowlistBase: options.allowlistBase ?? "# base\nprobe.example.com\n",
     squidTemplate: "port @@PORT@@ list @@ALLOWLIST_PATH@@\n",
     expertsDir,
+    caddyDigest: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
   };
   return { root, inputs };
 }
@@ -105,7 +106,34 @@ describe("render", () => {
     const doc = parseYaml(compose.content.replace(/^#.*\n/, "")) as {
       services: Record<string, unknown>;
     };
-    expect(Object.keys(doc.services).sort()).toEqual(["egress", "reader", "verifier", "writer"]);
+    expect(Object.keys(doc.services).sort()).toEqual([
+      "dispatcher",
+      "egress",
+      "gateway",
+      "reader",
+      "verifier",
+      "writer",
+    ]);
+  });
+
+  test("the gateway routes the dispatcher and every expert without buffering", async () => {
+    const { root, inputs } = await fixtureRoot();
+    const files = await renderAll(root, inputs);
+    const caddy = files.find((f) => f.path.endsWith("gateway/Caddyfile"))!;
+    expect(caddy.content).toContain("http://agency.localhost");
+    expect(caddy.content).toContain("reverse_proxy dispatcher:8080");
+    expect(caddy.content).toContain("http://writer.agency.localhost");
+    expect(caddy.content).toContain("reverse_proxy writer:4096");
+    expect(caddy.content).toContain("flush_interval -1");
+    expect(caddy.content).not.toContain("sleeper.agency.localhost");
+    const compose = files.find((f) => f.path.endsWith("docker-compose.yml"))!;
+    const doc = parseYaml(compose.content.replace(/^#.*\n/, "")) as {
+      services: Record<string, { image?: string; ports?: string[] }>;
+    };
+    expect(doc.services["gateway"]?.image).toContain("caddy@sha256:");
+    expect(doc.services["gateway"]?.ports).toEqual(["127.0.0.1:${AGENCY_HTTP_PORT}:8080"]);
+    expect(doc.services["dispatcher"]?.ports).toBeUndefined();
+    expect(doc.services["writer"]?.ports).toBeUndefined();
   });
 
   test("refuses an expert naming an MCP key missing from the registry", async () => {

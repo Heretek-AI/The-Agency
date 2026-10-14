@@ -144,6 +144,7 @@ export interface RenderInputs {
   allowlistBase: string;
   squidTemplate: string;
   expertsDir: string;
+  caddyDigest: string;
 }
 
 export async function loadInputs(root: string): Promise<RenderInputs> {
@@ -156,7 +157,20 @@ export async function loadInputs(root: string): Promise<RenderInputs> {
   const protocol = await Bun.file(`${root}/shared/FLEET_PROTOCOL.md`).text();
   const allowlistBase = await Bun.file(`${root}/shared/templates/allowlist-base.txt`).text();
   const squidTemplate = await Bun.file(`${root}/shared/templates/squid.conf.tmpl`).text();
-  return { fleet, registry, protocol, allowlistBase, squidTemplate, expertsDir: `${root}/experts` };
+  const versions = await Bun.file(`${root}/versions.env`).text();
+  const digest = /^CADDY_DIGEST=(.+)$/m.exec(versions)?.[1]?.trim();
+  if (digest === undefined || !/^sha256:[0-9a-f]{64}$/.test(digest)) {
+    throw new RenderError("refusing to render: versions.env holds no CADDY_DIGEST pin");
+  }
+  return {
+    fleet,
+    registry,
+    protocol,
+    allowlistBase,
+    squidTemplate,
+    expertsDir: `${root}/experts`,
+    caddyDigest: digest,
+  };
 }
 
 function parseAllowlistBase(text: string): string[] {
@@ -286,7 +300,11 @@ export async function renderAll(root: string, inputs: RenderInputs): Promise<Gen
     });
   }
 
-  files.push({ path: `${root}/docker-compose.yml`, content: renderCompose(fleet) });
+  files.push({ path: `${root}/docker-compose.yml`, content: renderCompose(fleet, inputs) });
+  files.push({
+    path: `${root}/gateway/Caddyfile`,
+    content: renderCaddyfile(fleet),
+  });
   files.push({
     path: `${root}/egress/allowlist.txt`,
     content:
@@ -302,7 +320,8 @@ export async function renderAll(root: string, inputs: RenderInputs): Promise<Gen
   return files;
 }
 
-function renderCompose(fleet: FleetConfig): string {
+function renderCompose(fleet: FleetConfig, inputs: RenderInputs): string {
+  const { caddyDigest } = inputs;
   const enabled = enabledExperts(fleet);
   const upper = (name: string): string => name.toUpperCase().replace(/-/g, "_");
   const services: Record<string, unknown> = {};
@@ -450,6 +469,79 @@ function renderCompose(fleet: FleetConfig): string {
     ],
   };
 
+  const dispatcherEnv: Record<string, string> = {
+    AGENCY_MODEL: "${AGENCY_MODEL}",
+    FLEET_MCP_TOKEN: "${FLEET_MCP_TOKEN}",
+    VERIFIER_TOKEN: "${VERIFIER_TOKEN}",
+    DISPATCHER_STATE_DIR: "/data",
+    DISPATCHER_REGISTRY_DIR: "/data/registry",
+    DISPATCHER_WORKSPACE: "/work",
+    DISPATCHER_ARTIFACTS: "/artifacts",
+    DISPATCHER_ALLOWLIST: "/data/registry/allowlist.yaml",
+  };
+  for (const name of enabled) dispatcherEnv[`PW_${upper(name)}`] = `\${PW_${upper(name)}}`;
+  const healthyDeps: Record<string, { condition: string }> = {};
+  for (const name of [...enabled, "verifier"]) healthyDeps[name] = { condition: "service_healthy" };
+  services["dispatcher"] = {
+    container_name: "agency-dispatcher",
+    build: {
+      context: ".",
+      dockerfile: "dispatcher/Dockerfile",
+      args: {
+        OPENCODE_VERSION: "${OPENCODE_VERSION}",
+        AGENT_UID: "${AGENT_UID}",
+        AGENT_GID: "${AGENT_GID}",
+      },
+    },
+    image: "agency-dispatcher:1.0.0",
+    restart: "unless-stopped",
+    working_dir: "/app",
+    networks: ["fleet"],
+    cap_drop: ["ALL"],
+    security_opt: ["no-new-privileges:true"],
+    pids_limit: 512,
+    cpus: 2,
+    mem_limit: "4g",
+    depends_on: healthyDeps,
+    healthcheck: {
+      test: ["CMD-SHELL", "curl -fsS --noproxy '*' http://127.0.0.1:8080/healthz >/dev/null"],
+      interval: "15s",
+      timeout: "10s",
+      retries: 5,
+      start_period: "30s",
+    },
+    environment: dispatcherEnv,
+    volumes: [
+      "${AGENCY_WORKSPACE:-./workspace}:/work:rw,z",
+      "artifacts:/artifacts",
+      "./state:/data:rw,z",
+      "dispatcher-cache:/home/agent/.cache",
+    ],
+  };
+  volumes["dispatcher-cache"] = {};
+  services["gateway"] = {
+    container_name: "agency-gateway",
+    image: `caddy@${caddyDigest}`,
+    restart: "unless-stopped",
+    networks: ["fleet"],
+    cap_drop: ["ALL"],
+    security_opt: ["no-new-privileges:true"],
+    pids_limit: 256,
+    cpus: 1,
+    mem_limit: "512m",
+    depends_on: { dispatcher: { condition: "service_healthy" } },
+    healthcheck: {
+      test: ["CMD-SHELL", "curl -fsS --noproxy '*' http://127.0.0.1:8080/healthz >/dev/null"],
+      interval: "15s",
+      timeout: "5s",
+      retries: 10,
+      start_period: "20s",
+    },
+    ports: ["127.0.0.1:${AGENCY_HTTP_PORT}:8080"],
+    volumes: ["./gateway/Caddyfile:/etc/caddy/Caddyfile:ro,z", "gateway-data:/data"],
+  };
+  volumes["gateway-data"] = {};
+
   const doc = {
     services,
     networks: { fleet: { internal: true }, outside: { driver: "bridge" } },
@@ -459,6 +551,39 @@ function renderCompose(fleet: FleetConfig): string {
     `# GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml.\n` +
     stringifyYaml(doc)
   );
+}
+
+/**
+ * Gateway routing (Stage 1d, Step 4): agency.localhost reaches the
+ * Dispatcher; each <name>.agency.localhost reaches that expert's
+ * OpenCode server as the debug fallback. Buffering is off
+ * (flush_interval -1) so SSE streams pass through unbuffered.
+ */
+function renderCaddyfile(fleet: FleetConfig): string {
+  const lines = [
+    "# GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml.",
+    "{",
+    "\tadmin off",
+    "\thttp_port 8080",
+    "}",
+    "",
+    "http://agency.localhost {",
+    "\treverse_proxy dispatcher:8080 {",
+    "\t\tflush_interval -1",
+    "\t}",
+    "}",
+  ];
+  for (const name of enabledExperts(fleet)) {
+    lines.push(
+      "",
+      `http://${name}.agency.localhost {`,
+      `\treverse_proxy ${name}:4096 {`,
+      "\t\tflush_interval -1",
+      "\t}",
+      "}",
+    );
+  }
+  return `${lines.join("\n")}\n`;
 }
 
 async function main(): Promise<void> {

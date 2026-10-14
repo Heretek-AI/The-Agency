@@ -3,6 +3,8 @@ docs/prompts/v1/
 docs/audit/
 docs/evidence/
 docker-compose.yml
+docker-compose.ports.yml
+gateway/Caddyfile
 experts/
 workspace/
 state/

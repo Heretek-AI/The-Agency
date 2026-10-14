@@ -745,6 +745,117 @@ services:
     volumes:
       - ./egress/allowlist.txt:/etc/squid/allowlist.txt:ro,z
       - ./egress/squid.conf:/etc/squid/squid.conf:ro,z
+  dispatcher:
+    container_name: agency-dispatcher
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-dispatcher:1.0.0
+    restart: unless-stopped
+    working_dir: /app
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    cpus: 2
+    mem_limit: 4g
+    depends_on:
+      director:
+        condition: service_healthy
+      scout:
+        condition: service_healthy
+      architect:
+        condition: service_healthy
+      product:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      dba:
+        condition: service_healthy
+      platform:
+        condition: service_healthy
+      security:
+        condition: service_healthy
+      qa:
+        condition: service_healthy
+      reviewer:
+        condition: service_healthy
+      docs:
+        condition: service_healthy
+      verifier:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' http://127.0.0.1:8080/healthz >/dev/null
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    environment:
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      FLEET_MCP_TOKEN: ${FLEET_MCP_TOKEN}
+      VERIFIER_TOKEN: ${VERIFIER_TOKEN}
+      DISPATCHER_STATE_DIR: /data
+      DISPATCHER_REGISTRY_DIR: /data/registry
+      DISPATCHER_WORKSPACE: /work
+      DISPATCHER_ARTIFACTS: /artifacts
+      DISPATCHER_ALLOWLIST: /data/registry/allowlist.yaml
+      PW_DIRECTOR: ${PW_DIRECTOR}
+      PW_SCOUT: ${PW_SCOUT}
+      PW_ARCHITECT: ${PW_ARCHITECT}
+      PW_PRODUCT: ${PW_PRODUCT}
+      PW_FRONTEND: ${PW_FRONTEND}
+      PW_BACKEND: ${PW_BACKEND}
+      PW_DBA: ${PW_DBA}
+      PW_PLATFORM: ${PW_PLATFORM}
+      PW_SECURITY: ${PW_SECURITY}
+      PW_QA: ${PW_QA}
+      PW_REVIEWER: ${PW_REVIEWER}
+      PW_DOCS: ${PW_DOCS}
+    volumes:
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - ./state:/data:rw,z
+      - dispatcher-cache:/home/agent/.cache
+  gateway:
+    container_name: agency-gateway
+    image: caddy@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    restart: unless-stopped
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    cpus: 1
+    mem_limit: 512m
+    depends_on:
+      dispatcher:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' http://127.0.0.1:8080/healthz >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - 127.0.0.1:${AGENCY_HTTP_PORT}:8080
+    volumes:
+      - ./gateway/Caddyfile:/etc/caddy/Caddyfile:ro,z
+      - gateway-data:/data
 networks:
   fleet:
     internal: true
@@ -789,3 +900,5 @@ volumes:
   docs-state: {}
   docs-cache: {}
   verifier-cache: {}
+  dispatcher-cache: {}
+  gateway-data: {}

@@ -23,3 +23,11 @@ objective changes shape.
 
 One playbook named, its gates listed in the plan, and no gate skipped or
 weakened to fit the schedule.
+
+## Fleet tools
+
+Start with `fleet_roster` (who is available and healthy) and
+`fleet_mission_create` (which returns the repository's ownership summary).
+The plan you submit must keep every task's paths inside its owner's
+grant; `fleet_plan_submit` refuses anything outside, and that refusal is
+a planning error, not a negotiation.

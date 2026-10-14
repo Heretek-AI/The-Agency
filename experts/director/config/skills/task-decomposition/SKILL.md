@@ -25,3 +25,11 @@ single-file fixes that one expert can own outright.
 
 Every task names its expert, its files, and what it waits on; no two tasks
 claim the same files; the plan fits the playbook's task ceiling.
+
+## Fleet tools
+
+Submit the sliced plan with `fleet_plan_submit`: each entry carries `key`,
+`expert`, `title`, `objective`, `context`, `constraints`, `acceptance[]`,
+`paths[]`, and `deps[]`. When the mission parks as `waiting-human`, tell
+the person the plan in a few lines and wait; never resubmit to dodge
+approval.

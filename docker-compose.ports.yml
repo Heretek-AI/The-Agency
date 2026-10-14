@@ -1,0 +1,30 @@
+# Fallback port publishing for expert debug access (Stage 1d, Step 4).
+# Not applied by default: `make up` publishes only the gateway.
+# Apply explicitly when direct OpenCode UI access is needed:
+#   docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d
+# Every mapping stays on the loopback interface.
+services:
+  director:
+    ports: ["127.0.0.1:4111:4096"]
+  scout:
+    ports: ["127.0.0.1:4112:4096"]
+  architect:
+    ports: ["127.0.0.1:4113:4096"]
+  product:
+    ports: ["127.0.0.1:4114:4096"]
+  frontend:
+    ports: ["127.0.0.1:4115:4096"]
+  backend:
+    ports: ["127.0.0.1:4116:4096"]
+  dba:
+    ports: ["127.0.0.1:4117:4096"]
+  platform:
+    ports: ["127.0.0.1:4118:4096"]
+  security:
+    ports: ["127.0.0.1:4119:4096"]
+  qa:
+    ports: ["127.0.0.1:4120:4096"]
+  reviewer:
+    ports: ["127.0.0.1:4121:4096"]
+  docs:
+    ports: ["127.0.0.1:4122:4096"]

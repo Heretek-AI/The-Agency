@@ -1,0 +1,83 @@
+# GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml.
+{
+	admin off
+	http_port 8080
+}
+
+http://agency.localhost {
+	reverse_proxy dispatcher:8080 {
+		flush_interval -1
+	}
+}
+
+http://director.agency.localhost {
+	reverse_proxy director:4096 {
+		flush_interval -1
+	}
+}
+
+http://scout.agency.localhost {
+	reverse_proxy scout:4096 {
+		flush_interval -1
+	}
+}
+
+http://architect.agency.localhost {
+	reverse_proxy architect:4096 {
+		flush_interval -1
+	}
+}
+
+http://product.agency.localhost {
+	reverse_proxy product:4096 {
+		flush_interval -1
+	}
+}
+
+http://frontend.agency.localhost {
+	reverse_proxy frontend:4096 {
+		flush_interval -1
+	}
+}
+
+http://backend.agency.localhost {
+	reverse_proxy backend:4096 {
+		flush_interval -1
+	}
+}
+
+http://dba.agency.localhost {
+	reverse_proxy dba:4096 {
+		flush_interval -1
+	}
+}
+
+http://platform.agency.localhost {
+	reverse_proxy platform:4096 {
+		flush_interval -1
+	}
+}
+
+http://security.agency.localhost {
+	reverse_proxy security:4096 {
+		flush_interval -1
+	}
+}
+
+http://qa.agency.localhost {
+	reverse_proxy qa:4096 {
+		flush_interval -1
+	}
+}
+
+http://reviewer.agency.localhost {
+	reverse_proxy reviewer:4096 {
+		flush_interval -1
+	}
+}
+
+http://docs.agency.localhost {
+	reverse_proxy docs:4096 {
+		flush_interval -1
+	}
+}

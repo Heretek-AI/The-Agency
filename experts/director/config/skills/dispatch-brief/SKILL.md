@@ -24,3 +24,10 @@ knowledge produces hallway results.
 
 The expert can start without asking anything; each criterion names its
 check (`bun test tests/x.test.ts`, not "tests pass").
+
+## Fleet tools
+
+A brief is the `objective`, `context`, `constraints`, `acceptance`, and
+`paths` of one `fleet_plan_submit` entry. Read the repository first
+(`fleet_roster` for who does what, `git log` and `git diff` for the
+ground truth); the expert sees only the brief, never this conversation.

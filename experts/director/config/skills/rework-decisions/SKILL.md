@@ -24,3 +24,11 @@ evidence you have not checked.
 
 Each decision cites the evidence, the attempt number, and what changes
 next; nothing is accepted on trust.
+
+## Fleet tools
+
+Read `fleet_task_result` first and `fleet_task_diff` only when the report
+does not settle the question. Decide with `fleet_decide`: `accept` only
+for verified work inside scope, `rework` with one precise question (at
+most twice), `abandon` when the slice was wrong. Turn each handoff line
+into a new task rather than doing it yourself.

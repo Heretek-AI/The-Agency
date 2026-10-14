@@ -22,3 +22,11 @@ end.
 
 A human reading only the report knows what shipped, what did not, and
 what to watch.
+
+## Fleet tools
+
+Recover with `fleet_mission_get` (objective, plan, every task status and
+reason, decisions) after any compaction or restart. Close with
+`fleet_mission_close`, which the Dispatcher refuses unless every code
+change carries a landed SHA and the last integration verify is green;
+write the summary only from landed evidence.
