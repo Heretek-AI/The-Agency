@@ -1,0 +1,3 @@
+Sabotage: scout expert container stopped (not the verifier as the builder did) so the tokenless expert-to-verifier call cannot be made
+CHECK 1c/06-verifier-isolated: FAIL the expert could not reach the verifier at all
+redproof-exit: 1

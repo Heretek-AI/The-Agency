@@ -1,0 +1,32 @@
+red-proofs: stage 1c acceptance checks (QA Agent, 2026-10-14 UTC, branch stage-1c-engine, HEAD 72f4865 base)
+Baseline (clean tree, keyed):
+  - `make check` exit 0 (format, lint, typecheck, ts-coverage 70 files, render-check 39 files current, 198 unit tests pass / 0 fail across 31 files)
+  - `bash scripts/accept.sh 1c` with ACCEPT_TIMEOUT=1800 exit 0, 10 pass / 0 skip / 0 fail — docs/evidence/1c/accept-20261014T163148Z.log (QA green run; Programmer's prior green log docs/evidence/1c/accept-20261014T162518Z.log agrees)
+
+Method: for each check 01..10 under scripts/accept/1c/, break the guarded invariant with a defect
+deliberately different from the builder's where practical (builder's proofs preserved under
+docs/evidence/1c/red/01..10-*.log plus unit-*.log), run the single check directly with
+`ACCEPT_STAGE=1c ACCEPT_CHECK=scripts/accept/1c/<check>.sh` (no full-stack re-runs, no extra
+evidence writes), assert exit 1 with a FAIL line, restore exactly (`git checkout --` for tracked
+files, `docker unpause` / `make up` for containers, byte-exact copy-back for the /tmp audit log),
+then re-run the same single check and assert exit 0 PASS — except 07/08, which are NOT re-run
+green so no extra live model runs are burned beyond the baseline; their restore is verified by
+all three engine containers healthy plus the live state dirs intact. Nothing committed in a
+sabotaged state; no check script modified; .env/.env.provider never written (mode 0600
+throughout). Per-check QA logs docs/evidence/1c/red/qa-*.log; each log's first line states the
+sabotage and last line records the red exit code.
+
+Per check (all restored Y):
+01 | 1c/01-make-check | broke: trailing whitespace appended to verifier/src/run-checks.ts (builder: dispatcher/src/engine.ts) | exit: 1 | detail: CHECK 1c/01-make-check: FAIL make check failed: [warn] verifier/src/run-checks.ts ... format-check Error 1 | restored: Y (git checkout; re-run PASS exit 0)
+02 | 1c/02-register-guards-present | broke: renamed guard test in dispatcher/test/opencode.test.ts (createSession ... QA-REDPROOF; builder: scheduler.test.ts retry test) | exit: 1 | detail: CHECK 1c/02-register-guards-present: FAIL guard test does not exist: createSession sends agent, location, permissions, metadata | restored: Y (git checkout; re-run PASS exit 0)
+03 | 1c/03-scheduler-pure | broke: appended side-effect `import "./engine.js";` to dispatcher/src/scheduler.ts (builder: Date.now() clock call) | exit: 1 | detail: CHECK 1c/03-scheduler-pure: FAIL scheduler.ts imports beyond model/wildcard | restored: Y (git checkout; re-run PASS exit 0)
+04 | 1c/04-single-opencode-module | broke: `/api/health` comment appended to dispatcher/src/git.ts (builder: /api/session in engine.ts) | exit: 1 | detail: CHECK 1c/04-single-opencode-module: FAIL OpenCode paths outside opencode.ts: dispatcher/src/git.ts | restored: Y (git checkout; re-run PASS exit 0)
+05 | 1c/05-verifier-live | broke: `docker compose pause verifier` (builder: stopped it) | exit: 1 | detail: CHECK 1c/05-verifier-live: FAIL cannot read VERIFIER_TOKEN from the verifier container (exec refused on paused container) | restored: Y (unpause; re-run PASS exit 0)
+06 | 1c/06-verifier-isolated | broke: `docker compose stop scout` (builder: stopped verifier) | exit: 1 | detail: CHECK 1c/06-verifier-isolated: FAIL the expert could not reach the verifier at all (verifier-env leg still passed) | restored: Y (make up healed stopped scout; re-run PASS exit 0)
+07 | 1c/07-engine-live-scout | broke: `docker pause agency-docs` (builder: paused scout) | exit: 1 | detail: CHECK 1c/07-engine-live-scout: FAIL live scout proof failed (exit 1): engine-live: make up failed: cannot start a paused container (fail-fast, no model called) | restored: Y (unpause + make up; scout/docs/verifier all healthy; /tmp/opencode/1c-live-scout intact; NOT re-run green: no extra model burn)
+08 | 1c/08-engine-live-docs-lands | broke: `docker pause agency-scout` (builder: paused docs) | exit: 1 | detail: CHECK 1c/08-engine-live-docs-lands: FAIL live docs proof failed (exit 1): engine-live: make up failed: cannot start a paused container (fail-fast, no model called) | restored: Y (unpause + make up; all healthy; /tmp/opencode/1c-live-docs/audit/audit.jsonl byte-untouched; NOT re-run green: no extra model burn)
+09 | 1c/09-no-task-exec-in-dispatcher | broke: dead `execCmd("sabotage")` comment added to dispatcher/src/model.ts (builder: execShell call in engine.ts) | exit: 1 | detail: CHECK 1c/09-no-task-exec-in-dispatcher: FAIL exec callers are not exactly git/exec/run-checks: ... dispatcher/src/model.ts ... | restored: Y (git checkout; re-run PASS exit 0)
+10 | 1c/10-audit-chain-intact | broke: corrupt `{"sabotage":true}` line appended to /tmp/opencode/1c-live-docs/audit/audit.jsonl (builder: moved the log aside) | exit: 1 | detail: CHECK 1c/10-audit-chain-intact: FAIL audit chain check failed: audit log holds a malformed entry | restored: Y (byte-exact copy-back verified by cmp; re-run PASS exit 0: 500 entries, branch fleet/integration/m-live-docs-mv8btf0i)
+
+Result: 10/10 checks red-proven (each fails exit 1 on sabotage, all restored, no check weakened; scripts/accept/1c/*.sh unmodified throughout — git diff on tracked files empty after every restore).
+Post-restore: `git status` shows only the new QA evidence files (1 accept log + 10 qa-*.log + this file); all stage containers healthy (scout/docs/verifier healthy; no paused containers; no stray live-proof containers — agency-dispatcher-live-* removed via --rm); .env/.env.provider mode 0600, never written, untracked (only .env.example tracked); no secret patterns in any new file; workspace/demo live-proof worktrees are routine gitignored artifacts of the green live runs (check 10 depends on the latest integration branch, left in place).

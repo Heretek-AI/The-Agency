@@ -1,0 +1,3 @@
+Sabotage: guard test renamed in dispatcher/test/opencode.test.ts (createSession ... QA-REDPROOF) so the named guard no longer exists (builder used dispatcher/test/scheduler.test.ts)
+CHECK 1c/02-register-guards-present: FAIL guard test does not exist: createSession sends agent, location, permissions, metadata
+redproof-exit: 1

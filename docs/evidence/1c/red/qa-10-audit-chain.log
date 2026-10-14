@@ -1,0 +1,3 @@
+Sabotage: corrupt JSON line appended to /tmp/opencode/1c-live-docs/audit/audit.jsonl so chain verification fails malformed (builder moved the log aside)
+CHECK 1c/10-audit-chain-intact: FAIL audit chain check failed: audit log holds a malformed entry
+redproof-exit: 1
