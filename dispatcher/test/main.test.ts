@@ -33,6 +33,9 @@ async function seedEnv(): Promise<{ dir: string; restore: () => void; experts: s
   cpSync(join(REPO_ROOT, "registry.example", "demo"), join(registryDir, "demo"), {
     recursive: true,
   });
+  // A stray file in the registry root (like the production allowlist) is
+  // skipped, not loaded as a repository.
+  writeFileSync(join(registryDir, "allowlist.yaml"), "version: 1\nusers: []\n");
   const hash = await Bun.password.hash("admin-pw", { algorithm: "argon2id" });
   const allowlist = join(dir, "allowlist.yaml");
   writeFileSync(

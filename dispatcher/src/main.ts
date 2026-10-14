@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { loadAllowlist, SessionStore } from "./auth.js";
 import {
   dispatcherCredentials,
@@ -52,6 +52,10 @@ export async function boot(options: BootOptions = {}): Promise<BootedService> {
   }
   for (const entry of entries.sort()) {
     if (entry.startsWith(".")) continue;
+    // The registry directory also holds the allowlist file; only
+    // subdirectories are repositories.
+    const entryStat = await stat(`${paths.registryDir}/${entry}`).catch(() => undefined);
+    if (entryStat === undefined || !entryStat.isDirectory()) continue;
     registries.set(entry, await loadRegistry(`${paths.registryDir}/${entry}`));
   }
   if (registries.size === 0)
