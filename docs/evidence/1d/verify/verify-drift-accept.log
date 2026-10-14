@@ -1,0 +1,194 @@
+docker compose down
+ Container agency-gateway Stopping 
+ Container agency-egress Stopping 
+ Container agency-gateway Stopped 
+ Container agency-gateway Removing 
+ Container agency-gateway Removed 
+ Container agency-dispatcher Stopping 
+ Container agency-dispatcher Stopped 
+ Container agency-dispatcher Removing 
+ Container agency-dispatcher Removed 
+ Container agency-reviewer Stopping 
+ Container agency-frontend Stopping 
+ Container agency-architect Stopping 
+ Container agency-dba Stopping 
+ Container agency-docs Stopping 
+ Container agency-product Stopping 
+ Container agency-scout Stopping 
+ Container agency-verifier Stopping 
+ Container agency-backend Stopping 
+ Container agency-director Stopping 
+ Container agency-qa Stopping 
+ Container agency-platform Stopping 
+ Container agency-security Stopping 
+ Container agency-verifier Stopped 
+ Container agency-verifier Removing 
+ Container agency-platform Stopped 
+ Container agency-platform Removing 
+ Container agency-scout Stopped 
+ Container agency-scout Removing 
+ Container agency-verifier Removed 
+ Container agency-director Stopped 
+ Container agency-director Removing 
+ Container agency-security Stopped 
+ Container agency-security Removing 
+ Container agency-frontend Stopped 
+ Container agency-frontend Removing 
+ Container agency-dba Stopped 
+ Container agency-dba Removing 
+ Container agency-product Stopped 
+ Container agency-product Removing 
+ Container agency-reviewer Stopped 
+ Container agency-reviewer Removing 
+ Container agency-architect Stopped 
+ Container agency-architect Removing 
+ Container agency-platform Removed 
+ Container agency-backend Stopped 
+ Container agency-backend Removing 
+ Container agency-docs Stopped 
+ Container agency-docs Removing 
+ Container agency-qa Stopped 
+ Container agency-qa Removing 
+ Container agency-scout Removed 
+ Container agency-security Removed 
+ Container agency-product Removed 
+ Container agency-frontend Removed 
+ Container agency-director Removed 
+ Container agency-reviewer Removed 
+ Container agency-architect Removed 
+ Container agency-dba Removed 
+ Container agency-qa Removed 
+ Container agency-docs Removed 
+ Container agency-backend Removed 
+ Container agency-egress Stopped 
+ Container agency-egress Removing 
+ Container agency-egress Removed 
+ Network agency_outside Removing 
+ Network agency_fleet Removing 
+ Network agency_fleet Removed 
+ Network agency_outside Removed 
+DOWN_EXIT:0
+docker compose up -d
+ Network agency_fleet Creating 
+ Network agency_fleet Creating 
+ Network agency_outside Creating 
+ Network agency_outside Creating 
+ Network agency_fleet Created 
+ Network agency_fleet Created 
+ Container agency-dba Creating 
+ Container agency-qa Creating 
+ Container agency-platform Creating 
+ Container agency-verifier Creating 
+ Container agency-security Creating 
+ Container agency-reviewer Creating 
+ Container agency-scout Creating 
+ Container agency-frontend Creating 
+ Container agency-product Creating 
+ Container agency-docs Creating 
+ Container agency-architect Creating 
+ Container agency-backend Creating 
+ Container agency-director Creating 
+ Network agency_outside Created 
+ Network agency_outside Created 
+ Container agency-egress Creating 
+ Container agency-director Created 
+ Container agency-architect Created 
+ Container agency-product Created 
+ Container agency-scout Created 
+ Container agency-qa Created 
+ Container agency-frontend Created 
+ Container agency-reviewer Created 
+ Container agency-docs Created 
+ Container agency-security Created 
+ Container agency-verifier Created 
+ Container agency-dba Created 
+ Container agency-platform Created 
+ Container agency-egress Created 
+ Container agency-backend Created 
+ Container agency-dispatcher Creating 
+ Container agency-dispatcher Created 
+ Container agency-gateway Creating 
+ Container agency-gateway Created 
+ Container agency-security Starting 
+ Container agency-docs Starting 
+ Container agency-product Starting 
+ Container agency-backend Starting 
+ Container agency-frontend Starting 
+ Container agency-qa Starting 
+ Container agency-verifier Starting 
+ Container agency-dba Starting 
+ Container agency-scout Starting 
+ Container agency-platform Starting 
+ Container agency-reviewer Starting 
+ Container agency-architect Starting 
+ Container agency-egress Starting 
+ Container agency-director Starting 
+ Container agency-security Started 
+ Container agency-docs Started 
+ Container agency-product Started 
+ Container agency-backend Started 
+ Container agency-frontend Started 
+ Container agency-qa Started 
+ Container agency-verifier Started 
+ Container agency-dba Started 
+ Container agency-scout Started 
+ Container agency-platform Started 
+ Container agency-reviewer Started 
+ Container agency-architect Started 
+ Container agency-egress Started 
+ Container agency-director Started 
+ Container agency-product Waiting 
+ Container agency-platform Waiting 
+ Container agency-reviewer Waiting 
+ Container agency-scout Waiting 
+ Container agency-qa Waiting 
+ Container agency-frontend Waiting 
+ Container agency-backend Waiting 
+ Container agency-dba Waiting 
+ Container agency-architect Waiting 
+ Container agency-docs Waiting 
+ Container agency-director Waiting 
+ Container agency-verifier Waiting 
+ Container agency-security Waiting 
+ Container agency-security Healthy 
+ Container agency-docs Healthy 
+ Container agency-product Healthy 
+ Container agency-backend Healthy 
+ Container agency-frontend Healthy 
+ Container agency-verifier Healthy 
+ Container agency-qa Healthy 
+ Container agency-scout Healthy 
+ Container agency-dba Healthy 
+ Container agency-platform Healthy 
+ Container agency-reviewer Healthy 
+ Container agency-architect Healthy 
+ Container agency-director Healthy 
+ Container agency-dispatcher Starting 
+ Container agency-dispatcher Started 
+ Container agency-dispatcher Waiting 
+ Container agency-dispatcher Healthy 
+ Container agency-gateway Starting 
+ Container agency-gateway Started 
+UP_EXIT:0
+bash scripts/accept.sh 1d
+CHECKS for stage 1d
+1d/01-make-check             PASS   
+1d/02-up-healthy             PASS   
+1d/03-only-gateway-published PASS   
+1d/04-credentials-required   PASS   
+1d/05-auth-and-roles         PASS   
+1d/06-director-scout         SKIP   no provider key in .env.provider
+1d/07-scout-completes        SKIP   no provider key in .env.provider
+1d/08-docs-lands             SKIP   no provider key in .env.provider
+1d/09-linter-break-fails-verify SKIP   no provider key in .env.provider
+1d/10-joint-breakage-resets  SKIP   no provider key in .env.provider
+1d/11-scope-refusal          PASS   
+1d/12-restart-collects       SKIP   no provider key in .env.provider
+1d/13-e2e                    SKIP   make e2e skipped (no provider key)
+1d/14-director-chat-proxy    SKIP   no provider key in .env.provider
+1d/15-audit-chain            PASS   
+1d/16-stage-1-register       PASS   
+stage 1d: 8 pass, 8 skip, 0 fail (16 checks)
+log: docs/evidence/1d/accept-20261014T215935Z.log
+make: *** [Makefile:39: accept] Error 77
+ACCEPT_EXIT:2

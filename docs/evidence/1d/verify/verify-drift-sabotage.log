@@ -1,0 +1,22 @@
+# Drift-verifier sabotage sample (HEAD ac5fa3c, 2026-10-14 UTC)
+## S1 03-only-gateway-published (DIFFERENT service+port from builder/QA verifier:19998)
+Sabotage: inserted ports ["127.0.0.1:19997:8080"] into dispatcher service in docker-compose.yml + 'docker compose up -d dispatcher'
+Sabotaged: CHECK 1d/03-only-gateway-published: FAIL unexpected host port bindings: /agency-dispatcher(...19997...); exit 1
+Restore: backup copied back (md5 b47d09603e8f4fb569eebe63fe6b3fac matches pre-sabotage); 'docker compose up -d dispatcher' dropped binding (inspect {}); green re-run: PASS, exit 0
+## S2 05-auth-and-roles (DIFFERENT from builder/QA ROLE_RANK demotion: stopped dependency container)
+Sabotage: 'docker stop agency-verifier'
+Sabotaged: CHECK 1d/05-auth-and-roles: FAIL agency-verifier is not healthy (run check 02 first); exit 1
+Restore: 'docker start agency-verifier', waited to healthy; green re-run: PASS, exit 0
+## S3 11-scope-refusal (DIFFERENT from builder/QA grant-widening: invalidated the grant config)
+Sabotage: set docs writes to [] in state/registry/demo/ownership.yaml (backup md5 db58c2476e646b0ced65bcef64ff906b) + 'docker restart agency-dispatcher'
+Observed fail-closed bonus: dispatcher refuses to start: 'invalid ownership.yaml ... Array must contain at least 1 element(s)' (no default-pass on absent grant)
+Sabotaged: CHECK 1d/11-scope-refusal: FAIL agency-dispatcher is not healthy (run check 02 first); exit 1
+Restore: backup copied back (md5 db58c2476e646b0ced65bcef64ff906b matches), dispatcher restarted healthy; green re-run: PASS (exit recorded above)
+## S4 15-audit-chain (DIFFERENT from builder/QA appended-malformed-line: flipped first byte of middle entry line 26/50)
+Sabotage: byte-flip in middle of state/audit/audit.jsonl (backup md5 1031d7586594f91c389de67d5c403be5, 50 lines)
+Sabotaged: CHECK 1d/15-audit-chain: FAIL audit chain broken: audit log holds a malformed entry; exit 1
+Restore: backup copied back (md5 1031d7586594f91c389de67d5c403be5 matches); green re-run: PASS (exit recorded above)
+## S5 04-credentials-required (real-gate rebuild; builder's own red/04 log used a weak wrong-image variant, QA proved this gate)
+Sabotage: dispatcherCredentials() FLEET_MCP_TOKEN via optionalEnv default 'drift-sabotage-default' in dispatcher/src/config.ts + rebuilt agency-dispatcher:1.0.0
+Sabotaged: CHECK 1d/04-credentials-required: FAIL FLEET_MCP_TOKEN: exit 1 without naming the variable; exit 1
+Restore: source restored (md5 d6bb42983d7c1a213fa2ed0f2b467d4d matches pre-sabotage), image rebuilt; green re-run: PASS (exit recorded above)
