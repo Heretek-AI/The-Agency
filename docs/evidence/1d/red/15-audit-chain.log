@@ -1,0 +1,2 @@
+Sabotage: stopped the dispatcher and appended a malformed entry to state/audit/audit.jsonl, breaking chain verification.
+CHECK ?/15-audit-chain: FAIL audit chain broken: audit log holds a malformed entry

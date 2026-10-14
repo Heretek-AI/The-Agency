@@ -1,0 +1,2 @@
+Sabotage: temporarily published 127.0.0.1:19998 on the verifier service, so a non-gateway binding exists.
+CHECK ?/03-only-gateway-published: FAIL unexpected host port bindings: /agency-verifier({"8080/tcp":[{"HostIp":"127.0.0.1","HostPort":"19998"}]})

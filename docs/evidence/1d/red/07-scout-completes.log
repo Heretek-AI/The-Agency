@@ -1,0 +1,2 @@
+Sabotage: OPENCODE_API_KEY replaced with invalid-test-key (model calls fail; mission never settles)
+CHECK 1d/07-scout-completes: FAIL agency-verifier is not healthy (run check 02 first)

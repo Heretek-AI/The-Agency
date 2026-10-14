@@ -1,0 +1,2 @@
+Sabotage: appended invalid YAML to docker-compose.yml so the fleet cannot build/start.
+CHECK ?/02-up-healthy: FAIL dispatcher build failed: go-yaml load error in parser (while parsing a flow sequence) at L913.C11-L914.C1: did not find expected ',' or ']'

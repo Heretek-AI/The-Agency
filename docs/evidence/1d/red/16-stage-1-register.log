@@ -1,0 +1,2 @@
+Sabotage: created dispatcher/src/lanes/ (the forbidden sandbox-lanes path) so the D-06 guard fails.
+CHECK ?/16-stage-1-register: FAIL lanes directory exists

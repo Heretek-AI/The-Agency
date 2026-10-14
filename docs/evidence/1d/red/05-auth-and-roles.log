@@ -1,0 +1,2 @@
+Sabotage: test allowlist grants viewer the admin role (viewer approve returns 200, not 403)
+CHECK 1d/05-auth-and-roles: FAIL viewer approve returned 200, want 403

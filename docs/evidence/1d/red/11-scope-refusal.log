@@ -1,0 +1,2 @@
+Sabotage: widened the docs write grant in state/registry/demo/ownership.yaml to include src/* and restarted the dispatcher, so the out-of-grant plan validated.
+CHECK ?/11-scope-refusal: FAIL out-of-grant plan was accepted for m-mv8msvgq-1
