@@ -75,7 +75,7 @@ None. No rule or requirement is broken.
   engine/runner/tests, so the engine core is wired to its callers.
 - "Not performed: None" is accurate — my re-run also had 0 skips (key
   present, so 07/08 ran live as the prompt requires).
-- "Not built" correctly lists the Stage 1d surface (HTTP/REST/SSE, fleet_*
+- "Not built" correctly lists the Stage 1d surface (HTTP/REST/SSE, fleet\_\*
   MCP, Director hook wiring, gateway, dashboard, CLI).
 
 ## Fail-closed probes
