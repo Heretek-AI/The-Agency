@@ -1,0 +1,20 @@
+bunx prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+bunx oxlint
+lint: process.env is read only in config.ts
+lint: task/mission status lists live only in model.ts
+lint: RESULT/VERDICT schemas are defined only in protocol.ts
+lint: no placeholder successes in first-party source
+bunx tsc --noEmit
+bun scripts/check-ts-coverage.ts
+ts-coverage: 41 tracked file(s), all inside the typecheck
+bun scripts/render.ts --check
+render-check: 39 generated files are current
+bun test v1.4.2 (744846f84)
+
+ 109 pass
+ 0 fail
+ 293 expect() calls
+Ran 109 tests across 19 files. [4.92s]
+MAKE_CHECK_EXIT=0

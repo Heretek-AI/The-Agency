@@ -1,0 +1,26 @@
+Verifier sabotage sample, stage 1b, branch stage-1b-roster, base commit c0a2813.
+Each entry: what was broken, the check command, the exit code, and the restore.
+All sabotages were restored exactly; `git status` shows no tracked modification
+afterwards (only this verify/ directory and the rerun accept log are untracked).
+
+01 | broke: appended '# VERIFY-SABOTAGE-01' to generated experts/backend/config/mcp-requirements.json (builder used docker-compose.yml, QA used scout opencode.jsonc)
+     | run: ACCEPT_STAGE=1b ACCEPT_CHECK=scripts/accept/1b/01-render-check.sh bash scripts/accept/1b/01-render-check.sh
+     | result: CHECK 1b/01-render-check: FAIL render-check stale ... exit=1
+     | restored: git checkout -- <file>; re-run PASS exit=0
+
+12 | broke: inserted ports 127.0.0.1:18097:4096 into the backend service of generated docker-compose.yml (builder edited docs service, QA used a /tmp override on scout) + `docker compose up -d backend`
+     | run: check 12 script | result: CHECK 1b/12-no-published-ports: FAIL host port bindings exist: /agency-backend {...18097...} exit=1
+     | restored: git checkout -- docker-compose.yml; `docker compose up -d backend`; bindings {}; re-run PASS exit=0
+
+07 | broke: deleted only the `opencode.ai` line from generated egress/allowlist.txt (builder stopped egress, QA emptied the file) + `docker compose up -d --force-recreate egress`
+     | note: a first attempt with plain `docker compose up -d egress` left the check green because compose saw no config change and never recreated the container, so squid never re-read the mounted file; the sabotage was not live. Re-done with --force-recreate: live probe `curl https://opencode.ai/` from backend returned `CONNECT tunnel failed, response 403`.
+     | run: check 07 script | result: CHECK 1b/07-egress-allow-deny: FAIL agency-backend: allowlisted request failed exit=1
+     | restored: git checkout -- egress/allowlist.txt; force-recreate egress; healthy; re-run PASS exit=0
+
+08 | broke: `docker network connect agency_outside agency-backend` (builder and QA both used the default bridge network; this uses the project's own outside network)
+     | run: check 08 script | result: CHECK 1b/08-no-direct-route: FAIL direct route out exists exit=1
+     | restored: `docker network disconnect agency_outside agency-backend` (backend on agency_fleet only); re-run PASS exit=0
+
+06 | broke: `docker stop agency-qa` (builder stopped director, QA stopped scout)
+     | run: check 06 script | result: CHECK 1b/06-smoke: FAIL ... expert qa: container not healthy exit=1
+     | restored: `docker start agency-qa`; healthy; re-run PASS exit=0 (first try, no flakes)
