@@ -363,6 +363,11 @@ export class StoreTx {
       .run(taskId, new Date().toISOString(), JSON.stringify(event));
   }
 
+  deleteTask(id: string): void {
+    this.db.query("DELETE FROM tasks WHERE id = ?").run(id);
+    this.db.query("DELETE FROM task_events WHERE task_id = ?").run(id);
+  }
+
   recordAllocation(worktree: string, taskId: string, branch: string | null): void {
     this.db
       .query(

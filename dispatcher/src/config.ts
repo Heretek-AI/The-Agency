@@ -150,3 +150,60 @@ export function verifierConnection(baseUrlOverride?: string): VerifierConnection
     token: requiredEnv("VERIFIER_TOKEN"),
   };
 }
+
+/** Bearer token the Director presents to the fleet MCP endpoint. */
+export function fleetMcpToken(): string {
+  return requiredEnv("FLEET_MCP_TOKEN");
+}
+
+/** Port the Dispatcher service listens on. Defaults to 8080. */
+export function dispatcherPort(): number {
+  const raw = optionalEnv("DISPATCHER_PORT", "8080");
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port <= 0 || port > 65535)
+    throw new Error(`refusing to start: DISPATCHER_PORT is not a port: ${JSON.stringify(raw)}`);
+  return port;
+}
+
+/** Filesystem roots the Dispatcher service reads. All have fixed defaults. */
+export function dispatcherPaths(): {
+  stateDir: string;
+  registryDir: string;
+  workspaceRoot: string;
+  artifactsRoot: string;
+  allowlistPath: string;
+} {
+  const stateDir = optionalEnv("DISPATCHER_STATE_DIR", "./state");
+  const registryDir = optionalEnv("DISPATCHER_REGISTRY_DIR", `${stateDir}/registry`);
+  return {
+    stateDir,
+    registryDir,
+    workspaceRoot: optionalEnv("DISPATCHER_WORKSPACE", "./workspace"),
+    artifactsRoot: optionalEnv("DISPATCHER_ARTIFACTS", "/artifacts"),
+    allowlistPath: optionalEnv("DISPATCHER_ALLOWLIST", `${registryDir}/allowlist.yaml`),
+  };
+}
+
+/**
+ * Every credential the Dispatcher service needs. Each is required; the
+ * service refuses to start naming the variable when any is empty. The
+ * per-expert server passwords cover every enabled expert.
+ */
+export function dispatcherCredentials(fleet: FleetConfig): {
+  fleetMcpToken: string;
+  verifierToken: string;
+  model: string;
+  expertPasswords: Map<string, string>;
+} {
+  const expertPasswords = new Map<string, string>();
+  for (const [name, expert] of Object.entries(fleet.experts)) {
+    if (!expert.enabled) continue;
+    expertPasswords.set(name, requiredEnv(`PW_${envNamePrefix(name)}`));
+  }
+  return {
+    fleetMcpToken: requiredEnv("FLEET_MCP_TOKEN"),
+    verifierToken: requiredEnv("VERIFIER_TOKEN"),
+    model: requiredEnv("AGENCY_MODEL"),
+    expertPasswords,
+  };
+}

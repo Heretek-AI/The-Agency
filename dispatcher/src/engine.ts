@@ -36,7 +36,7 @@ import {
   type RunnerHooks,
 } from "./runner.js";
 import { nextStatus, schedule } from "./scheduler.js";
-import { Store, storeRegistry } from "./store.js";
+import { Store, storeRegistry, type Decision } from "./store.js";
 import type { ChecksConfig, OwnershipConfig, RepoConfig } from "./registry-schema.js";
 import type { Verifier } from "./verify.js";
 import { release, salvage } from "./worktrees.js";
@@ -62,6 +62,8 @@ export interface EngineDeps {
   /** Idle-probe bound in ms for startup triage. Defaults to 2 s. */
   triageProbeMs?: number;
   locks?: MissionLocks;
+  /** Stage 1d: called with a task id when an expert run reaches a terminal state. */
+  onWake?: (taskId: string) => void;
 }
 
 export interface MissionView {
@@ -114,6 +116,11 @@ export class Engine {
     return this.deps.locks;
   }
 
+  /** Stage 1d: attach the Director wake-up hook after construction. */
+  setWakeHook(hook: ((taskId: string) => void) | undefined): void {
+    this.deps.onWake = hook;
+  }
+
   private registryFor(repoId: string): RepoRegistry {
     const reg = this.deps.registries.get(repoId);
     if (reg === undefined) throw new EngineError(`unknown repository ${JSON.stringify(repoId)}`);
@@ -142,7 +149,13 @@ export class Engine {
           )
           .then(() => {}),
       registry: storeRegistry(store),
-      onWake: () => {},
+      onWake: (taskId) => {
+        try {
+          this.deps.onWake?.(taskId);
+        } catch {
+          // A failing wake-up observer must not stall the engine loop.
+        }
+      },
     };
   }
 
@@ -275,6 +288,79 @@ export class Engine {
       mission: this.requireMission(missionId),
       tasks: this.store.tasksForMission(missionId),
     };
+  }
+
+  /** Stage 1d: every known mission id, in store order. */
+  listMissionIds(): string[] {
+    return this.store.listMissions().map((m) => m.id);
+  }
+
+  /** Stage 1d: the mission's append-only decision log. */
+  listDecisions(missionId: string): Decision[] {
+    this.requireMission(missionId);
+    return this.store.listDecisions(missionId);
+  }
+
+  /** Stage 1d: record the Director session id on the mission. */
+  async setDirectorSession(missionId: string, sessionId: string): Promise<void> {
+    const mission = this.requireMission(missionId);
+    if (sessionId.trim() === "") throw new EngineError("director session id is empty");
+    await this.store.transition(
+      "mission.updated",
+      { mission: missionId, directorSession: sessionId },
+      (tx) => tx.putMission({ ...mission, directorSessionId: sessionId, updatedAt: this.nowIso() }),
+    );
+  }
+
+  /** Stage 1d: store the Director's closing report in the decision log. */
+  async recordReport(missionId: string, summary: string): Promise<void> {
+    const mission = this.requireMission(missionId);
+    if (summary.trim() === "") throw new EngineError("mission report is empty");
+    await this.store.transition("mission.report", { mission: missionId, summary }, (tx) =>
+      tx.appendDecision(mission.id, { taskId: mission.id, decision: "report", notes: summary }),
+    );
+  }
+
+  /**
+   * Stage 1d: replace the plan while the mission waits for a human.
+   * Refused unless the mission waits for a human and no task has started
+   * (no attempts, no session). Old tasks are removed; the replacement is
+   * validated and expanded exactly like a fresh submission.
+   */
+  async updatePlan(missionId: string, directorTasks: DirectorTask[]): Promise<Task[]> {
+    const mission = this.requireMission(missionId);
+    if (mission.status !== MissionStatuses.waitingHuman)
+      throw new EngineError(`mission ${missionId} is not waiting for approval`);
+    const existing = this.store.tasksForMission(missionId);
+    const started = existing.filter((t) => t.attempts > 0 || t.sessionId !== undefined);
+    if (started.length > 0)
+      throw new EngineError(
+        `mission ${missionId} already started tasks ${started.map((t) => t.id).join(", ")}; plan is frozen`,
+      );
+    const reg = this.registryFor(mission.repo);
+    const { tasks, needsApproval } = expandPlan(
+      mission,
+      this.deps.fleet,
+      reg.ownership,
+      directorTasks,
+      reg.repo.planApprovalAbove,
+    );
+    const updated: Mission = {
+      ...mission,
+      plan: { director: directorTasks, lastVerifyOk: false, approved: !needsApproval },
+      updatedAt: this.nowIso(),
+      status: needsApproval ? MissionStatuses.waitingHuman : MissionStatuses.running,
+    };
+    await this.store.transition(
+      "plan.updated",
+      { mission: missionId, tasks: tasks.length, needsApproval },
+      (tx) => {
+        for (const old of existing) tx.deleteTask(old.id);
+        tx.putMission(updated);
+        for (const task of tasks) tx.putTask(task);
+      },
+    );
+    return tasks;
   }
 
   taskResult(taskId: string): unknown {
@@ -771,10 +857,15 @@ export class Engine {
             status: TaskStatuses.done,
             result: {
               block: outcome.result,
+              // Stage 1d: the expert's final message text (bounded) and the
+              // permission requests the Dispatcher rejected, for
+              // fleet_task_result. Artifacts hold the full outputs.
+              raw: outcome.resultRaw?.slice(0, 32768),
               headSha: outcome.headSha,
               commits: outcome.commits,
               artifacts: outcome.artifacts,
               sharedFlags: outcome.sharedFlags,
+              permissionRejections: outcome.permissionRejections,
               collectedUncommitted: outcome.collectedUncommitted,
             },
             sessionId: outcome.sessionId,
