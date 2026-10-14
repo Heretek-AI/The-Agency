@@ -1,0 +1,175 @@
+accept stage 1c (2026-10-14T20:18:35Z), timeout 120s per check
+===== 1c/01-make-check (exit 0) =====
+CHECK 1c/01-make-check: PASS
+===== 1c/02-register-guards-present (exit 0) =====
+CHECK 1c/02-register-guards-present: PASS
+===== 1c/03-scheduler-pure (exit 0) =====
+CHECK 1c/03-scheduler-pure: PASS
+===== 1c/04-single-opencode-module (exit 0) =====
+CHECK 1c/04-single-opencode-module: PASS
+===== 1c/05-verifier-live (exit 1) =====
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_REVIEWER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_REVIEWER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_REVIEWER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_REVIEWER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_REVIEWER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_DOCS\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"VERIFIER_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_VERIFIER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_VERIFIER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_VERIFIER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_VERIFIER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_DIRECTOR\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DIRECTOR\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DIRECTOR\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DIRECTOR\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DIRECTOR\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SCOUT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SCOUT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SCOUT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SCOUT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_SCOUT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_BACKEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_BACKEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_BACKEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_BACKEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_BACKEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PLATFORM\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PLATFORM\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PLATFORM\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PLATFORM\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_PLATFORM\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_QA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_QA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_QA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_QA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_QA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_FRONTEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_BACKEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DBA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PLATFORM\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DIRECTOR\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_ARCHITECT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SECURITY\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_QA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_REVIEWER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_VERIFIER\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SCOUT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PRODUCT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_ARCHITECT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_ARCHITECT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_ARCHITECT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_ARCHITECT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_ARCHITECT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_PRODUCT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PRODUCT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PRODUCT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PRODUCT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_PRODUCT\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_FRONTEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_FRONTEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_FRONTEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_FRONTEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_FRONTEND\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DBA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_DBA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DBA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DBA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_DBA\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_GID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENT_UID\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"OPENCODE_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PW_SECURITY\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"AGENCY_MODEL\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SECURITY\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SECURITY\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SECURITY\" variable is not set. Defaulting to a blank string."
+time="2026-10-14T16:19:01-04:00" level=warning msg="The \"PROXY_PW_SECURITY\" variable is not set. Defaulting to a blank string."
+service "verifier" is not running
+CHECK 1c/05-verifier-live: FAIL cannot read VERIFIER_TOKEN from the verifier container
+===== 1c/06-verifier-isolated (exit 1) =====
+CHECK 1c/06-verifier-isolated: FAIL cannot read the verifier environment
+===== 1c/07-engine-live-scout (exit 77) =====
+CHECK 1c/07-engine-live-scout: SKIP no provider key in .env.provider
+===== 1c/08-engine-live-docs-lands (exit 77) =====
+CHECK 1c/08-engine-live-docs-lands: SKIP no provider key in .env.provider
+===== 1c/09-no-task-exec-in-dispatcher (exit 0) =====
+CHECK 1c/09-no-task-exec-in-dispatcher: PASS
+===== 1c/10-audit-chain-intact (exit 1) =====
+CHECK 1c/10-audit-chain-intact: FAIL no live-docs integration branch (run check 08 first)
+CHECKS for stage 1c
+1c/01-make-check             PASS   
+1c/02-register-guards-present PASS   
+1c/03-scheduler-pure         PASS   
+1c/04-single-opencode-module PASS   
+1c/05-verifier-live          FAIL   cannot read VERIFIER_TOKEN from the verifier container
+1c/06-verifier-isolated      FAIL   cannot read the verifier environment
+1c/07-engine-live-scout      SKIP   no provider key in .env.provider
+1c/08-engine-live-docs-lands SKIP   no provider key in .env.provider
+1c/09-no-task-exec-in-dispatcher PASS   
+1c/10-audit-chain-intact     FAIL   no live-docs integration branch (run check 08 first)
+stage 1c: 5 pass, 2 skip, 3 fail (10 checks)
