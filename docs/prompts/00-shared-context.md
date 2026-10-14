@@ -18,7 +18,7 @@ The finished system does this:
 4. Work that passes lands on the mission's integration branch, is verified again there, and is pushed as a draft pull request by a bot identity. A human merges.
 5. People follow and steer through a dashboard, GitHub comments, and Discord.
 
-The build is split into twelve stage prompts. Each must pass its acceptance checks and an independent verification pass (`verify-stage.md`) before the next begins.
+The build is split into fourteen stage prompts across 6 logical waves. Each must pass its acceptance checks and an independent verification pass (`verify-stage.md`) before the next begins. UI surfaces adhere to the binding specification in `docs/prompts/ui-spec.md`.
 
 | Prompt | Delivers | Issue |
 |---|---|---|
@@ -26,7 +26,8 @@ The build is split into twelve stage prompts. Each must pass its acceptance chec
 | `stage-1a-spike-and-base-image.md` | Preflight, the spike answers, the base image | #1 |
 | `stage-1b-roster-network-egress.md` | `fleet.yaml`, the renderer, twelve experts, the egress proxy, the workspace and a minimal registry | #1 |
 | `stage-1c-dispatcher-engine.md` | The Dispatcher's deterministic engine and the verifier, proven against a fake OpenCode server | #1 |
-| `stage-1d-service-director-dashboard.md` | MCP tools, REST, the Director, gateway, dashboard, live acceptance | #1 |
+| `stage-1d-service-director-api.md` | MCP tools, REST & SSE control plane, Director chat proxy, role-based auth, gateway, live acceptance | #1 |
+| `stage-1e-web-ui-foundation.md` | Unified Web UI foundation: embedded Director chat, task pipelines, diffs, roles, mobile layout, Playwright E2E | #1 |
 | `stage-2a-playbooks-and-qa.md` | Playbook engine, QA seats, bounded rework | #2 |
 | `stage-2b-environments.md` | Environment runner and per-task stacks | #2 |
 | `stage-3a-registry-and-triggers.md` | Repository registry, onboarding, triggers, draft pull requests | #3 |
@@ -34,6 +35,7 @@ The build is split into twelve stage prompts. Each must pass its acceptance chec
 | `stage-4a-lifecycle-and-extended.md` | On-demand start, eleven extended experts | #4 |
 | `stage-4b-expert-packs.md` | Pack contract, validator, intake tooling | #4 |
 | `stage-4c-evals-seams-final.md` | Eval suite, seams, final pass | #4 |
+| `stage-5-web-ui-alive.md` | Alive layer: topology map, multi-stream wall, Go usage meter, egress feed, audit visualizer, PWA | #5 |
 
 ## 2. Where the project stands
 
@@ -678,7 +680,7 @@ hash = sha256( prevHash + ":" + canonicalJson({ seq, at, actor, event, data }) )
 2. Experts sit on an internal network with no route out. The egress proxy is the only exit and logs every allowed and denied request with the expert's name.
 3. Config directories are read-only inside experts. The registry is not mounted into any expert.
 4. `ro` experts cannot write to the workspace.
-5. Each expert has a unique server password. The `fleet` MCP endpoint needs its bearer token. The verifier needs its token. The dashboard and REST API need the admin password. Webhooks are signature-verified. No credential has a built-in default: an unset one stops the service.
+5. Each expert has a unique server password. The `fleet` MCP endpoint needs its bearer token. The verifier needs its token. The Web UI and REST API enforce role-based access control (`viewer`, `approver`, `admin`) backed by argon2-hashed accounts in the registry; session cookies and bearer tokens are supported; viewer cannot approve or mutate state. Webhooks are signature-verified. No credential has a built-in default: an unset one stops the service.
 6. Nothing listens on a non-loopback host address.
 7. Text from anyone not on the allowlist is never sent to an agent. Text from allowlisted people that arrives through GitHub, chat, or the API is passed to agents as quoted data inside the brief, never as instructions to the Dispatcher.
 8. Secrets files are created with mode `0600` and never tracked.

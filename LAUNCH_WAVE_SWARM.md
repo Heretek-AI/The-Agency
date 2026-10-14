@@ -1,12 +1,10 @@
-# 🚀 LAUNCH RUNBOOK: THE AGENCY (EDITION 2) WAVE ORCHESTRATION SWARM
+# 🚀 LAUNCH RUNBOOK: THE AGENCY (EDITION 3) WAVE ORCHESTRATION SWARM
 
 ## Overview
 
-Following the architectural audit by Claude Code (Opus 5.5) which uncovered shallow mocks and missing fleet wiring in previous monorepo builds, Claude Code authored **Edition 2** of the build specifications in [`docs/prompts/`](file:///home/john/Projects/The-Agency/docs/prompts/).
+Following the architectural audit by Claude Code (Opus 5.5) which uncovered shallow mocks and missing fleet wiring in previous monorepo builds, and the subsequent Edition 3 UI/UX architecture expansion, this runbook guides executing the **Master Wave Orchestration Swarm** using OpenCode in `agent: "coordinator"` mode inside `/home/john/Projects/The-Agency`.
 
-This runbook guides executing the **Master Wave Orchestration Swarm** using OpenCode in `agent: "coordinator"` mode inside `/home/john/Projects/The-Agency`.
-
-The build is partitioned into **5 Logical Recursive Waves** across **isolated git worktrees**. Each stage deploys a subagent triad:
+The build is partitioned into **6 Logical Recursive Waves** across **isolated git worktrees**. Each stage deploys a subagent triad:
 1. **Programmer Agent**: Full implementation; zero stubs or mocks.
 2. **QA Agent**: Runs `make check`, `make accept STAGE=<id>`, and performs red-proof sabotage tests.
 3. **Drift Reviewer Agent**: Executes [`docs/prompts/verify-stage.md`](file:///home/john/Projects/The-Agency/docs/prompts/verify-stage.md), hunts for `cmd: "true"` or vacuous checks, and issues a binding `VERDICT: PASS` or `VERDICT: FAIL`.
@@ -15,14 +13,14 @@ The build is partitioned into **5 Logical Recursive Waves** across **isolated gi
 
 ## 1. Automated Full Swarm Execution (Recommended)
 
-Run from `/home/john/Projects/The-Agency` with the `--agent coordinator` and `--auto` flags:
+Run from `/home/john/Projects/The-Agency` with the `--agent agency-coordinator` and `--auto` flags:
 
 ```bash
 cd /home/john/Projects/The-Agency
 
-opencode run --agent coordinator --auto \
+opencode run --agent agency-coordinator --auto \
   --file swarm_prompts/MASTER_WAVE_ORCHESTRATOR.md \
-  "Execute the master wave orchestration mission in MASTER_WAVE_ORCHESTRATOR.md. Deploy all 5 logical recursive waves in isolated worktrees using the Triad protocol (Programmer, QA, Drift Reviewer). Enforce zero stubs, require VERDICT: PASS before any merge to main, and complete the full Edition 2 build."
+  "Execute the master wave orchestration mission in MASTER_WAVE_ORCHESTRATOR.md. Deploy all 6 logical recursive waves in isolated worktrees using the Triad protocol (Programmer, QA, Drift Reviewer). Enforce zero stubs, require VERDICT: PASS before any merge to main, and complete the full Edition 3 build."
 ```
 
 ---
@@ -51,12 +49,12 @@ git worktree remove worktrees/wave-0-salvage
 
 ---
 
-### Wave 1: Fleet Core (Stages 1a -> 1b -> 1c -> 1d)
+### Wave 1: Fleet Core & Interface (Stages 1a -> 1b -> 1c -> 1d -> 1e)
 ```bash
 cd /home/john/Projects/The-Agency
 opencode run --agent coordinator --auto \
   --file swarm_prompts/WAVE_1_FLEET_CORE.md \
-  "Execute Wave 1 (Stages 1a through 1d) in sequential worktrees. For each stage, execute the Triad, verify VERDICT: PASS, and merge to main."
+  "Execute Wave 1 (Stages 1a through 1e) in sequential worktrees. For each stage, execute the Triad, verify VERDICT: PASS, and merge to main."
 ```
 
 ---
@@ -87,6 +85,16 @@ cd /home/john/Projects/The-Agency
 opencode run --agent coordinator --auto \
   --file swarm_prompts/WAVE_4_LIFECYCLE_PACKS_EVALS.md \
   "Execute Wave 4 (Stages 4a, 4b, 4c) in sequential worktrees. Execute Triad, verify VERDICT: PASS, and merge to main."
+```
+
+---
+
+### Wave 5: Web UI Alive Layer (Stage 5)
+```bash
+cd /home/john/Projects/The-Agency
+opencode run --agent coordinator --auto \
+  --file swarm_prompts/WAVE_5_WEB_UI_ALIVE.md \
+  "Execute Wave 5 (Stage 5) in worktrees/wave-5-web-ui-alive. Deploy the real-time topology map, multi-stream wall, Go usage meter, egress stream, and PWA capabilities. Execute Triad, verify VERDICT: PASS, and merge to main."
 ```
 
 ---

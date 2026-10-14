@@ -28,7 +28,7 @@ Every stage must be executed by a **Triad of Three Distinct Roles**:
 
 ## 2. The Triad Roles & Invocations
 
-### Role 1: The Programmer Agent (`agent: "coordinator"`)
+### Role 1: The Programmer Agent (`agent: "agency-programmer"`)
 - **Duty**: Complete the stage implementation as specified in `docs/prompts/<stage-file>.md` and `docs/prompts/00-shared-context.md`.
 - **Operating Rules**:
   - Read `docs/prompts/00-shared-context.md` and the designated stage prompt in full before touching any file.
@@ -38,7 +38,7 @@ Every stage must be executed by a **Triad of Three Distinct Roles**:
 - **Subagent Tool Call**:
   ```json
   {
-    "agent": "coordinator",
+    "agent": "agency-programmer",
     "description": "Programmer: implement <stage-id>",
     "prompt": "You are the Programmer Agent for <stage-id> in worktree <worktree-path> on branch <stage-branch>.\n\nFIRST: Read docs/prompts/00-shared-context.md in full.\nSECOND: Read docs/prompts/<stage-file>.md in full.\n\nExecute all steps in order. Zero stubs policy: write complete code, exact types, and real implementations. For salvaged modules, apply all fixes required by the salvage map. Write acceptance check scripts under scripts/accept/<stage-id>/ conforming to scripts/accept/lib.sh. When finished, write docs/reports/<stage-id>.md. Do not commit sabotaged states."
   }
@@ -46,7 +46,7 @@ Every stage must be executed by a **Triad of Three Distinct Roles**:
 
 ---
 
-### Role 2: The QA Agent (`agent: "coordinator"`)
+### Role 2: The QA Agent (`agent: "agency-qa"`)
 - **Duty**: Verify that the code compiles, passes all quality checks, and that every acceptance check is genuinely capable of failing (Red-Proof Sabotage).
 - **Operating Rules**:
   - Run `make check`. Must exit 0.
@@ -55,7 +55,7 @@ Every stage must be executed by a **Triad of Three Distinct Roles**:
 - **Subagent Tool Call**:
   ```json
   {
-    "agent": "coordinator",
+    "agent": "agency-qa",
     "description": "QA: verify and red-proof <stage-id>",
     "prompt": "You are the QA Agent for <stage-id> in worktree <worktree-path> on branch <stage-branch>.\n\n1. Run `make check`. Assert exit code 0.\n2. Run `make accept STAGE=<stage-id>`. Assert exit code 0.\n3. Perform red-proof sabotage on the stage's acceptance checks. For each check, introduce a temporary defect, confirm `make accept` fails with exit 1, then restore the file cleanly with git checkout. Record results in docs/evidence/<stage-id>/red-proofs.log.\n4. Confirm working directory is clean (`git status`). Report final check results."
   }
@@ -63,7 +63,7 @@ Every stage must be executed by a **Triad of Three Distinct Roles**:
 
 ---
 
-### Role 3: The Drift Reviewer Agent (`agent: "coordinator"`)
+### Role 3: The Drift Reviewer Agent (`agent: "agency-drift-guard"`)
 - **Duty**: Act as an independent, adversarial auditor following [`docs/prompts/verify-stage.md`](file:///home/john/Projects/The-Agency/docs/prompts/verify-stage.md).
 - **Operating Rules**:
   - You change no code!
@@ -81,7 +81,7 @@ Every stage must be executed by a **Triad of Three Distinct Roles**:
 - **Subagent Tool Call**:
   ```json
   {
-    "agent": "coordinator",
+    "agent": "agency-drift-guard",
     "description": "Drift Reviewer: adversarial audit of <stage-id>",
     "prompt": "You are the Drift Reviewer Agent for <stage-id> in worktree <worktree-path> on branch <stage-branch>.\n\nFollow docs/prompts/verify-stage.md strictly. You change no code. Re-run `make check` and `make accept STAGE=<stage-id>`. Inspect git diff against main. Hunt for stubs, dummy commands, `|| true`, or vacuous assertions. Sample-sabotage two checks to prove fail-closed behavior, then revert cleanly. Write docs/reports/<stage-id>-verification.md concluding with `VERDICT: PASS` or `VERDICT: FAIL`."
   }

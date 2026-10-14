@@ -63,7 +63,7 @@ Write `docs/es-convergence.md`: the mapping between this system and es-fleet and
 
 ## Step 5 — Final pass
 
-1. Run `make check` and `make accept STAGE=<id>` for every stage from 0 to 4c on the final tree. Record each exit code. A check that passed in its own stage and fails now is a regression to fix, not to waive.
+1. Run `make check` and `make accept STAGE=<id>` for every stage from 0 to 4c (including 1e) on the final tree. Record each exit code. A check that passed in its own stage and fails now is a regression to fix, not to waive.
 2. Walk the security requirements in shared context section 10 one by one. For each, name the acceptance check that proves it, run it, and record the result in `docs/security-walkthrough.md`. A requirement with no check gets one now.
 3. Walk `docs/audit/defects.md`. Every row's guard exists and passed in this run. Record the test or check name and its result beside each row.
 4. Run the scan in shared context 4.6 over the whole tree yourself and record what you looked for and found.

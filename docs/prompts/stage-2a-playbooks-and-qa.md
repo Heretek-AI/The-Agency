@@ -2,7 +2,7 @@
 
 Read `docs/prompts/00-shared-context.md` first. It is part of this prompt.
 
-**Prerequisite:** `docs/reports/stage-1d.md` and its verification report exist with a PASS verdict, and the Stage 1 end-to-end run was performed, not skipped. Read `docs/build-notes.md` for the spike answers and fallbacks in force. Work on branch `stage-2a-playbooks`.
+**Prerequisite:** `docs/reports/stage-1e.md` and its verification report exist with a PASS verdict, and the Stage 1 end-to-end run was performed, not skipped. Read `docs/build-notes.md` for the spike answers and fallbacks in force. Work on branch `stage-2a-playbooks`.
 
 ## Goal of this stage
 
@@ -120,11 +120,14 @@ The two judges must differ in substance, not in a paragraph. Each persona explai
 
 **Accept:** `make smoke` passes for all fourteen core experts.
 
-## Step 3 — Dashboard
+## Step 3 — Web UI extension
 
-Add: a pipeline view per work item (each step's state, attempts used out of the allowance, the red proof, verdicts side by side with their findings and the SHA they apply to); a resume form for halted missions; flags for changes to shared files.
+Update the Web UI in `dispatcher/web/` conforming to `docs/prompts/ui-spec.md`:
+- Enhanced pipeline view per work item: interactive step states, attempts used out of the allowance, the red-proof test badge, and side-by-side dual QA verdicts (`qa-functional` vs `qa-adversarial`) with their findings and the SHA they apply to.
+- Resume form for halted missions (with required human note input).
+- Flags for changes to shared files (e.g. package manifests, lockfiles).
 
-**Accept:** the views render from API data for a mission produced by the scripted tests.
+**Accept:** the views render from API data for a mission produced by the scripted tests; Playwright test asserts pipeline and dual-verdict rendering.
 
 ## Step 4 — Live run
 

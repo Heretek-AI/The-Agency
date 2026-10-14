@@ -25,11 +25,13 @@ Edition 2 keeps the original design and changes how it is cut and checked:
 | File | Delivers | Issue |
 |---|---|---|
 | `00-shared-context.md` | Where the project stands, rules, verification, OpenCode v2 facts, decisions, shared contracts. Every stage prompt includes it. | — |
+| `ui-spec.md` | Authoritative visual, behavioral, and architectural specification for the Web UI. | — |
 | `stage-0-migrate-and-salvage.md` | Scaffolding, CI, acceptance harness, defect register, salvaged modules with fixes, a fake OpenCode server | — |
 | `stage-1a-spike-and-base-image.md` | Preflight, fifteen spike answers, the base image | #1 |
 | `stage-1b-roster-network-egress.md` | `fleet.yaml`, renderer, twelve experts, egress proxy, workspace | #1 |
 | `stage-1c-dispatcher-engine.md` | The Dispatcher's engine and the verifier, proven against a fake server and two live runs | #1 |
-| `stage-1d-service-director-dashboard.md` | MCP tools, REST, the Director, gateway, dashboard, live end to end | #1 |
+| `stage-1d-service-director-api.md` | MCP tools, REST & SSE control plane, Director chat proxy, role-based auth, gateway, live acceptance | #1 |
+| `stage-1e-web-ui-foundation.md` | Unified Web UI foundation: embedded Director chat, task pipelines, diffs, roles, mobile layout, Playwright E2E | #1 |
 | `stage-2a-playbooks-and-qa.md` | Playbook engine, QA judges, bounded rework | #2 |
 | `stage-2b-environments.md` | Environment runner, per-task stacks | #2 |
 | `stage-3a-registry-and-triggers.md` | Registry, onboarding, REST, webhooks, schedules, GitHub, draft pull requests | #3 |
@@ -37,6 +39,7 @@ Edition 2 keeps the original design and changes how it is cut and checked:
 | `stage-4a-lifecycle-and-extended.md` | On-demand start, eleven extended experts | #4 |
 | `stage-4b-expert-packs.md` | Pack contract, validator, intake | #4 |
 | `stage-4c-evals-seams-final.md` | Eval suite, Scraper Swarm switch, final pass | #4 |
+| `stage-5-web-ui-alive.md` | Alive layer: topology map, multi-stream wall, Go usage meter, egress feed, audit visualizer, PWA | #5 |
 | `verify-stage.md` | The independent verification pass, run after every stage | — |
 | `donor-pack-conversion.md` | Run inside a donor repository to make it an expert pack; includes extracting the GDevelop plugin | — |
 | `donor-scraper-swarm.md` | Run inside `scraper-swarm` to bring home the contract client and guard plugin | — |
