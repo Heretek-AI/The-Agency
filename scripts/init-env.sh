@@ -54,6 +54,9 @@ fi
   done
   echo "FLEET_MCP_TOKEN=$(gen_secret)"
   echo "VERIFIER_TOKEN=$(gen_secret)"
+  # The verifier proxies dependency installs under its own identity
+  # (Stage 1c); it has no OpenCode server password.
+  echo "PROXY_PW_VERIFIER=$(gen_secret)"
   echo "AGENCY_ADMIN_PASSWORD=$(gen_secret)"
 } >"$ENVFILE"
 chmod 600 "$ENVFILE"
