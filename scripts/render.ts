@@ -474,6 +474,10 @@ function renderCompose(fleet: FleetConfig, inputs: RenderInputs): string {
     AGENCY_MODEL: "${AGENCY_MODEL}",
     FLEET_MCP_TOKEN: "${FLEET_MCP_TOKEN}",
     VERIFIER_TOKEN: "${VERIFIER_TOKEN}",
+    // Reachable on the fleet network: the gateway proxies
+    // agency.localhost to dispatcher:8080, which fails when the service
+    // binds loopback inside its own container.
+    DISPATCHER_HOSTNAME: "0.0.0.0",
     DISPATCHER_STATE_DIR: "/data",
     DISPATCHER_REGISTRY_DIR: "/data/registry",
     DISPATCHER_WORKSPACE: "/work",
@@ -524,8 +528,24 @@ function renderCompose(fleet: FleetConfig, inputs: RenderInputs): string {
     container_name: "agency-gateway",
     image: `caddy@${caddyDigest}`,
     restart: "unless-stopped",
-    networks: ["fleet"],
+    // Dual-homed like egress: `fleet` reaches the Dispatcher and experts,
+    // `outside` lets the daemon program the loopback-only published port.
+    // A container on the internal `fleet` network alone gets its published
+    // ports silently dropped by the daemon (verified on Docker 29.9.0: an
+    // identical `docker run -p` on the internal network programs no
+    // mapping, while the same run on a bridge network does). The gateway
+    // still publishes only on 127.0.0.1, and its static Caddyfile only
+    // reverse-proxies to fleet upstreams, so it initiates no egress
+    // itself; experts stay on the internal network only.
+    networks: ["fleet", "outside"],
     cap_drop: ["ALL"],
+    // The official Caddy binary carries the file capability
+    // cap_net_bind_service=ep. Dropping ALL empties the bounding set, so
+    // execve of the binary fails with EPERM ("operation not permitted")
+    // and the container restarts forever. Re-adding only NET_BIND_SERVICE
+    // keeps the bounding set compatible while granting nothing the gateway
+    // needs beyond executing its own binary (it serves port 8080).
+    cap_add: ["NET_BIND_SERVICE"],
     security_opt: ["no-new-privileges:true"],
     pids_limit: 256,
     cpus: 1,

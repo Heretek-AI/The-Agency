@@ -2,6 +2,7 @@ import { readdir, stat } from "node:fs/promises";
 import { loadAllowlist, SessionStore } from "./auth.js";
 import {
   dispatcherCredentials,
+  dispatcherHostname,
   dispatcherPaths,
   dispatcherPort,
   loadFleet,
@@ -127,7 +128,7 @@ export async function boot(options: BootOptions = {}): Promise<BootedService> {
     notify:
       wakeClient !== undefined ? directorWakeHook(engine, { director: wakeClient }) : undefined,
     port: options.port ?? dispatcherPort(),
-    hostname: options.hostname ?? "127.0.0.1",
+    hostname: options.hostname ?? dispatcherHostname(),
   });
 
   const pollMs = options.pollMs ?? 5000;
@@ -156,17 +157,46 @@ export async function boot(options: BootOptions = {}): Promise<BootedService> {
   };
 }
 
+/**
+ * Signal shutdown (Stage 1d recovery fix): the audit lock is released by
+ * `close`, so the process must stay alive until `close` settles. Calling
+ * `process.exit` first leaves a stale `audit.lock` behind, and the
+ * replacement container then refuses to start with `LockedError`,
+ * crash-looping the whole fleet. A second signal while a close is in
+ * flight is ignored so it cannot cut the release short. Exported for
+ * tests.
+ */
+export function shutdownService(
+  service: Pick<BootedService, "close"> | undefined,
+  exit: (code: number) => void,
+): void {
+  if (service === undefined) {
+    exit(0);
+    return;
+  }
+  service.close().then(
+    () => exit(0),
+    () => exit(1),
+  );
+}
+
 async function main(): Promise<void> {
   let service: BootedService | undefined;
-  const shutdown = (): void => {
-    if (service !== undefined) {
-      service.close().catch(() => {});
-      service = undefined;
+  let closing = false;
+  const exit = (code: number): void => process.exit(code);
+  const onSignal = (): void => {
+    if (closing) return;
+    const current = service;
+    service = undefined;
+    if (current === undefined) {
+      exit(0);
+      return;
     }
-    process.exit(0);
+    closing = true;
+    shutdownService(current, exit);
   };
-  process.on("SIGTERM", shutdown);
-  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", onSignal);
+  process.on("SIGINT", onSignal);
   try {
     service = await boot();
   } catch (err) {

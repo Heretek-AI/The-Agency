@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 import {
+  dispatcherHostname,
   expertConnection,
   fleetModel,
   loadFleet,
@@ -102,6 +103,18 @@ describe("stage-1c config", () => {
     });
     withEnv("VERIFIER_TOKEN", "tok", () => {
       expect(verifierConnection()).toEqual({ baseUrl: "http://verifier:8080", token: "tok" });
+    });
+  });
+
+  test("dispatcherHostname defaults to loopback and refuses empty", () => {
+    withEnv("DISPATCHER_HOSTNAME", undefined, () => {
+      expect(dispatcherHostname()).toBe("127.0.0.1");
+    });
+    withEnv("DISPATCHER_HOSTNAME", "0.0.0.0", () => {
+      expect(dispatcherHostname()).toBe("0.0.0.0");
+    });
+    withEnv("DISPATCHER_HOSTNAME", "", () => {
+      expect(() => dispatcherHostname()).toThrow(/DISPATCHER_HOSTNAME/);
     });
   });
 });

@@ -128,10 +128,35 @@ describe("render", () => {
     expect(caddy.content).not.toContain("sleeper.agency.localhost");
     const compose = files.find((f) => f.path.endsWith("docker-compose.yml"))!;
     const doc = parseYaml(compose.content.replace(/^#.*\n/, "")) as {
-      services: Record<string, { image?: string; ports?: string[] }>;
+      services: Record<
+        string,
+        {
+          image?: string;
+          ports?: string[];
+          cap_add?: string[];
+          cap_drop?: string[];
+          environment?: Record<string, string>;
+          networks?: string[];
+        }
+      >;
     };
     expect(doc.services["gateway"]?.image).toContain("caddy@sha256:");
     expect(doc.services["gateway"]?.ports).toEqual(["127.0.0.1:${AGENCY_HTTP_PORT}:8080"]);
+    // The Caddy binary carries cap_net_bind_service as a file capability;
+    // dropping ALL without re-adding it makes exec fail, so the renderer
+    // grants exactly that one capability back.
+    expect(doc.services["gateway"]?.cap_drop).toEqual(["ALL"]);
+    expect(doc.services["gateway"]?.cap_add).toEqual(["NET_BIND_SERVICE"]);
+    // Defect: the dispatcher bound loopback inside its container, so the
+    // gateway's dispatcher:8080 route was refused with 502. The renderer
+    // binds all interfaces so the gateway can reach it over the fleet
+    // network.
+    expect(doc.services["dispatcher"]?.environment?.["DISPATCHER_HOSTNAME"]).toBe("0.0.0.0");
+    // Defect: the daemon silently drops published ports on an
+    // internal-network-only container, so the gateway is dual-homed with
+    // the egress proxy while experts stay internal-only.
+    expect(doc.services["gateway"]?.networks).toEqual(["fleet", "outside"]);
+    expect(doc.services["writer"]?.networks).toEqual(["fleet"]);
     expect(doc.services["dispatcher"]?.ports).toBeUndefined();
     expect(doc.services["writer"]?.ports).toBeUndefined();
   });

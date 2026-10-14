@@ -1,0 +1,80 @@
+accept stage 1d (2026-10-14T21:17:07Z), timeout 900s per check
+===== 1d/01-make-check (exit 0) =====
+CHECK 1d/01-make-check: PASS
+===== 1d/02-up-healthy (exit 1) =====
+CHECK 1d/02-up-healthy: FAIL make up failed: dependency failed to start: container agency-dispatcher is unhealthy
+make[1]: *** [Makefile:60: up] Error 1
+make[1]: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-1d-service'
+===== 1d/03-only-gateway-published (exit 0) =====
+gateway alone publishes 127.0.0.1:8081
+CHECK 1d/03-only-gateway-published: PASS
+===== 1d/04-credentials-required (exit 0) =====
+CHECK 1d/04-credentials-required: PASS
+===== 1d/05-auth-and-roles (exit 1) =====
+CHECK 1d/05-auth-and-roles: FAIL test dispatcher never healthy
+===== 1d/06-director-scout (exit 77) =====
+CHECK 1d/06-director-scout: SKIP no provider key in .env.provider
+===== 1d/07-scout-completes (exit 77) =====
+CHECK 1d/07-scout-completes: SKIP no provider key in .env.provider
+===== 1d/08-docs-lands (exit 77) =====
+CHECK 1d/08-docs-lands: SKIP no provider key in .env.provider
+===== 1d/09-linter-break-fails-verify (exit 77) =====
+CHECK 1d/09-linter-break-fails-verify: SKIP no provider key in .env.provider
+===== 1d/10-joint-breakage-resets (exit 77) =====
+CHECK 1d/10-joint-breakage-resets: SKIP no provider key in .env.provider
+===== 1d/11-scope-refusal (exit 1) =====
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json,sys; print(json.load(sys.stdin)["token"])
+                           ~~~~~~~~~^^^^^^^^^^^
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.15/3.15.0/lib/python3.15/json/__init__.py", line 306, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook,
+        array_hook=array_hook, **kw)
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.15/3.15.0/lib/python3.15/json/__init__.py", line 371, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.15/3.15.0/lib/python3.15/json/decoder.py", line 358, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/linuxbrew/.linuxbrew/Cellar/python@3.15/3.15.0/lib/python3.15/json/decoder.py", line 376, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+CHECK 1d/11-scope-refusal: FAIL approver login failed
+===== 1d/12-restart-collects (exit 77) =====
+CHECK 1d/12-restart-collects: SKIP no provider key in .env.provider
+===== 1d/13-e2e (exit 1) =====
+make[1]: Entering directory '/home/john/Projects/The-Agency/worktrees/wave-1d-service'
+bash scripts/e2e.sh
+e2e: SKIP no provider key in .env.provider
+make[1]: *** [Makefile:78: e2e] Error 77
+make[1]: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-1d-service'
+CHECK 1d/13-e2e: FAIL make e2e failed: e2e: SKIP no provider key in .env.provider make[1]: *** [Makefile:78: e2e] Error 77 make[1]: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-1d-service' 
+===== 1d/14-director-chat-proxy (exit 77) =====
+CHECK 1d/14-director-chat-proxy: SKIP no provider key in .env.provider
+===== 1d/15-audit-chain (exit 0) =====
+audit: 2 entries, tip b6c85f718b807a02fce85362f3cd1c4b251fdb3939bdcf321db4944425a788f9; 0 landed merge(s) anchored across 0 branch(es)
+CHECK 1d/15-audit-chain: PASS
+===== 1d/16-stage-1-register (exit 1) =====
+CHECK 1d/16-stage-1-register: FAIL bubblewrap referenced: scripts/accept/0/06-no-donor-code.sh
+scripts/accept/1d/16-stage-1-register.sh
+CHECKS for stage 1d
+1d/01-make-check             PASS   
+1d/02-up-healthy             FAIL   make up failed: dependency failed to start: container agency-dispatcher is unhealthy
+1d/03-only-gateway-published PASS   
+1d/04-credentials-required   PASS   
+1d/05-auth-and-roles         FAIL   test dispatcher never healthy
+1d/06-director-scout         SKIP   no provider key in .env.provider
+1d/07-scout-completes        SKIP   no provider key in .env.provider
+1d/08-docs-lands             SKIP   no provider key in .env.provider
+1d/09-linter-break-fails-verify SKIP   no provider key in .env.provider
+1d/10-joint-breakage-resets  SKIP   no provider key in .env.provider
+1d/11-scope-refusal          FAIL   approver login failed
+1d/12-restart-collects       SKIP   no provider key in .env.provider
+1d/13-e2e                    FAIL   make e2e failed: e2e: SKIP no provider key in .env.provider make[1]: *** [Makefile:78: e2e] Error 77 make[1]: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-1d-service' 
+1d/14-director-chat-proxy    SKIP   no provider key in .env.provider
+1d/15-audit-chain            PASS   
+1d/16-stage-1-register       FAIL   bubblewrap referenced: scripts/accept/0/06-no-donor-code.sh
+stage 1d: 4 pass, 7 skip, 5 fail (16 checks)

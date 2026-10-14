@@ -58,7 +58,22 @@ artifacts_vol=$(docker inspect agency-verifier \
   --format '{{ range .Mounts }}{{ if eq .Destination "/artifacts" }}{{ print .Name }}{{ end }}{{ end }}' 2>/dev/null) ||
   fail "cannot find the artifacts volume (run check 02 first)"
 [ -n "$artifacts_vol" ] || fail "verifier has no /artifacts mount (run check 02 first)"
-docker run -d --name agency-dispatcher-test --network agency_fleet \
+# The daemon silently drops published ports on an internal-network-only
+# container (same root cause as the gateway defect: verified on Docker
+# 29.9.0), so the test Dispatcher starts on the non-internal network the
+# egress proxy already uses and joins the fleet network second for expert
+# DNS. DISPATCHER_HOSTNAME=0.0.0.0 is required too: the proxy forwards to
+# the container address, not loopback.
+fleet_net=$(docker inspect agency-verifier \
+  --format '{{ range $k,$v := .NetworkSettings.Networks }}{{ print $k }}{{ end }}' 2>/dev/null |
+  head -1) || fail "cannot find the fleet network (run check 02 first)"
+[ -n "$fleet_net" ] || fail "verifier has no network (run check 02 first)"
+outside_net=$(docker inspect agency-egress \
+  --format '{{ range $k,$v := .NetworkSettings.Networks }}{{ print $k }}{{ end }}' 2>/dev/null |
+  grep -v -x "$fleet_net" | head -1) ||
+  fail "cannot find the non-internal network (run check 02 first)"
+[ -n "$outside_net" ] || fail "egress has no non-internal network (run check 02 first)"
+docker create --name agency-dispatcher-test --network "$outside_net" \
   -p 127.0.0.1:18080:8080 \
   -v "$root/workspace:/work:rw,z" \
   -v "$artifacts_vol:/artifacts:z" \
@@ -71,10 +86,14 @@ docker run -d --name agency-dispatcher-test --network agency_fleet \
   -e PW_DBA="$PW_DBA" -e PW_PLATFORM="$PW_PLATFORM" \
   -e PW_SECURITY="$PW_SECURITY" -e PW_QA="$PW_QA" \
   -e PW_REVIEWER="$PW_REVIEWER" -e PW_DOCS="$PW_DOCS" \
+  -e DISPATCHER_HOSTNAME=0.0.0.0 \
   -e DISPATCHER_STATE_DIR=/data -e DISPATCHER_REGISTRY_DIR=/data/registry \
   -e DISPATCHER_WORKSPACE=/work -e DISPATCHER_ARTIFACTS=/artifacts \
   -e DISPATCHER_ALLOWLIST=/data/registry/allowlist.yaml \
-  agency-dispatcher:1.0.0 >/dev/null || fail "cannot start test dispatcher"
+  agency-dispatcher:1.0.0 >/dev/null || fail "cannot create test dispatcher"
+docker network connect "$fleet_net" agency-dispatcher-test ||
+  fail "cannot join test dispatcher to $fleet_net"
+docker start agency-dispatcher-test >/dev/null || fail "cannot start test dispatcher"
 
 test_base="http://127.0.0.1:18080"
 healthy=""

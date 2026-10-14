@@ -3,7 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "bun:test";
-import { boot } from "../src/main.js";
+import { boot, shutdownService } from "../src/main.js";
 import { enabledExperts, FleetSchema } from "../src/fleet-schema.js";
 import { parse as parseYaml } from "yaml";
 import { startFakeOpenCode, type FakeOpenCode } from "./support/fake-opencode.js";
@@ -132,4 +132,62 @@ describe("dispatcher startup", () => {
       seed.restore();
     }
   }, 120_000);
+});
+
+describe("shutdownService", () => {
+  const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 10));
+
+  test("exits 0 at once when there is no service", () => {
+    const exits: number[] = [];
+    shutdownService(undefined, (code) => {
+      exits.push(code);
+    });
+    expect(exits).toEqual([0]);
+  });
+
+  test("waits for close to release resources before exiting", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let closed = false;
+    const exits: number[] = [];
+    shutdownService(
+      {
+        close: async () => {
+          await gate;
+          closed = true;
+        },
+      },
+      (code) => {
+        exits.push(code);
+      },
+    );
+    // Defect: the old handler called process.exit(0) synchronously after
+    // kicking off close, so the audit lock was never released. The exit
+    // must not happen until close settles.
+    expect(closed).toBe(false);
+    expect(exits).toEqual([]);
+    release();
+    await gate;
+    await settle();
+    expect(closed).toBe(true);
+    expect(exits).toEqual([0]);
+  });
+
+  test("exits non-zero when close fails", async () => {
+    const exits: number[] = [];
+    shutdownService(
+      {
+        close: async () => {
+          throw new Error("close failed");
+        },
+      },
+      (code) => {
+        exits.push(code);
+      },
+    );
+    await settle();
+    expect(exits).toEqual([1]);
+  });
 });

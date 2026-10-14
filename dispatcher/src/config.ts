@@ -165,6 +165,19 @@ export function dispatcherPort(): number {
   return port;
 }
 
+/**
+ * Interface the Dispatcher service binds. Defaults to loopback; the
+ * fleet compose file sets `0.0.0.0` so the gateway can reach it over the
+ * internal `fleet` network. Binding loopback inside the container makes
+ * the gateway's `dispatcher:8080` route refuse connections, so an empty
+ * value refuses to start rather than silently binding nowhere useful.
+ */
+export function dispatcherHostname(): string {
+  const raw = optionalEnv("DISPATCHER_HOSTNAME", "127.0.0.1");
+  if (raw.trim() === "") throw new Error("refusing to start: DISPATCHER_HOSTNAME is empty");
+  return raw;
+}
+
 /** Filesystem roots the Dispatcher service reads. All have fixed defaults. */
 export function dispatcherPaths(): {
   stateDir: string;

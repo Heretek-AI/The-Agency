@@ -10,7 +10,9 @@ require_cmd docker
 out=$(cd "$root" && make e2e 2>&1)
 code=$?
 echo "$out" | tail -5
-if [ "$code" -eq 77 ]; then
+# GNU make reports the recipe's 77 as its own failure (exit 2); the SKIP
+# line inside the output is the authority, not make's exit code.
+if echo "$out" | grep -q "e2e: SKIP"; then
   skip "make e2e skipped (no provider key)"
 fi
 [ "$code" -eq 0 ] || fail "make e2e failed: $(echo "$out" | tail -3 | tr '\n' ' ')"

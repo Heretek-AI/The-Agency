@@ -47,11 +47,11 @@ run_guard dispatcher/test/registry-schema.test.ts "checks.yaml rejects an empty 
 run_guard verifier/test/server.test.ts "an empty check list returns no-checks, never success"
 run_guard dispatcher/test/runner.test.ts "a scripted permission request is rejected with the exact message and recorded"
 
-# D-06: no sandbox lanes, no bubblewrap anywhere in first-party code.
+# D-06: no sandbox lanes and no donor code. The stage-0 scan owns the
+# self-aware source sweep (it exempts its own mention); re-run it
+# rather than duplicating its grep.
 [ ! -e dispatcher/src/lanes ] || fail "lanes directory exists"
 [ ! -e dispatcher/src/scheduler/runner.ts ] || fail "old scheduler runner exists"
-bwrap=$(grep -rln "bwrap" dispatcher/src verifier/src scripts envrunner lifecycle 2>/dev/null || true)
-[ -z "$bwrap" ] || fail "bubblewrap referenced: $bwrap"
 
 # Static stage guards that run in seconds, with their own result lines
 # captured so they cannot end this check early.
@@ -65,6 +65,7 @@ static_check "$root/scripts/accept/1c/03-scheduler-pure.sh" "1c/03"
 static_check "$root/scripts/accept/1c/04-single-opencode-module.sh" "1c/04"
 static_check "$root/scripts/accept/1c/09-no-task-exec-in-dispatcher.sh" "1c/09"
 static_check "$root/scripts/accept/0/07-no-skips.sh" "0/07"
+static_check "$root/scripts/accept/0/06-no-donor-code.sh" "0/06"
 
 # D-07: generated services carry limits, dropped capabilities, and :z.
 bun -e '

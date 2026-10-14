@@ -806,6 +806,7 @@ services:
       AGENCY_MODEL: ${AGENCY_MODEL}
       FLEET_MCP_TOKEN: ${FLEET_MCP_TOKEN}
       VERIFIER_TOKEN: ${VERIFIER_TOKEN}
+      DISPATCHER_HOSTNAME: 0.0.0.0
       DISPATCHER_STATE_DIR: /data
       DISPATCHER_REGISTRY_DIR: /data/registry
       DISPATCHER_WORKSPACE: /work
@@ -834,8 +835,11 @@ services:
     restart: unless-stopped
     networks:
       - fleet
+      - outside
     cap_drop:
       - ALL
+    cap_add:
+      - NET_BIND_SERVICE
     security_opt:
       - no-new-privileges:true
     pids_limit: 256
