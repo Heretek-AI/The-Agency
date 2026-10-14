@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process";
 import { describe, expect, test } from "bun:test";
 import { loadFleet } from "../src/config.js";
 import { git } from "../src/git.js";
-import { TaskStatuses, type Mission, type Task } from "../src/model.js";
+import { TaskStatuses, type Mission } from "../src/model.js";
 import { expandPlan, PlanError, type DirectorTask } from "../src/plan.js";
 import { changedFiles, checkPolicy } from "../src/policy.js";
 import type { OwnershipConfig } from "../src/registry-schema.js";

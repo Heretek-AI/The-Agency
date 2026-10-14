@@ -105,7 +105,7 @@ describe("render", () => {
     const doc = parseYaml(compose.content.replace(/^#.*\n/, "")) as {
       services: Record<string, unknown>;
     };
-    expect(Object.keys(doc.services).sort()).toEqual(["egress", "reader", "writer"]);
+    expect(Object.keys(doc.services).sort()).toEqual(["egress", "reader", "verifier", "writer"]);
   });
 
   test("refuses an expert naming an MCP key missing from the registry", async () => {
