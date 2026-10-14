@@ -186,6 +186,16 @@ check re-ran green before moving on):
 - `16-stage-1-register` (`red/16-stage-1-register.log`): created
   `dispatcher/src/lanes/` → the D-06 guard failed (`lanes directory
 exists`), check exited 1. Directory removed, check green.
+- Unit sabotage, same discipline (source restored byte-identically,
+  suite green after):
+  - `red/unit-updatePlan-guard.log`: dropped the
+    waiting-for-approval guard in `Engine.updatePlan` → `updatePlan
+refuses running missions` failed (promise resolved instead of
+    rejecting). Restored; `engine-1d.test.ts` 5/5 green.
+  - `red/unit-shutdownService.log`: `shutdownService` exited without
+    waiting for `close()` (the stale-audit-lock defect) → `waits for
+close to release resources before exiting` failed. Restored;
+    `main.test.ts` 6/6 green.
 - Checks 06, 07, 08, 09, 10, 12, 13, 14: no red proof possible — each
   skips without a provider key and never ran green in this environment,
   so there is no passing behavior to sabotage. The skips are the ones

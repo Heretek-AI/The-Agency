@@ -1,0 +1,29 @@
+Sabotage: shutdownService exits without waiting for close (the stale-audit-lock defect)
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/main.test.ts:
+165 |     );
+166 |     // Defect: the old handler called process.exit(0) synchronously after
+167 |     // kicking off close, so the audit lock was never released. The exit
+168 |     // must not happen until close settles.
+169 |     expect(closed).toBe(false);
+170 |     expect(exits).toEqual([]);
+                        ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   0,
++ ]
+
+- Expected  - 1
++ Received  + 3
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1d-service/dispatcher/test/main.test.ts:170:19)
+(fail) shutdownService > waits for close to release resources before exiting [0.79ms]
+
+ 0 pass
+ 5 filtered out
+ 1 fail
+ 2 expect() calls
+Ran 1 test across 1 file. [75.00ms]

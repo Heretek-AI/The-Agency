@@ -1,0 +1,24 @@
+Sabotage: dropped the waiting-for-approval guard in Engine.updatePlan (edits accepted on running missions)
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/engine-1d.test.ts:
+76 |         source: "api",
+77 |         playbook: "director",
+78 |         objective: "frozen",
+79 |       });
+80 |       await h.engine.submitPlan(m.id, [scoutTask("t1")]);
+81 |       await expect(h.engine.updatePlan(m.id, [scoutTask("t2")])).rejects.toThrow("not waiting");
+                                                                              ^
+error: expect(received).rejects.toThrow(expected)
+
+Expected promise that rejects
+Received promise that resolved: Promise { <resolved> }
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1d-service/dispatcher/test/engine-1d.test.ts:81:74)
+(fail) engine Stage 1d extensions > updatePlan refuses running missions, started tasks, and bad experts [614.81ms]
+
+ 0 pass
+ 4 filtered out
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [677.00ms]
