@@ -1,0 +1,42 @@
+accept stage 1b (2026-10-14T01:34:24Z), timeout 120s per check
+===== 1b/01-render-check (exit 0) =====
+CHECK 1b/01-render-check: PASS
+===== 1b/02-compose-config (exit 1) =====
+CHECK 1b/02-compose-config: FAIL docker compose config -q failed: time="2026-10-13T21:34:25-04:00" level=warning msg="The \"PROXY_PW_FRONTEND\" variable is not set. Defaulting to a blank string." time="2026-10-13T21:34:25-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string." env file /home/john/Projects/The-Agency/.env.provider not found: stat /home/john/Projects/The-Agency/.env.provider: no such file or directory 
+===== 1b/03-compose-hardening (exit 0) =====
+CHECK 1b/03-compose-hardening: PASS
+===== 1b/04-images-pinned-and-built (exit 1) =====
+CHECK 1b/04-images-pinned-and-built: FAIL docker compose build failed: #1 [internal] load local bake definitions #1 reading from stdin 7.15kB done #1 DONE 0.0s invalid tag "agency-reviewer:": invalid reference format 
+===== 1b/05-up-healthy (exit 1) =====
+CHECK 1b/05-up-healthy: FAIL make up failed: time="2026-10-13T21:34:26-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string." env file /home/john/Projects/The-Agency/.env.provider not found: stat /home/john/Projects/The-Agency/.env.provider: no such file or directory make: *** [Makefile:60: up] Error 1 
+===== 1b/06-smoke (exit 1) =====
+CHECK 1b/06-smoke: FAIL make smoke failed: bash scripts/smoke.sh smoke: .env missing (run: make init) make: *** [Makefile:72: smoke] Error 1 
+===== 1b/07-egress-allow-deny (exit 1) =====
+Error response from daemon: No such container: agency-backend
+CHECK 1b/07-egress-allow-deny: FAIL agency-backend: allowlisted request failed
+===== 1b/08-no-direct-route (exit 1) =====
+Error response from daemon: No such container: agency-backend
+CHECK 1b/08-no-direct-route: FAIL metadata probe errored instead of returning the proxy denial
+===== 1b/09-unique-passwords (exit 1) =====
+scripts/accept/1b/09-unique-passwords.sh: line 11: /home/john/Projects/The-Agency/.env: No such file or directory
+CHECK 1b/09-unique-passwords: FAIL director: PW_DIRECTOR is empty
+===== 1b/10-protocol-examples-parse (exit 0) =====
+CHECK 1b/10-protocol-examples-parse: PASS
+===== 1b/11-workspace-demo (exit 0) =====
+CHECK 1b/11-workspace-demo: PASS
+===== 1b/12-no-published-ports (exit 1) =====
+CHECK 1b/12-no-published-ports: FAIL project has no containers to inspect
+CHECKS for stage 1b
+1b/01-render-check           PASS   
+1b/02-compose-config         FAIL   docker compose config -q failed: time="2026-10-13T21:34:25-04:00" level=warning msg="The \"PROXY_PW_FRONTEND\" variable is not set. Defaulting to a blank string." time="2026-10-13T21:34:25-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string." env file /home/john/Projects/The-Agency/.env.provider not found: stat /home/john/Projects/The-Agency/.env.provider: no such file or directory 
+1b/03-compose-hardening      PASS   
+1b/04-images-pinned-and-built FAIL   docker compose build failed: #1 [internal] load local bake definitions #1 reading from stdin 7.15kB done #1 DONE 0.0s invalid tag "agency-reviewer:": invalid reference format 
+1b/05-up-healthy             FAIL   make up failed: time="2026-10-13T21:34:26-04:00" level=warning msg="The \"PROXY_PW_DOCS\" variable is not set. Defaulting to a blank string." env file /home/john/Projects/The-Agency/.env.provider not found: stat /home/john/Projects/The-Agency/.env.provider: no such file or directory make: *** [Makefile:60: up] Error 1 
+1b/06-smoke                  FAIL   make smoke failed: bash scripts/smoke.sh smoke: .env missing (run: make init) make: *** [Makefile:72: smoke] Error 1 
+1b/07-egress-allow-deny      FAIL   agency-backend: allowlisted request failed
+1b/08-no-direct-route        FAIL   metadata probe errored instead of returning the proxy denial
+1b/09-unique-passwords       FAIL   director: PW_DIRECTOR is empty
+1b/10-protocol-examples-parse PASS   
+1b/11-workspace-demo         PASS   
+1b/12-no-published-ports     FAIL   project has no containers to inspect
+stage 1b: 4 pass, 0 skip, 8 fail (12 checks)
