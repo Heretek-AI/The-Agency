@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { OpenCodeClient, OpenCodeError } from "../src/opencode.js";
 import type { FakeOpenCode } from "./support/fake-opencode.js";
 import {
+  FAKE_ROUTES,
   checkRoutesAgainstOpenApi,
   loadOpenApiSpec,
   startFakeOpenCode,
@@ -41,19 +42,19 @@ describe("opencode client against the fake", () => {
     const repo = makeTmpGitRepo();
     const created = await c.createSession({ title: "t", location: { directory: repo } });
     expect(created.id.startsWith("ses-")).toBe(true);
-    const got = (await c.getSession(created.id)) as { id: string };
+    const got = (await c.sessionInfo(created.id)) as { id: string };
     expect(got.id).toBe(created.id);
     const marker = `probe-${Date.now()}`;
     const admitted = await c.prompt(created.id, marker);
     expect(admitted.inboxId.length).toBeGreaterThan(0);
-    await c.wait(created.id, 10_000);
-    const messages = await c.listMessages(created.id);
+    await c.waitIdle(created.id, 10_000);
+    const messages = await c.messages(created.id);
     expect(messages.some((m) => JSON.stringify(m).includes(marker))).toBe(true);
     expect(messages.some((m) => m["content"] === "hello")).toBe(true);
     expect(await c.diff(created.id)).toEqual([]);
     await c.interrupt(created.id);
     await c.deleteSession(created.id);
-    await expect(c.getSession(created.id)).rejects.toBeInstanceOf(OpenCodeError);
+    await expect(c.sessionInfo(created.id)).rejects.toBeInstanceOf(OpenCodeError);
   });
 
   test("requests without a password get 401", async () => {
@@ -73,7 +74,7 @@ describe("opencode client against the fake", () => {
     const repo = makeTmpGitRepo();
     const created = await c.createSession({ location: { directory: repo } });
     await c.prompt(created.id, "go");
-    const err = await c.wait(created.id, 10_000).catch((e: unknown) => e);
+    const err = await c.waitIdle(created.id, 10_000).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(OpenCodeError);
     expect((err as OpenCodeError).status).toBe(500);
     expect((err as OpenCodeError).message).toContain("POST /api/experimental/session/");
@@ -103,21 +104,49 @@ describe("opencode client against the fake", () => {
 
   test("every operation the client uses exists in openapi.json", async () => {
     const { spec } = await loadOpenApiSpec();
+    expect(checkRoutesAgainstOpenApi(FAKE_ROUTES, spec)).toEqual([]);
+    const { OPENCODE_OPERATIONS } = await import("../src/opencode.js");
     const missing = checkRoutesAgainstOpenApi(
-      [
-        { method: "GET", pattern: "/api/info" },
-        { method: "POST", pattern: "/api/session" },
-        { method: "GET", pattern: "/api/session/:sessionID" },
-        { method: "DELETE", pattern: "/api/session/:sessionID" },
-        { method: "POST", pattern: "/api/session/:sessionID/prompt" },
-        { method: "POST", pattern: "/api/experimental/session/:sessionID/wait" },
-        { method: "POST", pattern: "/api/session/:sessionID/interrupt" },
-        { method: "GET", pattern: "/api/session/:sessionID/message" },
-        { method: "GET", pattern: "/api/session/:sessionID/diff" },
-      ],
+      OPENCODE_OPERATIONS.map((op) => ({
+        method: op.method,
+        pattern: op.path.replace(/\{([^/]+)\}/g, ":$1"),
+      })),
       spec,
     );
     expect(missing).toEqual([]);
+  });
+
+  test("assertContract passes against the fake and names a removed operation", async () => {
+    fake = await startFakeOpenCode({ password: PASSWORD });
+    await expect(client().assertContract()).resolves.toBeUndefined();
+    const { spec } = await loadOpenApiSpec();
+    const reduced = {
+      paths: Object.fromEntries(
+        Object.entries(spec.paths).filter(
+          ([p, ops]) => !(p === "/api/session/{sessionID}/diff" && ops["get"] !== undefined),
+        ),
+      ),
+    };
+    const missing = checkRoutesAgainstOpenApi(
+      [{ method: "GET", pattern: "/api/session/:sessionID/diff" }],
+      reduced,
+    );
+    expect(missing).toEqual(["GET /api/session/{sessionID}/diff"]);
+    const failing = new OpenCodeClient({
+      baseUrl: fake.url,
+      password: PASSWORD,
+      fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+        const res = await fetch(url, init);
+        if (new URL(res.url).pathname === "/openapi.json") {
+          return new Response(JSON.stringify(reduced), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return res;
+      }) as typeof fetch,
+    });
+    await expect(failing.assertContract()).rejects.toThrow("GET /api/session/{sessionID}/diff");
   });
 
   test("every route the fake serves exists in openapi.json", async () => {
@@ -147,7 +176,7 @@ describe("opencode client against the fake", () => {
     const c = client();
     const created = await c.createSession({ location: { directory: repo } });
     await c.prompt(created.id, "please build it");
-    await c.wait(created.id, 15_000);
+    await c.waitIdle(created.id, 15_000);
     expect(gitHead(repo)).not.toBe(before);
     const log = execFileSync("git", ["log", "--oneline", "-1"], { cwd: repo }).toString();
     expect(log).toContain("fake: add feature");
@@ -179,8 +208,8 @@ describe("opencode client against the fake", () => {
         body: JSON.stringify({ decision: "once" }),
       },
     );
-    expect(reply.status).toBe(200);
-    await c.wait(created.id, 15_000);
+    expect(reply.status).toBe(204);
+    await c.waitIdle(created.id, 15_000);
   });
 
   test("events stream on /api/event as SSE", async () => {

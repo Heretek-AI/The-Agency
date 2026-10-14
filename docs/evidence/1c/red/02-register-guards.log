@@ -1,0 +1,2 @@
+Sabotage: guard test renamed in dispatcher/test/scheduler.test.ts so the register guard it names no longer exists
+CHECK 1c/02-register-guards-present: FAIL guard test does not exist: retry re-queues the same task

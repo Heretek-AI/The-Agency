@@ -1,0 +1,2 @@
+Sabotage: Date.now() added to dispatcher/src/scheduler.ts so the no-clock purity rule goes red
+CHECK 1c/03-scheduler-pure: FAIL scheduler.ts uses clock/timer/random: 187:const sabotageNow: number = Date.now(); 

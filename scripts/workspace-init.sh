@@ -35,7 +35,7 @@ if [ "$src" = "--demo" ]; then
     rm -rf "$ROOT/workspace/$repo_id"
     exit 1
   }
-  git -C "$dest" init -q
+  git -C "$dest" init -q -b main
   git -C "$dest" -c user.name=agency -c user.email=agency@agency.invalid add -A
   git -C "$dest" -c user.name=agency -c user.email=agency@agency.invalid commit -qm seed
   echo "workspace-init: demo workspace ready at workspace/$repo_id"

@@ -13,3 +13,7 @@ docs/prompts/*.md
 docs/research/
 LAUNCH_WAVE_SWARM.md
 swarm_prompts/
+# Prettier's shell formatter reflows this extensionless helper's comments
+# into code (proven by a red format-check cycle); like every *.sh helper it
+# is checked by `bash -n` and shellcheck instead.
+scripts/accept/1c/engine-live.inc

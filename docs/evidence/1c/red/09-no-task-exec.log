@@ -1,0 +1,2 @@
+Sabotage: a dead execShell call added to dispatcher/src/engine.ts so the Dispatcher-side exec allowlist goes red
+CHECK 1c/09-no-task-exec-in-dispatcher: FAIL exec callers are not exactly git/exec/run-checks: dispatcher/src/engine.ts dispatcher/src/git.ts dispatcher/src/util/exec.ts verifier/src/run-checks.ts 

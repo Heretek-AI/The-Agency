@@ -1,0 +1,3 @@
+Sabotage: scout expert container paused (builder paused docs for this check) so make up fails and the live docs proof cannot start - no model called, docs audit log untouched
+CHECK 1c/08-engine-live-docs-lands: FAIL live docs proof failed (exit 1): engine-live: make up failed: Error response from daemon: cannot start a paused container, try unpause instead make: *** [Makefile:60: up] Error 1 
+redproof-exit: 1

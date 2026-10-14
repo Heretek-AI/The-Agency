@@ -379,6 +379,52 @@ function renderCompose(fleet: FleetConfig): string {
 
   const egressEnv: Record<string, string> = {};
   for (const name of enabled) egressEnv[`PROXY_PW_${upper(name)}`] = `\${PROXY_PW_${upper(name)}}`;
+  // The verifier proxies dependency installs under its own identity.
+  egressEnv["PROXY_PW_VERIFIER"] = "${PROXY_PW_VERIFIER}";
+  services["verifier"] = {
+    container_name: "agency-verifier",
+    build: {
+      context: ".",
+      dockerfile: "verifier/Dockerfile",
+      args: {
+        OPENCODE_VERSION: "${OPENCODE_VERSION}",
+        AGENT_UID: "${AGENT_UID}",
+        AGENT_GID: "${AGENT_GID}",
+      },
+    },
+    image: "agency-verifier:1.0.0",
+    restart: "unless-stopped",
+    working_dir: "/app",
+    networks: ["fleet"],
+    cap_drop: ["ALL"],
+    security_opt: ["no-new-privileges:true"],
+    pids_limit: 512,
+    cpus: 2,
+    mem_limit: "4g",
+    healthcheck: {
+      test: ["CMD-SHELL", "curl -fsS --noproxy '*' http://127.0.0.1:8080/healthz >/dev/null"],
+      interval: "15s",
+      timeout: "5s",
+      retries: 10,
+      start_period: "20s",
+    },
+    environment: {
+      VERIFIER_TOKEN: "${VERIFIER_TOKEN}",
+      VERIFIER_PORT: "8080",
+      HTTP_PROXY: "http://verifier:${PROXY_PW_VERIFIER}@egress:3128",
+      HTTPS_PROXY: "http://verifier:${PROXY_PW_VERIFIER}@egress:3128",
+      http_proxy: "http://verifier:${PROXY_PW_VERIFIER}@egress:3128",
+      https_proxy: "http://verifier:${PROXY_PW_VERIFIER}@egress:3128",
+      NO_PROXY: "localhost,127.0.0.1,egress,dispatcher,verifier",
+      no_proxy: "localhost,127.0.0.1,egress,dispatcher,verifier",
+    },
+    volumes: [
+      "${AGENCY_WORKSPACE:-./workspace}:/work:rw,z",
+      "artifacts:/artifacts",
+      "verifier-cache:/home/agent/.cache",
+    ],
+  };
+  volumes["verifier-cache"] = {};
   services["egress"] = {
     container_name: "agency-egress",
     build: { context: "./egress" },

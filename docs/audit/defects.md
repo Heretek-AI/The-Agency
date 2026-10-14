@@ -38,3 +38,4 @@ its first guard belongs to the first stage.
 | D-28 | CI (`ci-unit.yaml`), root `tsconfig.json` include gap (2.1, 2.10) | CI ran neither lint nor typecheck; files outside typecheck | fixed | check `0/01-make-check`, `0/02-ts-coverage` | 0 |
 | D-29 | `opencode-sdk/test/host-live.test.ts` skips, pack-gdevelop seam skips (2.2) | Vacuous skips counted as passes | fixed | `check-no-skips.sh`; harness exit 77 | 0 |
 | D-30 | Commit subjects at `14f297a` (6.4) | Commit subjects and reports claimed absent features | guarded: operating rules | `verify-stage.md` compares claims with the tree | 0 |
+| D-31 | `dispatcher/src/runner.ts` (Stage 1c live proof) | Final-message scan assumed oldest-first transcripts (the fake order); the real server serves newest-first, so live tasks failed with `no-block` | fixed in stage | test: `defect: newest-first transcripts resolve the final assistant message` | 1c |

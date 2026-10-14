@@ -1,0 +1,3 @@
+Sabotage: unauthorized side-effect import appended to dispatcher/src/scheduler.ts so the model/wildcard-only import rule goes red (builder used a Date.now() clock call)
+CHECK 1c/03-scheduler-pure: FAIL scheduler.ts imports beyond model/wildcard: import "./engine.js"; 
+redproof-exit: 1

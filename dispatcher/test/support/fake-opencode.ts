@@ -18,6 +18,7 @@
  */
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { checkOperationsAgainstSpec, type OpenCodeOperation } from "../../src/opencode.js";
 
 export type FakeStep =
   | { kind: "write"; path: string; content: string }
@@ -43,6 +44,7 @@ export interface RecordedRequest {
   method: string;
   path: string;
   body: unknown;
+  headers: Record<string, string>;
 }
 
 interface TranscriptMessage {
@@ -149,32 +151,16 @@ function patternMatches(pattern: string, pathname: string): Record<string, strin
  * Every served route must exist in the spec: same segment shape
  * (spec `{param}` segments match any single segment) with the same method.
  * Returns the missing routes, empty when the routes match the spec.
+ * Delegates to the client's table so the two cannot drift apart.
  */
 export function checkRoutesAgainstOpenApi(routes: FakeRoute[], spec: OpenApiSpec): string[] {
-  const missing: string[] = [];
-  for (const route of routes) {
-    if (route.exemptFromSpec) continue;
-    const rp = route.pattern.split("/");
-    let found = false;
-    for (const [specPath, ops] of Object.entries(spec.paths)) {
-      const sp = specPath.split("/");
-      if (sp.length !== rp.length) continue;
-      let shape = true;
-      for (let i = 0; i < sp.length; i++) {
-        const isParam = sp[i]!.startsWith("{") && sp[i]!.endsWith("}");
-        if (!isParam && sp[i] !== rp[i]) {
-          shape = false;
-          break;
-        }
-      }
-      if (shape && ops[route.method.toLowerCase()] !== undefined) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) missing.push(`${route.method} ${route.pattern}`);
-  }
-  return missing;
+  const ops: OpenCodeOperation[] = routes
+    .filter((r) => !r.exemptFromSpec)
+    .map((r) => ({
+      method: r.method,
+      path: r.pattern.replace(/:([^/]+)/g, "{$1}"),
+    }));
+  return checkOperationsAgainstSpec(ops, spec);
 }
 
 /** The fake's own route table against the spec. */
@@ -185,6 +171,11 @@ export function checkFakeRoutesAgainstOpenApi(spec: OpenApiSpec): string[] {
 export interface FakeOptions {
   password?: string;
   script?: FakeScript;
+  /**
+   * Drop every SSE stream after this many broadcasts (Stage 1c: proves the
+   * client's subscription reconnects). Once only; later streams stay open.
+   */
+  sseDropAfter?: number;
 }
 
 export interface FakeOpenCode {
@@ -287,9 +278,26 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
   let reqSeq = 0;
 
   const expectedAuth = `Basic ${btoa(`opencode:${password}`)}`;
+  const dropAfter = options.sseDropAfter;
+  let broadcasts = 0;
+  let dropped = false;
+
+  function dropStreams(): void {
+    dropped = true;
+    for (const controller of streams) {
+      streams.delete(controller);
+      try {
+        controller.close();
+      } catch {
+        // already gone
+      }
+    }
+  }
 
   function broadcast(event: unknown): void {
-    const line = encoder.encode(`data: ${JSON.stringify(event)}\n\n`);
+    broadcasts += 1;
+    if (dropAfter !== undefined && !dropped && broadcasts >= dropAfter) dropStreams();
+    const line = encoder.encode(`id: evt-${broadcasts}\ndata: ${JSON.stringify(event)}\n\n`);
     for (const controller of streams) {
       try {
         controller.enqueue(line);
@@ -324,7 +332,11 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
     try {
       for (const step of steps) {
         if (step.kind === "write") {
-          const target = path.join(session.directory, step.path);
+          // Relative paths land in the session directory (the worktree).
+          // Absolute paths simulate the expert writing to /artifacts/<taskId>/.
+          const target = step.path.startsWith("/")
+            ? step.path
+            : path.join(session.directory, step.path);
           await mkdir(path.dirname(target), { recursive: true });
           await Bun.write(target, step.content);
           broadcast({ type: "step.write", sessionID: session.id, path: step.path });
@@ -400,7 +412,11 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
       } catch {
         body = undefined;
       }
-      requests.push({ method, path: url.pathname, body });
+      requests.push({ method, path: url.pathname, body, headers: {} });
+      for (const [key, value] of req.headers.entries()) {
+        const last = requests[requests.length - 1]!;
+        last.headers[key.toLowerCase()] = value;
+      }
       if (req.headers.get("authorization") !== expectedAuth) {
         return Response.json({ error: "unauthorized" }, { status: 401 });
       }
@@ -479,6 +495,9 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
               (r) => r.matchPrompt === undefined || text.includes(r.matchPrompt),
             );
             const steps = rule?.steps ?? script.defaultSteps ?? [];
+            // A new prompt starts new work: clear any terminal error and
+            // mark the session busy before the steps run.
+            s.error = undefined;
             s.done = false;
             broadcast({ type: "prompt.received", sessionID: s.id });
             void runSteps(s, steps);
@@ -524,7 +543,8 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
           case "GET /api/session/:sessionID/permission": {
             const s = sessionID !== undefined ? sessions.get(sessionID) : undefined;
             if (!s) return Response.json({ error: "no such session" }, { status: 404 });
-            return data(s.pending);
+            // Like the real server, decided requests disappear from the list.
+            return data(s.pending.filter((p) => p.status === "pending"));
           }
           case "POST /api/session/:sessionID/permission/:requestID/reply": {
             const s = sessionID !== undefined ? sessions.get(sessionID) : undefined;
@@ -534,13 +554,19 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
             found.status = "decided";
             found.decision = b.decision ?? "reject";
             found.decidedNote = b.message ?? "";
-            return data(true);
+            // The real server answers 204 here.
+            return new Response(null, { status: 204 });
           }
           case "PUT /api/session/:sessionID/environment": {
             const s = sessionID !== undefined ? sessions.get(sessionID) : undefined;
             if (!s) return Response.json({ error: "no such session" }, { status: 404 });
-            s.env = ((body ?? {}) as { env?: Record<string, string> }).env ?? {};
-            return data(s.env);
+            // Real shape is `{ variables }` (a bare object 400s); the real
+            // server answers 204.
+            const vars = ((body ?? {}) as { variables?: Record<string, string> }).variables;
+            if (vars === undefined || typeof vars !== "object" || vars === null)
+              return Response.json({ error: "body.variables is required" }, { status: 400 });
+            s.env = vars;
+            return new Response(null, { status: 204 });
           }
           case "GET /api/event": {
             let controller: ReadableStreamDefaultController<Uint8Array>;

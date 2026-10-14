@@ -1,0 +1,24 @@
+Sabotage: runner.ts collect step guarded by false so uncommitted expert work is never committed
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/runner.test.ts:
+291 |         permissionPollMs: 10,
+292 |         hooks: h,
+293 |         paths: { repoDir: layout.repo, treesDir: layout.trees, artifactsDir: layout.artifacts },
+294 |       });
+295 |       expect(out.outcome).toBe("done");
+296 |       expect(out.collectedUncommitted).toBe(true);
+                                             ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/runner.test.ts:296:40)
+(fail) runner > uncommitted changes are committed by the Dispatcher [178.97ms]
+
+ 0 pass
+ 9 filtered out
+ 1 fail
+ 2 expect() calls
+Ran 1 test across 1 file. [224.00ms]

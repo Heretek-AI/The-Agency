@@ -1,0 +1,2 @@
+Sabotage: verifier container stopped so its isolation surface cannot be probed
+CHECK 1c/06-verifier-isolated: FAIL cannot read the verifier environment

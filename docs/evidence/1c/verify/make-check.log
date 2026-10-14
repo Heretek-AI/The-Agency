@@ -1,0 +1,41 @@
+bunx prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+bunx oxlint
+dispatcher/src/opencode.ts:198:43: warning unicorn(no-useless-fallback-in-spread): Empty fallbacks in spreads are unnecessary help: Spreading falsy values in object literals won't add any unexpected properties, so it's unnecessary to add an empty object as fallback.
+dispatcher/test/engine.test.ts:171:15: warning eslint(no-unsafe-optional-chaining): Unsafe usage of optional chaining help: If this short-circuits with 'undefined' the evaluation will throw TypeError
+dispatcher/test/engine.test.ts:413:15: warning eslint(no-unsafe-optional-chaining): Unsafe usage of optional chaining help: If this short-circuits with 'undefined' the evaluation will throw TypeError
+dispatcher/test/runner.test.ts:214:15: warning eslint(no-unsafe-optional-chaining): Unsafe usage of optional chaining help: If this short-circuits with 'undefined' the evaluation will throw TypeError
+dispatcher/test/runner.test.ts:528:28: warning eslint(no-unsafe-optional-chaining): Unsafe usage of optional chaining help: If this short-circuits with 'undefined' the evaluation will throw TypeError
+lint: process.env is read only in config.ts
+lint: task/mission status lists live only in model.ts
+lint: RESULT/VERDICT schemas are defined only in protocol.ts
+lint: no placeholder successes in first-party source
+bunx tsc --noEmit
+bun scripts/check-ts-coverage.ts
+ts-coverage: 70 tracked file(s), all inside the typecheck
+bun scripts/render.ts --check
+render-check: 39 generated files are current
+bun test v1.4.2 (744846f84)
+fatal: Needed a single revision
+Preparing worktree (checking out 'fleet/docs-t1')
+fatal: Needed a single revision
+Preparing worktree (checking out 'fleet/docs-t2')
+fatal: Needed a single revision
+Preparing worktree (checking out 'fleet/docs-t3')
+fatal: Needed a single revision
+Preparing worktree (checking out 'fleet/docs-t4')
+fatal: Needed a single revision
+Preparing worktree (checking out 'fleet/docs-t5')
+fatal: Needed a single revision
+fatal: Needed a single revision
+Preparing worktree (checking out 'fleet/a-1')
+Preparing worktree (checking out 'fleet/b-1')
+fatal: ambiguous argument 'refs/heads/fleet/docs-a1': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+
+ 198 pass
+ 0 fail
+ 589 expect() calls
+Ran 198 tests across 31 files. [16.27s]

@@ -1,0 +1,2 @@
+Sabotage: live-docs audit.jsonl moved aside so the chain cannot verify and the landed tip cannot be found
+CHECK 1c/10-audit-chain-intact: FAIL no live-docs audit log (run check 08 first): /tmp/opencode/1c-live-docs/audit/audit.jsonl

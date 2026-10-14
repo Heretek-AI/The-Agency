@@ -1,0 +1,24 @@
+Sabotage: scheduler.ts nextStatus always fails so retry never re-queues the same task
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/scheduler.test.ts:
+114 |     expect(res.ready).toEqual([]);
+115 |   });
+116 | 
+117 |   test("retry re-queues the same task", () => {
+118 |     const t = task({ id: "r", policy: { strategy: "retry", maxAttempts: 2 }, attempts: 1 });
+119 |     expect(nextStatus(t, "failure")).toBe(TaskStatuses.pending);
+                                           ^
+error: expect(received).toBe(expected)
+
+Expected: "pending"
+Received: "failed"
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/scheduler.test.ts:119:38)
+(fail) scheduler > retry re-queues the same task [0.36ms]
+
+ 0 pass
+ 12 filtered out
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [18.00ms]

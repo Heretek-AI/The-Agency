@@ -1,0 +1,30 @@
+Sabotage: scheduler.ts never adds to the cancel set so dependents of a failed task are not cancelled
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/scheduler.test.ts:
+54 |   test("dependents of a failed task are cancelled", () => {
+55 |     const a = task({ id: "a", status: TaskStatuses.failed });
+56 |     const b = task({ id: "b", deps: ["a"] });
+57 |     const c = task({ id: "c", deps: ["b"] });
+58 |     const res = schedule([a, b, c], [], { fleet: 4 });
+59 |     expect(res.cancel).toEqual(["b", "c"]);
+                            ^
+error: expect(received).toEqual(expected)
+
+- [
+-   "b",
+-   "c",
+- ]
++ []
+
+- Expected  - 4
++ Received  + 1
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/scheduler.test.ts:59:24)
+(fail) scheduler > dependents of a failed task are cancelled [1.01ms]
+
+ 0 pass
+ 12 filtered out
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [18.00ms]

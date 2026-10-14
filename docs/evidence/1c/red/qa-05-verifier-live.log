@@ -1,0 +1,4 @@
+Sabotage: verifier container paused (not stopped as the builder did) so exec/healthz probing cannot succeed
+Error response from daemon: Container 48264c25a83a56f987c41963105925b196bef8eac2d803650a19d2480b1683f4 is paused, unpause the container before exec
+CHECK 1c/05-verifier-live: FAIL cannot read VERIFIER_TOKEN from the verifier container
+redproof-exit: 1

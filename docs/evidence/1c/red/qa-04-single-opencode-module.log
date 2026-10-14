@@ -1,0 +1,3 @@
+Sabotage: an /api/health string appended to dispatcher/src/git.ts so the single-OpenCode-module rule goes red (builder used dispatcher/src/engine.ts with /api/session)
+CHECK 1c/04-single-opencode-module: FAIL OpenCode paths outside opencode.ts: dispatcher/src/git.ts:30:// qa-redproof references /api/health 
+redproof-exit: 1

@@ -149,7 +149,7 @@ test("live host session lifecycle: create, get, diff, messages, delete", async (
   expect(created.id.length).toBeGreaterThan(0);
   const sessionId = created.id;
 
-  const got = (await adapter.getSession(sessionId)) as { id?: string };
+  const got = (await adapter.sessionInfo(sessionId)) as { id?: string };
   expect(got?.id).toBe(sessionId);
 
   // A fresh session has no file changes: diff is an empty list.
@@ -159,9 +159,9 @@ test("live host session lifecycle: create, get, diff, messages, delete", async (
 
   // No prompt was sent, so no user message round-trip is asserted here;
   // the messages endpoint must simply answer with a list.
-  const messages = await adapter.listMessages(sessionId);
+  const messages = await adapter.messages(sessionId);
   expect(Array.isArray(messages)).toBe(true);
 
   await adapter.deleteSession(sessionId);
-  await expect(adapter.getSession(sessionId)).rejects.toThrow();
+  await expect(adapter.sessionInfo(sessionId)).rejects.toThrow();
 }, 60_000);

@@ -94,6 +94,32 @@ export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 export type TaskPolicy = z.infer<typeof TaskPolicySchema>;
 export type TaskInput = z.infer<typeof TaskInputSchema>;
 export type Task = z.infer<typeof TaskSchema>;
+
+/**
+ * Status constants. Every other module compares through these (the lint
+ * target keeps the `"waiting-human"` literal in this file only).
+ */
+export const TaskStatuses = {
+  pending: "pending",
+  ready: "ready",
+  running: "running",
+  waitingHuman: "waiting-human",
+  done: "done",
+  failed: "failed",
+  cancelled: "cancelled",
+} as const satisfies Record<string, TaskStatus>;
 export type MissionSource = z.infer<typeof MissionSourceSchema>;
 export type MissionStatus = z.infer<typeof MissionStatusSchema>;
 export type Mission = z.infer<typeof MissionSchema>;
+
+/** Mission status constants; see TaskStatuses above. */
+export const MissionStatuses = {
+  planning: "planning",
+  waitingHuman: "waiting-human",
+  running: "running",
+  paused: "paused",
+  halted: "halted",
+  done: "done",
+  failed: "failed",
+  cancelled: "cancelled",
+} as const satisfies Record<string, MissionStatus>;

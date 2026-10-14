@@ -324,3 +324,43 @@ literal double spaces in sent commands (proven with `od`), so spacing in
 `echo "hash  file"` lines must be constructed programmatically or written
 with the file tools (committed files are byte-exact; verified with
 hexdump).
+
+## Stage 1c notes (2026-10-14, observed against 2.0.26)
+
+- Transcript order (D-31, the stage's one real engine bug): the scripted
+  fake serves `GET /api/session/{id}/message` oldest-first while the real
+  server serves newest-first, and the runner's final-message scan assumed
+  oldest-first. The live scout run proved it: the model answered correctly
+  on the first try, yet the runner parsed the task envelope and failed the
+  task with `no-block` (audit proves both halves). The scan now resolves
+  the newest assistant message by timestamp with an oldest-first fallback,
+  and `messageText` also covers top-level `text` and `parts` shapes.
+- Live harness completeness: `assertContracts` refuses to start unless
+  every enabled expert has a client, so the live test builds one client
+  per `enabledExperts(fleet)` (not just the two under test) with all
+  twelve passwords forwarded into the dispatcher container — never the
+  provider key.
+- Demo base branch: the registry declares `defaultBranch: main` but
+  `workspace-init.sh` ran bare `git init` (→ `master`). The script now
+  uses `git init -b main`; the existing clone was renamed.
+- Verifier image: the pinned bun zip ships only the `bun` binary while
+  repository scripts call `bunx`; the image gains a `bun x` shim (check 05
+  proved the 127, green after). Demo fixture gains `.oxlintrc.json`
+  ignoring `node_modules/**`: oxlint 1.87 scans vendored `.d.ts` files
+  and the declared `lint` check was red on a clean tree, host and
+  verifier alike.
+- Check 09 scope: "execCmd only in git.ts" cannot stand literally — the
+  verifier's mandated job is executing check commands through the same
+  audited primitive. The check asserts the precise property (raw spawn
+  only in `util/exec.ts`; callers exactly git + run-checks; git runs only
+  git; explicit env, no ambient reads in the verifier path).
+- Harness red-proof lesson: `make up` heals a _stopped_ container, so a
+  stop-then-run red passes vacuously; `pause` survives `up` and freezes
+  the health status, which is what the 07/08 red proofs use. A paused
+  container reports its frozen status, so pause it while unhealthy for a
+  fast gate failure.
+- Prettier's shell formatter reflows the extensionless
+  `scripts/accept/1c/engine-live.inc` comments into code (proven by
+  `bash -n` failing on prettier's own output); the file is
+  `.prettierignore`d with the reason recorded there, like every `*.sh`
+  helper it is covered by `bash -n` and shellcheck instead.
