@@ -16,7 +16,12 @@ export interface VerifyRequest {
 }
 
 export type VerifyReason =
-  "no-checks" | "setup" | "checks" | "unreachable" | "busy" | "outside-work";
+  | "no-checks"
+  | "setup"
+  | "checks"
+  | "unreachable"
+  | "busy"
+  | "outside-work";
 
 export interface VerifyResponse {
   ok: boolean;

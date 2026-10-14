@@ -90,7 +90,12 @@ export interface RunnerOptions {
 }
 
 export type RunReason =
-  "timeout" | "unreachable" | "no-block" | "scope" | "ro-violation" | "provider";
+  | "timeout"
+  | "unreachable"
+  | "no-block"
+  | "scope"
+  | "ro-violation"
+  | "provider";
 
 export interface ProviderFailure {
   kind: "quota" | "transient" | "auth";
@@ -152,22 +157,61 @@ export function grantFor(ownership: OwnershipConfig, expert: string): OwnershipG
   return { writes: entry?.writes ?? [], shared: ownership.shared, protected: ownership.protected };
 }
 
-function messageText(message: { content?: unknown; parts?: unknown }): string {
-  const content = message.content;
-  if (typeof content === "string") return content;
-  if (Array.isArray(content)) {
-    return content
-      .map((part) => {
-        if (typeof part === "string") return part;
-        if (typeof part === "object" && part !== null) {
-          const text = (part as Record<string, unknown>)["text"];
-          return typeof text === "string" ? text : "";
-        }
-        return "";
-      })
-      .join("\n");
+function partText(part: unknown): string {
+  if (typeof part === "string") return part;
+  if (typeof part === "object" && part !== null) {
+    const text = (part as Record<string, unknown>)["text"];
+    return typeof text === "string" ? text : "";
   }
   return "";
+}
+
+export function messageText(message: {
+  content?: unknown;
+  parts?: unknown;
+  text?: unknown;
+}): string {
+  const chunks: string[] = [];
+  // Real v2 user messages carry top-level `text`; assistant messages carry
+  // `content` (a string or a list of parts). A message holds one shape.
+  if (typeof message.text === "string") chunks.push(message.text);
+  const content = message.content;
+  if (typeof content === "string") chunks.push(content);
+  else if (Array.isArray(content)) chunks.push(content.map(partText).join("\n"));
+  if (Array.isArray(message.parts)) chunks.push(message.parts.map(partText).join("\n"));
+  return chunks.join("\n");
+}
+
+/**
+ * Text of the expert's final message, independent of transcript order.
+ * The scripted fake serves transcripts oldest-first while the real server
+ * serves them newest-first; sorting by timestamp (real `time.created`,
+ * fake `at`) finds the newest message either way. Assistant messages win
+ * over the Dispatcher's own envelope and follow-up prompts, which are the
+ * newest `user` entries after a re-prompt.
+ */
+export function finalMessageText(messages: { [key: string]: unknown }[]): string {
+  const assistants = messages.filter((m) => (m as { type?: unknown }).type === "assistant");
+  const pool = assistants.length > 0 ? assistants : messages;
+  const timed = pool.map((m, i) => ({ m, i, at: messageInstant(m) }));
+  const ordered = timed.some((x) => !Number.isNaN(x.at))
+    ? [...timed].sort((a, b) => b.at - a.at || b.i - a.i)
+    : [...timed].reverse();
+  return ordered.map((x) => messageText(x.m)).find((t) => t.trim() !== "") ?? "";
+}
+
+function messageInstant(message: { [key: string]: unknown }): number {
+  const time = message["time"];
+  if (typeof time === "object" && time !== null) {
+    const created = (time as Record<string, unknown>)["created"];
+    if (typeof created === "number") return created;
+  }
+  const at = message["at"];
+  if (typeof at === "string") {
+    const parsed = Date.parse(at);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return NaN;
 }
 
 /** Provider refusal envelope in a transcript message (spike Q8 shape). */
@@ -176,7 +220,8 @@ export function findProviderError(
 ): ProviderFailure | undefined {
   for (const message of messages) {
     const error = (message as Record<string, unknown>)["error"] as
-      { type?: unknown; message?: unknown; status?: unknown } | undefined;
+      | { type?: unknown; message?: unknown; status?: unknown }
+      | undefined;
     if (
       typeof error === "object" &&
       error !== null &&
@@ -418,12 +463,7 @@ export async function runExpertTask(
     };
   }
 
-  const lastText = (msgs: { [key: string]: unknown }[]): string =>
-    [...msgs]
-      .reverse()
-      .map((m) => messageText(m))
-      .find((t) => t.trim() !== "") ?? "";
-  const first = extractBlock(lastText(messages), "RESULT");
+  const first = extractBlock(finalMessageText(messages), "RESULT");
   let block: ResultBlock;
   let blockRaw: string;
   if (first.ok) {
@@ -452,7 +492,7 @@ export async function runExpertTask(
         return { outcome: "failed", reason: "unreachable", sessionId, branch, worktree: alloc.dir };
       throw err;
     }
-    const second = extractBlock(lastText(messages), "RESULT");
+    const second = extractBlock(finalMessageText(messages), "RESULT");
     if (!second.ok) {
       await finish();
       return {

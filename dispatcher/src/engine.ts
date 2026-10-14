@@ -7,7 +7,7 @@
  * injected clock.
  *
  * `decide(taskId, decision, notes)`:
- * - `accept` releases the task's verify and land steps (waiting-human to
+ * - `accept` releases the task's verify and land steps (waitingHuman to
  *   pending) and appends to the decision log;
  * - `rework` sends the notes into the same session, increments `attempts`,
  *   and re-runs the task on its existing branch;
@@ -1005,7 +1005,7 @@ export class Engine {
     if (current.status !== MissionStatuses.waitingHuman) {
       await this.store.transition(
         "mission.updated",
-        { mission: mission.id, to: "waiting-human" },
+        { mission: mission.id, to: MissionStatuses.waitingHuman },
         (tx) =>
           tx.putMission({
             ...current,

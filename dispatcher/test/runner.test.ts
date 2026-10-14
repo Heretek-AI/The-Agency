@@ -12,7 +12,12 @@ import { describe, expect, test } from "bun:test";
 import { loadFleet, loadRegistry } from "../src/config.js";
 import type { Mission, Task } from "../src/model.js";
 import { OpenCodeClient } from "../src/opencode.js";
-import { PERMISSION_REJECT_MESSAGE, runExpertTask, type RunnerHooks } from "../src/runner.js";
+import {
+  PERMISSION_REJECT_MESSAGE,
+  finalMessageText,
+  runExpertTask,
+  type RunnerHooks,
+} from "../src/runner.js";
 import type { StreamEvent } from "../src/opencode.js";
 import { buildEnvelope } from "../src/envelope.js";
 import { startFakeOpenCode } from "./support/fake-opencode.js";
@@ -119,6 +124,32 @@ function hooks(): RunnerHooks & {
 }
 
 describe("runner", () => {
+  test("defect: newest-first transcripts resolve the final assistant message", () => {
+    const block = '## RESULT\n```json\n{"status":"done"}\n```';
+    // Real v2 shape, newest-first: the final assistant reply carries the
+    // block while the older envelope (and a newer user follow-up) do not.
+    const newestFirst = [
+      { id: "u2", type: "user", text: "follow-up prompt", time: { created: 300 } },
+      {
+        id: "a2",
+        type: "assistant",
+        content: [
+          { type: "reasoning", text: "thinking" },
+          { type: "text", text: block },
+        ],
+        time: { created: 200 },
+      },
+      { id: "u1", type: "user", text: "# Task t: envelope", time: { created: 100 } },
+    ];
+    expect(finalMessageText(newestFirst)).toContain("## RESULT");
+    // Fake shape, oldest-first: the newest entry is last and typeless.
+    const oldestFirst = [
+      { id: "u1", role: "user", content: "# Task t: envelope", at: "2026-01-01T00:00:00Z" },
+      { id: "a1", role: "assistant", content: block, at: "2026-01-01T00:00:01Z" },
+    ];
+    expect(finalMessageText(oldestFirst)).toContain("## RESULT");
+  });
+
   test("expert-run creates a session and sends the envelope", async () => {
     const layout = freshClone();
     const m = mission("m-env");

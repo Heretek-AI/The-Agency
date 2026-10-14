@@ -14,7 +14,7 @@
  *   as `ready` (waiting for a slot).
  * - Two `expert-run` tasks whose declared `paths` overlap never run at
  *   the same time (conservative `mayOverlap`; serializing is acceptable).
- * - `waiting-human` tasks never start and never force cancellation: a
+ * - `waitingHuman` tasks never start and never force cancellation: a
  *   human may still release them.
  */
 import { TaskStatuses, type Task, type TaskStatus } from "./model.js";
