@@ -48,7 +48,7 @@ rest_login() {
     "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$user")" \
     "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$password")" >"$body"
   token=$(curl -fsS --noproxy '*' -m 20 -X POST "$base/api/auth/login" \
-    -H 'content-type: application/json' --data-binary "@$body" 2>/dev/null |
+    -H 'Host: agency.localhost' -H 'content-type: application/json' --data-binary "@$body" 2>/dev/null |
     python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])') || {
     rm -f "$body"
     return 1
@@ -65,11 +65,11 @@ rest_api() {
   base="$(rest_base)"
   if [ -n "$data" ]; then
     out=$(curl -sS --noproxy '*' -m 30 -X "$method" "$base$path" \
-      -H "authorization: Bearer $token" -H 'content-type: application/json' \
+      -H 'Host: agency.localhost' -H "authorization: Bearer $token" -H 'content-type: application/json' \
       --data-binary "@$data" -w '\n%{http_code}') || return 1
   else
     out=$(curl -sS --noproxy '*' -m 30 -X "$method" "$base$path" \
-      -H "authorization: Bearer $token" -w '\n%{http_code}') || return 1
+      -H 'Host: agency.localhost' -H "authorization: Bearer $token" -w '\n%{http_code}') || return 1
   fi
   REST_STATUS="$(printf '%s' "$out" | tail -1)"
   printf '%s' "$out" | sed '$d'
@@ -86,7 +86,7 @@ rest_mcp() {
   envelope=$(printf '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":%s,"arguments":%s}}' \
     "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$tool")" "$args")
   curl -fsS --noproxy '*' -m 60 -X POST "$base/mcp" \
-    -H "authorization: Bearer $mcptoken" -H 'content-type: application/json' \
+    -H 'Host: agency.localhost' -H "authorization: Bearer $mcptoken" -H 'content-type: application/json' \
     -d "$envelope" 2>/dev/null
 }
 

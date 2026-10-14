@@ -532,10 +532,10 @@ function renderCompose(fleet: FleetConfig, inputs: RenderInputs): string {
     // `outside` lets the daemon program the loopback-only published port.
     // A container on the internal `fleet` network alone gets its published
     // ports silently dropped by the daemon (verified on Docker 29.9.0: an
-    // identical `docker run -p` on the internal network programs no
-    // mapping, while the same run on a bridge network does). The gateway
-    // still publishes only on 127.0.0.1, and its static Caddyfile only
-    // reverse-proxies to fleet upstreams, so it initiates no egress
+    // identical container start with `-p` on the internal network programs
+    // no mapping, while the same start on a bridge network does). The
+    // gateway still publishes only on 127.0.0.1, and its static Caddyfile
+    // only reverse-proxies to fleet upstreams, so it initiates no egress
     // itself; experts stay on the internal network only.
     networks: ["fleet", "outside"],
     cap_drop: ["ALL"],

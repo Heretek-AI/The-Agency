@@ -65,11 +65,11 @@ artifacts_vol=$(docker inspect agency-verifier \
 # DNS. DISPATCHER_HOSTNAME=0.0.0.0 is required too: the proxy forwards to
 # the container address, not loopback.
 fleet_net=$(docker inspect agency-verifier \
-  --format '{{ range $k,$v := .NetworkSettings.Networks }}{{ print $k }}{{ end }}' 2>/dev/null |
+  --format '{{ range $k,$v := .NetworkSettings.Networks }}{{ println $k }}{{ end }}' 2>/dev/null |
   head -1) || fail "cannot find the fleet network (run check 02 first)"
 [ -n "$fleet_net" ] || fail "verifier has no network (run check 02 first)"
 outside_net=$(docker inspect agency-egress \
-  --format '{{ range $k,$v := .NetworkSettings.Networks }}{{ print $k }}{{ end }}' 2>/dev/null |
+  --format '{{ range $k,$v := .NetworkSettings.Networks }}{{ println $k }}{{ end }}' 2>/dev/null |
   grep -v -x "$fleet_net" | head -1) ||
   fail "cannot find the non-internal network (run check 02 first)"
 [ -n "$outside_net" ] || fail "egress has no non-internal network (run check 02 first)"
