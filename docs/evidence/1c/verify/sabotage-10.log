@@ -1,0 +1,4 @@
+NOTE: an earlier truncate-last-line sabotage did NOT turn check 10 red (tip membership still held); effective sabotage below corrupts line 250 hash. See verification report.
+CHECK ?/10-audit-chain-intact: FAIL audit chain check failed: audit chain broken at line 250: hash mismatch
+audit: 549 entries, tip a0f54a5d7407800f29ab9ccccc7578bf4e1ca30ad43be467f1effa5d22264ac0; branch fleet/integration/m-live-docs-mv8jn66u at c23b75c9bf4b240332e854c054e3ef8e3af07fd6
+CHECK ?/10-audit-chain-intact: PASS

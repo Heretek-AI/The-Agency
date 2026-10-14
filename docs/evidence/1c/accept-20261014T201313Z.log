@@ -1,0 +1,34 @@
+accept stage 1c (2026-10-14T20:08:39Z), timeout 1800s per check
+===== 1c/01-make-check (exit 0) =====
+CHECK 1c/01-make-check: PASS
+===== 1c/02-register-guards-present (exit 0) =====
+CHECK 1c/02-register-guards-present: PASS
+===== 1c/03-scheduler-pure (exit 0) =====
+CHECK 1c/03-scheduler-pure: PASS
+===== 1c/04-single-opencode-module (exit 0) =====
+CHECK 1c/04-single-opencode-module: PASS
+===== 1c/05-verifier-live (exit 0) =====
+CHECK 1c/05-verifier-live: PASS
+===== 1c/06-verifier-isolated (exit 0) =====
+CHECK 1c/06-verifier-isolated: PASS
+===== 1c/07-engine-live-scout (exit 0) =====
+CHECK 1c/07-engine-live-scout: PASS
+===== 1c/08-engine-live-docs-lands (exit 0) =====
+CHECK 1c/08-engine-live-docs-lands: PASS
+===== 1c/09-no-task-exec-in-dispatcher (exit 0) =====
+CHECK 1c/09-no-task-exec-in-dispatcher: PASS
+===== 1c/10-audit-chain-intact (exit 0) =====
+audit: 549 entries, tip a0f54a5d7407800f29ab9ccccc7578bf4e1ca30ad43be467f1effa5d22264ac0; branch fleet/integration/m-live-docs-mv8jn66u at c23b75c9bf4b240332e854c054e3ef8e3af07fd6
+CHECK 1c/10-audit-chain-intact: PASS
+CHECKS for stage 1c
+1c/01-make-check             PASS   
+1c/02-register-guards-present PASS   
+1c/03-scheduler-pure         PASS   
+1c/04-single-opencode-module PASS   
+1c/05-verifier-live          PASS   
+1c/06-verifier-isolated      PASS   
+1c/07-engine-live-scout      PASS   
+1c/08-engine-live-docs-lands PASS   
+1c/09-no-task-exec-in-dispatcher PASS   
+1c/10-audit-chain-intact     PASS   
+stage 1c: 10 pass, 0 skip, 0 fail (10 checks)
