@@ -1,0 +1,19 @@
+CHECKS for stage 1d
+1d/01-make-check             PASS   
+1d/02-up-healthy             PASS   
+1d/03-only-gateway-published PASS   
+1d/04-credentials-required   PASS   
+1d/05-auth-and-roles         PASS   
+1d/06-director-scout         SKIP   no provider key in .env.provider
+1d/07-scout-completes        SKIP   no provider key in .env.provider
+1d/08-docs-lands             SKIP   no provider key in .env.provider
+1d/09-linter-break-fails-verify SKIP   no provider key in .env.provider
+1d/10-joint-breakage-resets  SKIP   no provider key in .env.provider
+1d/11-scope-refusal          PASS   
+1d/12-restart-collects       SKIP   no provider key in .env.provider
+1d/13-e2e                    SKIP   make e2e skipped (no provider key)
+1d/14-director-chat-proxy    SKIP   no provider key in .env.provider
+1d/15-audit-chain            PASS   
+1d/16-stage-1-register       PASS   
+stage 1d: 8 pass, 8 skip, 0 fail (16 checks)
+log: docs/evidence/1d/accept-20261014T214748Z.log

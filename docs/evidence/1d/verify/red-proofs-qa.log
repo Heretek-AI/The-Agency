@@ -1,0 +1,54 @@
+# QA red proofs for stage 1d (independent QA session, 2026-10-14/15 UTC)
+# Each entry: sabotage, command, exit observed, restore confirmation.
+# Stack baseline: make check 253 pass/0 fail; accept 8 pass/8 skip/0 fail (exit 77).
+
+## 01-make-check
+Sabotage: appended unformatted line 'const QA_SABOTAGE_UNFORMATTED=1' to dispatcher/src/config.ts
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=01-make-check bash scripts/accept/1d/01-make-check.sh
+Sabotaged exit: 1 (FAIL make check failed: format-check on dispatcher/src/config.ts)
+Restore: git checkout -- dispatcher/src/config.ts (exit 0, md5 d6bb42983d7c1a213fa2ed0f2b467d4d matches pre-sabotage); green re-run exit: 0 (PASS)
+
+## 02-up-healthy
+Sabotage: appended invalid YAML 'qa-sabotage-broken: [unclosed' to rendered docker-compose.yml
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=02-up-healthy bash scripts/accept/1d/02-up-healthy.sh
+Sabotaged exit: 1 (FAIL dispatcher build failed: go-yaml parse error)
+Restore: git checkout -- docker-compose.yml (exit 0, md5 b47d09603e8f4fb569eebe63fe6b3fac matches pre-sabotage, render-check clean); green re-run exit: 0 (PASS)
+
+## 03-only-gateway-published
+Sabotage: added 'ports: 127.0.0.1:19998:8080' to verifier service in docker-compose.yml + 'docker compose up -d verifier'
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=03-only-gateway-published bash scripts/accept/1d/03-only-gateway-published.sh
+Sabotaged exit: 1 (FAIL unexpected host port bindings: /agency-verifier(...19998...))
+Restore: removed the 2 lines (md5 b47d09 matches pre-sabotage blob); 'docker compose up -d --force-recreate verifier' dropped the binding (inspect shows {}); green re-run exit: 0 (PASS)
+INCIDENT: concurrent session committed 39da70b at 17:49:57 EDT mid-sabotage, sweeping the live sabotage into HEAD (docker-compose.yml +2) plus my in-progress verify logs. Worktree fix applied WITHOUT commit (M docker-compose.yml, -2 lines); HEAD still contains the sabotage ports. Orchestrator must drop/amend 39da70b's compose hunk. No new commits since (HEAD still 39da70b).
+
+## 04-credentials-required
+Sabotage: dispatcherCredentials() used optionalEnv default 'qa-sabotage-default' for FLEET_MCP_TOKEN; rebuilt agency-dispatcher:1.0.0
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=04-credentials-required bash scripts/accept/1d/04-credentials-required.sh
+Sabotaged exit: 1 (FAIL FLEET_MCP_TOKEN: exit 1 without naming the variable; manual probe: sabotaged image no longer refuses naming FLEET_MCP_TOKEN)
+Restore: git checkout -- dispatcher/src/config.ts (exit 0, md5 d6bb42.. matches), image rebuilt; green re-run exit: 0 (PASS). No concurrent commits during window (HEAD still 39da70b).
+
+## 05-auth-and-roles
+Sabotage: ROLE_RANK demoted to viewer:1 (== approver) in dispatcher/src/auth.ts; rebuilt agency-dispatcher:1.0.0
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=05-auth-and-roles bash scripts/accept/1d/05-auth-and-roles.sh
+Sabotaged exit: 1 (FAIL viewer approve returned 200, want 403 — privilege escalation detected)
+Restore: git checkout -- dispatcher/src/auth.ts (exit 0, md5 f311bc12.. matches pre-sabotage), image rebuilt; green re-run exit: 0 (PASS). HEAD still 39da70b.
+
+## 11-scope-refusal
+Sabotage: widened docs grant in state/registry/demo/ownership.yaml to include src/* (backup /tmp/qa-ownership-backup.yaml, md5 db58c2..) + 'docker restart agency-dispatcher'
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=11-scope-refusal bash scripts/accept/1d/11-scope-refusal.sh
+Sabotaged exit: 1 (FAIL out-of-grant plan was accepted for m-mv8nbjb5-1)
+Restore: backup copied back (md5 db58c2.. matches), dispatcher restarted healthy; leftover probe mission m-mv8nbjb5-1 cancelled via API; green re-run exit: 0 (PASS). HEAD still 39da70b.
+Note: ownership.yaml and audit log are git-ignored; restore via backup copy, not git checkout.
+
+## 15-audit-chain
+Sabotage: stopped dispatcher, appended malformed JSON line to state/audit/audit.jsonl (backup md5 958f1f68.., 46 lines)
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=15-audit-chain bash scripts/accept/1d/15-audit-chain.sh
+Sabotaged exit: 1 (FAIL audit chain broken: audit log holds a malformed entry)
+Restore: backup copied back (md5 958f1f68.. matches, 46 lines), dispatcher started healthy; green re-run exit: 0 (PASS). HEAD still 39da70b.
+Note: audit log is git-ignored; restore via backup copy, not git checkout.
+
+## 16-stage-1-register
+Sabotage: created dispatcher/src/lanes/ with a stub file (D-06 guard: no sandbox lanes)
+Command: ACCEPT_STAGE=1d ACCEPT_CHECK=16-stage-1-register bash scripts/accept/1d/16-stage-1-register.sh
+Sabotaged exit: 1 (FAIL lanes directory exists)
+Restore: rm -rf dispatcher/src/lanes (untracked dir; git checkout N/A); green re-run exit: 0 (PASS). HEAD still 39da70b.

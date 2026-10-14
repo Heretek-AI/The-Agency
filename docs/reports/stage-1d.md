@@ -95,7 +95,9 @@ exited 77 (no failures; skips only where the stage prompt allows them);
 pass / 7 skip / 5 fail — pre-fix tree: gateway Restarting, dispatcher
 crash-looping on a stale audit lock), `accept-20261014T213316Z.log` and
 `accept-20261014T213342Z.log` (both 8 pass / 8 skip / 0 fail,
-post-fix confirmations).
+post-fix confirmations). The authoritative final run at a clean HEAD
+produced `accept-20261014T214839Z.log` (8 pass / 8 skip / 0 fail),
+which the table below references.
 
 ```
 CHECKS for stage 1d
@@ -116,27 +118,27 @@ CHECKS for stage 1d
 1d/15-audit-chain            PASS
 1d/16-stage-1-register       PASS
 stage 1d: 8 pass, 8 skip, 0 fail (16 checks)
-log: docs/evidence/1d/accept-20261014T214146Z.log
+log: docs/evidence/1d/accept-20261014T214839Z.log
 ```
 
 | Check                        | Result                 | Evidence                                     |
 | ---------------------------- | ---------------------- | -------------------------------------------- |
-| 01-make-check                | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
-| 02-up-healthy                | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
-| 03-only-gateway-published    | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
-| 04-credentials-required      | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
-| 05-auth-and-roles            | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
-| 06-director-scout            | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 07-scout-completes           | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 08-docs-lands                | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 09-linter-break-fails-verify | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 10-joint-breakage-resets     | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 11-scope-refusal             | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
-| 12-restart-collects          | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 13-e2e                       | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 14-director-chat-proxy       | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214146Z.log |
-| 15-audit-chain               | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
-| 16-stage-1-register          | PASS                   | docs/evidence/1d/accept-20261014T214146Z.log |
+| 01-make-check                | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
+| 02-up-healthy                | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
+| 03-only-gateway-published    | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
+| 04-credentials-required      | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
+| 05-auth-and-roles            | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
+| 06-director-scout            | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 07-scout-completes           | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 08-docs-lands                | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 09-linter-break-fails-verify | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 10-joint-breakage-resets     | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 11-scope-refusal             | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
+| 12-restart-collects          | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 13-e2e                       | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 14-director-chat-proxy       | SKIP (no provider key) | docs/evidence/1d/accept-20261014T214839Z.log |
+| 15-audit-chain               | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
+| 16-stage-1-register          | PASS                   | docs/evidence/1d/accept-20261014T214839Z.log |
 
 `make check` (format, lint, typecheck, coverage, render-check, 253 unit
 tests) exits 0. `git status` is clean except the files committed with
