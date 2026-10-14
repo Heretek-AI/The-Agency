@@ -71,6 +71,9 @@ logs:
 smoke:
 	bash scripts/smoke.sh
 
+engine-live:
+	bash scripts/accept/1c/engine-live.inc both
+
 e2e:
 	@echo "not built until stage 4c: e2e" >&2; exit 1
 
