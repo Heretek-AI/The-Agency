@@ -1,0 +1,3 @@
+Sabotage: published 127.0.0.1:18099 on a recreated agency-docs container
+CHECK 1b/12-no-published-ports: FAIL host port bindings exist: /agency-docs {"4096/tcp":[{"HostIp":"127.0.0.1","HostPort":"18099"}]} 
+exit=1

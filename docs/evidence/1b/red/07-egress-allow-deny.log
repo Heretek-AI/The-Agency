@@ -1,0 +1,4 @@
+Sabotage: stopped agency-egress (re-validated after poll-window change)
+curl: (5) Could not resolve proxy: egress
+CHECK 1b/07-egress-allow-deny: FAIL agency-backend: allowlisted request failed
+exit=1

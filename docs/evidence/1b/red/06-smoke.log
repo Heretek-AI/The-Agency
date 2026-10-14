@@ -1,0 +1,2 @@
+Sabotage: stopped agency-director
+CHECK 1b/06-smoke: FAIL make smoke failed: bash scripts/smoke.sh smoke: expert director: container not healthy make: *** [Makefile:72: smoke] Error 1 

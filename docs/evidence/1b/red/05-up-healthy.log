@@ -1,0 +1,3 @@
+Sabotage: paused agency-docs (unhealthy, make up cannot heal it)
+CHECK 1b/05-up-healthy: FAIL make up failed:  Container agency-docs Error response from daemon: cannot start a paused container, try unpause instead  Error response from daemon: cannot start a paused container, try unpause instead make: *** [Makefile:60: up] Error 1 
+exit=1
