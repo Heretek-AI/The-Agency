@@ -1,0 +1,2 @@
+Sabotage: trailing whitespace appended to dispatcher/src/engine.ts so prettier --check (and make check) goes red
+CHECK 1c/01-make-check: FAIL make check failed: [warn] dispatcher/src/engine.ts [warn] Code style issues found in the above file. Run Prettier with --write to fix. make: *** [Makefile:13: format-check] Error 1 

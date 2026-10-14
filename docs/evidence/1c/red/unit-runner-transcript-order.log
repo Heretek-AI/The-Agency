@@ -1,0 +1,24 @@
+Sabotage: finalMessageText uses the old reverse-and-find-first logic, so a newest-first transcript resolves to the envelope instead of the final assistant reply
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/runner.test.ts:
+139 |         ],
+140 |         time: { created: 200 },
+141 |       },
+142 |       { id: "u1", type: "user", text: "# Task t: envelope", time: { created: 100 } },
+143 |     ];
+144 |     expect(finalMessageText(newestFirst)).toContain("## RESULT");
+                                                ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "## RESULT"
+Received: "# Task t: envelope"
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/runner.test.ts:144:43)
+(fail) runner > defect: newest-first transcripts resolve the final assistant message [0.71ms]
+
+ 0 pass
+ 10 filtered out
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [58.00ms]

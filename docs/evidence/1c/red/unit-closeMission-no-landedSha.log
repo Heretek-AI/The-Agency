@@ -1,0 +1,24 @@
+Sabotage: engine.ts assertDoneable matches kind land-ignored so unlanded land tasks are never detected
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/engine.test.ts:
+369 |       await h.store.transition("task.finished", {}, (tx) => {
+370 |         tx.putTask({ ...h.store.getTask("docs-d01")!, status: TaskStatuses.done });
+371 |         tx.putTask({ ...h.store.getTask("docs-d01-verify")!, status: TaskStatuses.done });
+372 |         tx.putTask({ ...h.store.getTask("docs-d01-land")!, status: TaskStatuses.done });
+373 |       });
+374 |       await expect(h.engine.closeMission(m.id, "done")).rejects.toThrow(/landedSha/);
+                                                                      ^
+error: expect(received).toThrow(expected)
+
+Expected pattern: /landedSha/
+Received message: "mission m-d01 is not done: no green verify on the integration branch"
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/engine.test.ts:374:65)
+(fail) engine done-gate > mission is not done without landedSha [137.17ms]
+
+ 0 pass
+ 8 filtered out
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [201.00ms]

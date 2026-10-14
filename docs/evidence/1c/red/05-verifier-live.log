@@ -1,0 +1,3 @@
+Sabotage: verifier container stopped so GET /healthz cannot succeed
+service "verifier" is not running
+CHECK 1c/05-verifier-live: FAIL cannot read VERIFIER_TOKEN from the verifier container

@@ -1,0 +1,26 @@
+Sabotage: landing.ts drops the Agency-Audit-Tip trailer so the merge commit carries three trailers
+bun test v1.4.2 (744846f84)
+fatal: Needed a single revision
+Preparing worktree (checking out 'fleet/docs-t1')
+
+dispatcher/test/landing.test.ts:
+128 |       const message = sh(layout.repo, ["log", "-1", "--format=%B", res.landedSha]);
+129 |       expect(message).toContain("Agency-Mission: m-green");
+130 |       expect(message).toContain("Agency-Task: docs-t1");
+131 |       expect(message).toContain("Agency-Verify: always-green=pass");
+132 |       const tipLine = message.split("\n").find((l) => l.startsWith("Agency-Audit-Tip: "));
+133 |       expect(tipLine).toBe(`Agency-Audit-Tip: ${res.auditTip}`);
+                            ^
+error: expect(received).toBe(expected)
+
+Expected: "Agency-Audit-Tip: 4086a257e4b08e29a3bac30ebabe8d69e1dfb43fdee0bb9fcb21e8080d150882"
+Received: undefined
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/landing.test.ts:133:23)
+(fail) landing > green path: landedSha, --no-ff, four trailers, kept branch, base untouched [131.55ms]
+
+ 0 pass
+ 6 filtered out
+ 1 fail
+ 7 expect() calls
+Ran 1 test across 1 file. [189.00ms]

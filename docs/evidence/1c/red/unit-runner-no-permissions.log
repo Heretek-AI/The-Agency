@@ -1,0 +1,28 @@
+Sabotage: runner.ts createSession sends permissions: [] so the grant-derived edit allows are missing
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/runner.test.ts:
+162 |       const permissions = body["permissions"] as {
+163 |         action: string;
+164 |         resource: string;
+165 |         effect: string;
+166 |       }[];
+167 |       expect(permissions).toContainEqual({ action: "edit", resource: "README*", effect: "allow" });
+                                ^
+error: expect(received).toContainEqual(expected)
+
+Expected to contain: {
+  action: "edit",
+  resource: "README*",
+  effect: "allow",
+}
+Received: []
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/runner.test.ts:167:27)
+(fail) runner > expert-run creates a session and sends the envelope [203.96ms]
+
+ 0 pass
+ 9 filtered out
+ 1 fail
+ 4 expect() calls
+Ran 1 test across 1 file. [253.00ms]

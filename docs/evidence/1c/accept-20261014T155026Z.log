@@ -1,0 +1,33 @@
+accept stage 1c (2026-10-14T15:49:48Z), timeout 1800s per check
+===== 1c/01-make-check (exit 0) =====
+CHECK 1c/01-make-check: PASS
+===== 1c/02-register-guards-present (exit 0) =====
+CHECK 1c/02-register-guards-present: PASS
+===== 1c/03-scheduler-pure (exit 0) =====
+CHECK 1c/03-scheduler-pure: PASS
+===== 1c/04-single-opencode-module (exit 0) =====
+CHECK 1c/04-single-opencode-module: PASS
+===== 1c/05-verifier-live (exit 0) =====
+CHECK 1c/05-verifier-live: PASS
+===== 1c/06-verifier-isolated (exit 0) =====
+CHECK 1c/06-verifier-isolated: PASS
+===== 1c/07-engine-live-scout (exit 1) =====
+CHECK 1c/07-engine-live-scout: FAIL live scout proof failed (exit 1): bun test v1.4.2 (744846f84) Test filter "./dispatcher/test/live/engine.live.test.ts" had no matches engine-live: scope scout exited 1; state at /tmp/opencode/1c-live-scout 
+===== 1c/08-engine-live-docs-lands (exit 1) =====
+CHECK 1c/08-engine-live-docs-lands: FAIL live docs proof failed (exit 1): bun test v1.4.2 (744846f84) Test filter "./dispatcher/test/live/engine.live.test.ts" had no matches engine-live: scope docs exited 1; state at /tmp/opencode/1c-live-docs 
+===== 1c/09-no-task-exec-in-dispatcher (exit 0) =====
+CHECK 1c/09-no-task-exec-in-dispatcher: PASS
+===== 1c/10-audit-chain-intact (exit 1) =====
+CHECK 1c/10-audit-chain-intact: FAIL no live-docs audit log (run check 08 first): /tmp/opencode/1c-live-docs/audit/audit.jsonl
+CHECKS for stage 1c
+1c/01-make-check             PASS   
+1c/02-register-guards-present PASS   
+1c/03-scheduler-pure         PASS   
+1c/04-single-opencode-module PASS   
+1c/05-verifier-live          PASS   
+1c/06-verifier-isolated      PASS   
+1c/07-engine-live-scout      FAIL   live scout proof failed (exit 1): bun test v1.4.2 (744846f84) Test filter "./dispatcher/test/live/engine.live.test.ts" had no matches engine-live: scope scout exited 1; state at /tmp/opencode/1c-live-scout 
+1c/08-engine-live-docs-lands FAIL   live docs proof failed (exit 1): bun test v1.4.2 (744846f84) Test filter "./dispatcher/test/live/engine.live.test.ts" had no matches engine-live: scope docs exited 1; state at /tmp/opencode/1c-live-docs 
+1c/09-no-task-exec-in-dispatcher PASS   
+1c/10-audit-chain-intact     FAIL   no live-docs audit log (run check 08 first): /tmp/opencode/1c-live-docs/audit/audit.jsonl
+stage 1c: 7 pass, 0 skip, 3 fail (10 checks)

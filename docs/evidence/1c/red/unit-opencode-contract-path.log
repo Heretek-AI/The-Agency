@@ -1,0 +1,29 @@
+Sabotage: opencode.ts SSE path changed to /api/events so the client uses an operation missing from openapi.json
+bun test v1.4.2 (744846f84)
+
+dispatcher/test/opencode.test.ts:
+111 |         method: op.method,
+112 |         pattern: op.path.replace(/\{([^/]+)\}/g, ":$1"),
+113 |       })),
+114 |       spec,
+115 |     );
+116 |     expect(missing).toEqual([]);
+                          ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   "GET /api/events",
++ ]
+
+- Expected  - 1
++ Received  + 3
+
+      at <anonymous> (/home/john/Projects/The-Agency/worktrees/wave-1c-engine/dispatcher/test/opencode.test.ts:116:21)
+(fail) opencode client against the fake > every operation the client uses exists in openapi.json [5.70ms]
+
+ 0 pass
+ 10 filtered out
+ 1 fail
+ 2 expect() calls
+Ran 1 test across 1 file. [21.00ms]

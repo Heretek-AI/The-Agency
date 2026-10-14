@@ -1,0 +1,33 @@
+accept stage 1c (2026-10-14T15:47:25Z), timeout 1800s per check
+===== 1c/01-make-check (exit 1) =====
+CHECK 1c/01-make-check: FAIL make check failed: [warn] scripts/accept/1c/engine-live.inc [warn] Code style issues found in the above file. Run Prettier with --write to fix. make: *** [Makefile:13: format-check] Error 1 
+===== 1c/02-register-guards-present (exit 0) =====
+CHECK 1c/02-register-guards-present: PASS
+===== 1c/03-scheduler-pure (exit 0) =====
+CHECK 1c/03-scheduler-pure: PASS
+===== 1c/04-single-opencode-module (exit 0) =====
+CHECK 1c/04-single-opencode-module: PASS
+===== 1c/05-verifier-live (exit 0) =====
+CHECK 1c/05-verifier-live: PASS
+===== 1c/06-verifier-isolated (exit 0) =====
+CHECK 1c/06-verifier-isolated: PASS
+===== 1c/07-engine-live-scout (exit 1) =====
+CHECK 1c/07-engine-live-scout: FAIL live scout proof failed (exit 1): note: Tests need ".test", "_test_", ".spec" or "_spec_" in the filename (ex: "MyApp.test.ts") note: To treat the "dispatcher/test/live/engine.live.test.ts" filter as a path, run "bun test ./dispatcher/test/live/engine.live.test.ts"  Learn more about bun test: https://bun.com/docs/cli/test engine-live: scope scout exited 1; state at /tmp/opencode/1c-live-scout 
+===== 1c/08-engine-live-docs-lands (exit 1) =====
+CHECK 1c/08-engine-live-docs-lands: FAIL live docs proof failed (exit 1): note: Tests need ".test", "_test_", ".spec" or "_spec_" in the filename (ex: "MyApp.test.ts") note: To treat the "dispatcher/test/live/engine.live.test.ts" filter as a path, run "bun test ./dispatcher/test/live/engine.live.test.ts"  Learn more about bun test: https://bun.com/docs/cli/test engine-live: scope docs exited 1; state at /tmp/opencode/1c-live-docs 
+===== 1c/09-no-task-exec-in-dispatcher (exit 1) =====
+CHECK 1c/09-no-task-exec-in-dispatcher: FAIL execCmd used outside git.ts: verifier/src/run-checks.ts verifier/src/server.ts 
+===== 1c/10-audit-chain-intact (exit 1) =====
+CHECK 1c/10-audit-chain-intact: FAIL no live-docs audit log (run check 08 first): /tmp/opencode/1c-live-docs/audit/audit.jsonl
+CHECKS for stage 1c
+1c/01-make-check             FAIL   make check failed: [warn] scripts/accept/1c/engine-live.inc [warn] Code style issues found in the above file. Run Prettier with --write to fix. make: *** [Makefile:13: format-check] Error 1 
+1c/02-register-guards-present PASS   
+1c/03-scheduler-pure         PASS   
+1c/04-single-opencode-module PASS   
+1c/05-verifier-live          PASS   
+1c/06-verifier-isolated      PASS   
+1c/07-engine-live-scout      FAIL   live scout proof failed (exit 1): note: Tests need ".test", "_test_", ".spec" or "_spec_" in the filename (ex: "MyApp.test.ts") note: To treat the "dispatcher/test/live/engine.live.test.ts" filter as a path, run "bun test ./dispatcher/test/live/engine.live.test.ts"  Learn more about bun test: https://bun.com/docs/cli/test engine-live: scope scout exited 1; state at /tmp/opencode/1c-live-scout 
+1c/08-engine-live-docs-lands FAIL   live docs proof failed (exit 1): note: Tests need ".test", "_test_", ".spec" or "_spec_" in the filename (ex: "MyApp.test.ts") note: To treat the "dispatcher/test/live/engine.live.test.ts" filter as a path, run "bun test ./dispatcher/test/live/engine.live.test.ts"  Learn more about bun test: https://bun.com/docs/cli/test engine-live: scope docs exited 1; state at /tmp/opencode/1c-live-docs 
+1c/09-no-task-exec-in-dispatcher FAIL   execCmd used outside git.ts: verifier/src/run-checks.ts verifier/src/server.ts 
+1c/10-audit-chain-intact     FAIL   no live-docs audit log (run check 08 first): /tmp/opencode/1c-live-docs/audit/audit.jsonl
+stage 1c: 5 pass, 0 skip, 5 fail (10 checks)

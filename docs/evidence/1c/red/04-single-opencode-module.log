@@ -1,0 +1,2 @@
+Sabotage: an /api/session string added to dispatcher/src/engine.ts so the single-OpenCode-module rule goes red
+CHECK 1c/04-single-opencode-module: FAIL OpenCode paths outside opencode.ts: dispatcher/src/engine.ts:1044:// sabotage: stray reference to /api/session for check 04 
