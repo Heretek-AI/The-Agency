@@ -12,12 +12,8 @@ import { describe, expect, test } from "bun:test";
 import { loadFleet, loadRegistry } from "../src/config.js";
 import type { Mission, Task } from "../src/model.js";
 import { OpenCodeClient } from "../src/opencode.js";
-import {
-  PERMISSION_REJECT_MESSAGE,
-  runExpertTask,
-  type RunnerHooks,
-  type StreamEvent,
-} from "../src/runner.js";
+import { PERMISSION_REJECT_MESSAGE, runExpertTask, type RunnerHooks } from "../src/runner.js";
+import type { StreamEvent } from "../src/opencode.js";
 import { buildEnvelope } from "../src/envelope.js";
 import { startFakeOpenCode } from "./support/fake-opencode.js";
 
