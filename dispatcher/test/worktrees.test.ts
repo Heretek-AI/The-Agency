@@ -59,6 +59,7 @@ describe("worktrees", () => {
     const records: AllocationRecord[] = [];
     const registry = {
       record: (r: AllocationRecord) => void records.push(r),
+      confirm: () => {},
       releaseWorktree: () => {},
     };
     const first = await allocate({
