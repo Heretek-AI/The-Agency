@@ -1,0 +1,39 @@
+accept stage 1b (2026-10-14T01:09:39Z), timeout 120s per check
+===== 1b/01-render-check (exit 0) =====
+CHECK 1b/01-render-check: PASS
+===== 1b/02-compose-config (exit 0) =====
+CHECK 1b/02-compose-config: PASS
+===== 1b/03-compose-hardening (exit 0) =====
+CHECK 1b/03-compose-hardening: PASS
+===== 1b/04-images-pinned-and-built (exit 0) =====
+CHECK 1b/04-images-pinned-and-built: PASS
+===== 1b/05-up-healthy (exit 0) =====
+CHECK 1b/05-up-healthy: PASS
+===== 1b/06-smoke (exit 0) =====
+CHECK 1b/06-smoke: PASS
+===== 1b/07-egress-allow-deny (exit 0) =====
+CHECK 1b/07-egress-allow-deny: PASS
+===== 1b/08-no-direct-route (exit 0) =====
+CHECK 1b/08-no-direct-route: PASS
+===== 1b/09-unique-passwords (exit 0) =====
+CHECK 1b/09-unique-passwords: PASS
+===== 1b/10-protocol-examples-parse (exit 0) =====
+CHECK 1b/10-protocol-examples-parse: PASS
+===== 1b/11-workspace-demo (exit 0) =====
+CHECK 1b/11-workspace-demo: PASS
+===== 1b/12-no-published-ports (exit 0) =====
+CHECK 1b/12-no-published-ports: PASS
+CHECKS for stage 1b
+1b/01-render-check           PASS   
+1b/02-compose-config         PASS   
+1b/03-compose-hardening      PASS   
+1b/04-images-pinned-and-built PASS   
+1b/05-up-healthy             PASS   
+1b/06-smoke                  PASS   
+1b/07-egress-allow-deny      PASS   
+1b/08-no-direct-route        PASS   
+1b/09-unique-passwords       PASS   
+1b/10-protocol-examples-parse PASS   
+1b/11-workspace-demo         PASS   
+1b/12-no-published-ports     PASS   
+stage 1b: 12 pass, 0 skip, 0 fail (12 checks)

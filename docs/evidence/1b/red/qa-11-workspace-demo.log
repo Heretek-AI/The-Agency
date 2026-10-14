@@ -1,0 +1,3 @@
+Sabotage: emptied the checks list in registry.example/demo/checks.yaml so the registry control files no longer validate (different invariant than builder's moved demo fixture)
+CHECK 1b/11-workspace-demo: FAIL registry control files do not validate:  1 fail  7 expect() calls Ran 7 tests across 1 file. [120.00ms] 
+exit=1

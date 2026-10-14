@@ -1,0 +1,3 @@
+Sabotage: inserted 'privileged: true' into the scout service in generated docker-compose.yml (different hardening rule than builder's cap_drop sabotage)
+CHECK 1b/03-compose-hardening: FAIL scout: privileged
+exit=1

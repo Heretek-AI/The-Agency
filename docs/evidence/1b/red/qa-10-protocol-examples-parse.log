@@ -1,0 +1,3 @@
+Sabotage: changed the VERDICT example decision from fail to bogus in shared/FLEET_PROTOCOL.md (different example and field than builder's RESULT status change)
+CHECK 1b/10-protocol-examples-parse: FAIL protocol examples test failed:  0 pass  1 fail  2 expect() calls Ran 1 test across 1 file. [27.00ms] 
+exit=1

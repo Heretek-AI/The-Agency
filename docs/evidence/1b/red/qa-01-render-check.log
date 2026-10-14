@@ -1,0 +1,3 @@
+Sabotage: appended a hand-edited comment line to generated experts/scout/config/opencode.jsonc (different file than builder's docker-compose.yml sabotage)
+CHECK 1b/01-render-check: FAIL make render-check failed: render-check: stale or missing generated files:   /home/john/Projects/The-Agency/worktrees/wave-1b-roster/experts/scout/config/opencode.jsonc make: *** [Makefile:33: render-check] Error 1 
+exit=1
