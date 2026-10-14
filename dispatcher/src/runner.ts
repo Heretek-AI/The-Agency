@@ -75,6 +75,18 @@ export interface RunnerOptions {
     treesDir: string;
     artifactsDir: string;
   };
+  /**
+   * Re-run on the existing session and branch (rework, usage-limit
+   * resume, crash re-attach): allocation and session creation are
+   * skipped. `prompt` is sent first; undefined sends nothing and only
+   * waits and collects (re-attach to a busy session).
+   */
+  resume?: {
+    sessionId: string;
+    worktree: string;
+    branch: string;
+    prompt?: string;
+  };
 }
 
 export type RunReason =
@@ -227,45 +239,50 @@ export async function runExpertTask(
   const scoped = expert.access === "scoped";
   const base = task.input.base ?? integrationBranch(mission.id);
 
-  await hooks.audit("task.started", { task: task.id, mission: mission.id, expert: task.expert });
-  const alloc = await allocate({
-    repoDir: paths.repoDir,
-    treesDir: paths.treesDir,
-    taskId: task.id,
-    mode: scoped ? "branch" : "detached",
-    base,
-    registry: hooks.registry,
-  });
-  const branch = scoped ? taskBranch(task.id) : "";
+  const resume = options.resume;
+  const alloc =
+    resume !== undefined
+      ? { taskId: task.id, branch: resume.branch, dir: resume.worktree }
+      : await allocate({
+          repoDir: paths.repoDir,
+          treesDir: paths.treesDir,
+          taskId: task.id,
+          mode: scoped ? "branch" : "detached",
+          base,
+          registry: hooks.registry,
+        });
+  const branch = resume?.branch ?? (scoped ? taskBranch(task.id) : "");
 
   const permissions = sessionPermissions(fleet, ownership, task);
   let sessionId: string;
-  try {
-    const created = await client.createSession({
-      title: `Task ${task.id}: ${task.title}`,
-      agent: task.expert,
-      location: { directory: alloc.dir },
-      permissions,
-      metadata: { taskId: task.id, missionId: mission.id, role: task.role },
-    });
-    sessionId = created.id;
-  } catch (err) {
-    if (isUnreachable(err))
-      return {
-        outcome: "failed",
-        reason: "unreachable",
-        sessionId: "",
-        branch,
-        worktree: alloc.dir,
-      };
-    throw err;
+  if (resume !== undefined) {
+    sessionId = resume.sessionId;
+  } else {
+    try {
+      const created = await client.createSession({
+        title: `Task ${task.id}: ${task.title}`,
+        agent: task.expert,
+        location: { directory: alloc.dir },
+        permissions,
+        metadata: { taskId: task.id, missionId: mission.id, role: task.role },
+      });
+      sessionId = created.id;
+    } catch (err) {
+      if (isUnreachable(err))
+        return {
+          outcome: "failed",
+          reason: "unreachable",
+          sessionId: "",
+          branch,
+          worktree: alloc.dir,
+        };
+      throw err;
+    }
   }
 
-  const events: StreamEvent[] = [];
   const sub = client.subscribeEvents({
     reconnectMs: 1000,
     onEvent: (event) => {
-      events.push(event);
       void hooks.eventLog(task.id, event).catch(() => {});
     },
   });
@@ -311,29 +328,32 @@ export async function runExpertTask(
   };
 
   const timeoutMs = options.taskTimeoutSec * 1000;
-  try {
-    await client.prompt(
-      sessionId,
-      buildEnvelope({
-        taskId: task.id,
-        title: task.title,
-        missionId: mission.id,
-        role: task.role,
-        expert: task.expert ?? "",
-        objective: task.input.objective,
-        context: task.input.context,
-        constraints: task.input.constraints,
-        acceptance: task.input.acceptance,
-        worktree: alloc.dir,
-        branch: scoped ? branch : null,
-        grantedPaths: task.input.paths,
-      }),
-    );
-  } catch (err) {
-    await finish();
-    if (isUnreachable(err))
-      return { outcome: "failed", reason: "unreachable", sessionId, branch, worktree: alloc.dir };
-    throw err;
+  const firstPrompt =
+    resume !== undefined
+      ? resume.prompt
+      : buildEnvelope({
+          taskId: task.id,
+          title: task.title,
+          missionId: mission.id,
+          role: task.role,
+          expert: task.expert ?? "",
+          objective: task.input.objective,
+          context: task.input.context,
+          constraints: task.input.constraints,
+          acceptance: task.input.acceptance,
+          worktree: alloc.dir,
+          branch: scoped ? branch : null,
+          grantedPaths: task.input.paths,
+        });
+  if (firstPrompt !== undefined) {
+    try {
+      await client.prompt(sessionId, firstPrompt);
+    } catch (err) {
+      await finish();
+      if (isUnreachable(err))
+        return { outcome: "failed", reason: "unreachable", sessionId, branch, worktree: alloc.dir };
+      throw err;
+    }
   }
 
   try {
@@ -497,15 +517,6 @@ export async function runExpertTask(
   const commitsRaw = await git(alloc.dir, ["log", "--format=%H", `${base}..HEAD`]).catch(() => "");
   const commits = commitsRaw.split("\n").filter((s) => s !== "");
   const artifacts = await listArtifacts(paths.artifactsDir, task.id);
-  await hooks.audit("task.finished", {
-    task: task.id,
-    mission: mission.id,
-    headSha,
-    commits,
-    artifacts,
-    collectedUncommitted,
-    sharedTouched: policy.sharedTouched,
-  });
   await finish();
   hooks.onWake(task.id);
   return {

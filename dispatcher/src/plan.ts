@@ -143,11 +143,13 @@ export function expandPlan(
       const verify: Task = {
         ...baseTask(mission, verifyId, "verify", "verify", [dt.id]),
         title: `verify ${dt.id}`,
+        input: { objective: `verify ${dt.id}`, acceptance: [], paths: [] },
         status: TaskStatuses.waitingHuman,
       };
       const land: Task = {
         ...baseTask(mission, landId, "land", "land", [verifyId]),
         title: `land ${dt.id}`,
+        input: { objective: `land ${dt.id}`, acceptance: [], paths: [] },
         status: TaskStatuses.waitingHuman,
       };
       tasks.push(verify, land);

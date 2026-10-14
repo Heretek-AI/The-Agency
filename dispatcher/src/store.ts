@@ -16,6 +16,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { AuditLog, type JournalEntry } from "./audit.js";
 import { MissionSchema, TaskSchema, type Mission, type Task } from "./model.js";
+import type { AllocationRegistry } from "./worktrees.js";
 
 export interface StoreOptions {
   /** SQLite file, e.g. `<state>/dispatcher.db`. Its directory is created. */
@@ -78,6 +79,15 @@ export class Store {
     private readonly audit: AuditLog,
     private readonly actor: string,
   ) {}
+
+  /**
+   * In-process write serialization. The audit log has one writer: async
+   * interleaving (SSE relays, supervisors) must not compute two entries
+   * from the same tip. Every transition chains behind the previous one;
+   * a failure does not stall the chain (its audit entry stays unanchored
+   * and is named by recovery on the next open).
+   */
+  private tail: Promise<void> = Promise.resolve();
 
   static async open(options: StoreOptions): Promise<Store> {
     await mkdir(path.dirname(options.dbPath), { recursive: true });
@@ -153,19 +163,27 @@ export class Store {
     data: unknown,
     mutate: (tx: StoreTx) => void,
   ): Promise<TransitionResult> {
-    const entry: JournalEntry = await this.audit.append(event, data, this.actor);
-    const tx = new StoreTx(this.db);
-    try {
-      this.db.transaction(() => {
-        mutate(tx);
-        this.db.query("INSERT INTO anchors (seq, hash) VALUES (?, ?)").run(entry.seq, entry.hash);
-      })();
-    } catch (err) {
-      throw new Error(
-        `transition ${event} committed audit seq ${entry.seq} but the database write failed: ${(err as Error).message}`,
-      );
-    }
-    return { seq: entry.seq, hash: entry.hash };
+    const run = async (): Promise<TransitionResult> => {
+      const entry: JournalEntry = await this.audit.append(event, data, this.actor);
+      const tx = new StoreTx(this.db);
+      try {
+        this.db.transaction(() => {
+          mutate(tx);
+          this.db.query("INSERT INTO anchors (seq, hash) VALUES (?, ?)").run(entry.seq, entry.hash);
+        })();
+      } catch (err) {
+        throw new Error(
+          `transition ${event} committed audit seq ${entry.seq} but the database write failed: ${(err as Error).message}`,
+        );
+      }
+      return { seq: entry.seq, hash: entry.hash };
+    };
+    const out = this.tail.then(run, run);
+    this.tail = out.then(
+      () => {},
+      () => {},
+    );
+    return out;
   }
 
   /** Current audit tip, for landing commit trailers. */
@@ -268,6 +286,29 @@ export class Store {
     this.db.close();
     await this.audit.close();
   }
+}
+
+/**
+ * Crash-safe allocation register backed by the store: every record,
+ * confirm, and release is its own audited transition.
+ */
+export function storeRegistry(store: Store): AllocationRegistry {
+  return {
+    record: (a) =>
+      store
+        .transition("worktree.allocated", a, (tx) =>
+          tx.recordAllocation(a.worktree, a.taskId, a.branch),
+        )
+        .then(() => {}),
+    confirm: (worktree) =>
+      store
+        .transition("worktree.confirmed", { worktree }, (tx) => tx.confirmAllocation(worktree))
+        .then(() => {}),
+    releaseWorktree: (worktree) =>
+      store
+        .transition("worktree.released", { worktree }, (tx) => tx.releaseAllocation(worktree))
+        .then(() => {}),
+  };
 }
 
 /** Row writes available inside `transition`. No status escapes this path. */

@@ -332,7 +332,11 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
     try {
       for (const step of steps) {
         if (step.kind === "write") {
-          const target = path.join(session.directory, step.path);
+          // Relative paths land in the session directory (the worktree).
+          // Absolute paths simulate the expert writing to /artifacts/<taskId>/.
+          const target = step.path.startsWith("/")
+            ? step.path
+            : path.join(session.directory, step.path);
           await mkdir(path.dirname(target), { recursive: true });
           await Bun.write(target, step.content);
           broadcast({ type: "step.write", sessionID: session.id, path: step.path });
@@ -491,6 +495,9 @@ export async function startFakeOpenCode(options: FakeOptions = {}): Promise<Fake
               (r) => r.matchPrompt === undefined || text.includes(r.matchPrompt),
             );
             const steps = rule?.steps ?? script.defaultSteps ?? [];
+            // A new prompt starts new work: clear any terminal error and
+            // mark the session busy before the steps run.
+            s.error = undefined;
             s.done = false;
             broadcast({ type: "prompt.received", sessionID: s.id });
             void runSteps(s, steps);
