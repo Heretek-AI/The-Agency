@@ -7,6 +7,7 @@
 # of /work at the same path everywhere and has no LFS credentials, so
 # submodule pointers and LFS objects would arrive broken inside experts.
 set -u
+set -e
 
 ROOT="$(git rev-parse --show-toplevel)"
 repo_id="${1:?usage: scripts/workspace-init.sh <repoId> <git-url | path | --demo}"
@@ -29,7 +30,11 @@ fi
 
 if [ "$src" = "--demo" ]; then
   mkdir -p "$dest" "$trees" "$landing"
-  cp -r "$ROOT/fixtures/demo-repo/." "$dest/"
+  cp -r "$ROOT/fixtures/demo-repo/." "$dest/" || {
+    echo "workspace-init: refusing: cannot copy fixtures/demo-repo" >&2
+    rm -rf "$ROOT/workspace/$repo_id"
+    exit 1
+  }
   git -C "$dest" init -q
   git -C "$dest" -c user.name=agency -c user.email=agency@agency.invalid add -A
   git -C "$dest" -c user.name=agency -c user.email=agency@agency.invalid commit -qm seed

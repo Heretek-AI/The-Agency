@@ -16,14 +16,14 @@ for name in $names; do
   pw_var="PW_$upper"
   pw="${!pw_var:-}"
   [ -n "$pw" ] || fail "$name: $pw_var is empty"
-  code=$(docker exec "agency-$name" curl -sS --noproxy '*' -u "opencode:$pw" -o /dev/null \
+  code=$(docker exec "agency-$name" curl -sS --noproxy '*' --max-time 30 -u "opencode:$pw" -o /dev/null \
     -w '%{http_code}' http://127.0.0.1:4096/api/info) || fail "$name: own password probe failed"
   [ "$code" = "200" ] || fail "$name: own password rejected"
   for other in $names; do
     [ "$other" = "$name" ] && continue
     other_upper=$(printf '%s' "$other" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
     other_var="PW_$other_upper"
-    code=$(docker exec "agency-$name" curl -sS --noproxy '*' -u "opencode:${!other_var}" -o /dev/null \
+    code=$(docker exec "agency-$name" curl -sS --noproxy '*' --max-time 30 -u "opencode:${!other_var}" -o /dev/null \
       -w '%{http_code}' http://127.0.0.1:4096/api/info) || fail "$name: cross-password probe failed"
     [ "$code" = "401" ] || fail "$name accepted $other's password (status $code)"
   done

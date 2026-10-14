@@ -28,7 +28,14 @@ log=$(docker logs agency-egress 2>&1) || fail "cannot read the proxy log"
 for expert in backend scout; do
   allowed_found=""
   denied_found=""
-  for _ in $(seq 1 12); do
+  # The assertion below is unchanged: the exact allow/deny lines must appear
+  # with the right expert name. The window is generous (18x5s) because under
+  # load the tail -F mirror behind `docker logs` can lag the authoritative
+  # access.log by a minute (observed 2026-10-14: probes returned 2xx/403
+  # while the mirror showed nothing for >60s during heavy inference traffic
+  # on the shared host). Waiting longer cannot false-pass: the lines either
+  # appear, or the check still fails.
+  for _ in $(seq 1 18); do
     echo "$log" | grep -q "TCP_TUNNEL.*opencode.ai.*$expert" && allowed_found="yes"
     echo "$log" | grep -q "TCP_DENIED.*denied.invalid.*$expert" && denied_found="yes"
     [ -n "$allowed_found" ] && [ -n "$denied_found" ] && break
