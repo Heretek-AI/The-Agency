@@ -1,0 +1,3 @@
+Sabotage: replaced one service's cap_drop [ALL] with [] in generated docker-compose.yml
+CHECK 1b/03-compose-hardening: FAIL director: cap_drop != [ALL]
+exit=1

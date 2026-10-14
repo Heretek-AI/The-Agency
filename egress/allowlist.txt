@@ -1,0 +1,17 @@
+# GENERATED, do not edit. Rendered by scripts/render.ts from shared/templates/allowlist-base.txt and fleet.yaml.
+api.githubcopilot.com
+developer.mozilla.org
+docs.python.org
+files.pythonhosted.org
+github.com
+huggingface.co
+mcp.context7.com
+mcp.deepwiki.com
+mcp.figma.com
+mcp.linear.app
+mcp.sentry.dev
+models.opencode.ai
+opencode.ai
+pypi.org
+registry.npmjs.org
+semgrep.dev

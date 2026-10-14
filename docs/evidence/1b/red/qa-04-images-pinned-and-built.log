@@ -1,0 +1,3 @@
+Sabotage: appended unpinned 'RUN pip install requests' to egress/Dockerfile (different file and defect class than builder's floating FROM in experts/docs/Dockerfile)
+CHECK 1b/04-images-pinned-and-built: FAIL floating versions: /home/john/Projects/The-Agency/worktrees/wave-1b-roster/egress/Dockerfile:unpinned-pip
+exit=1

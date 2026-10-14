@@ -1,0 +1,5 @@
+# Demo repository control file (fleet-side copy lives in
+# state/registry/demo/, which no expert can read or write).
+id: demo
+defaultBranch: main
+planApprovalAbove: 3

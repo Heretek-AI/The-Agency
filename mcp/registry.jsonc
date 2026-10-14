@@ -1,0 +1,186 @@
+// MCP server registry (Stage 1b). One entry per server from shared context
+// 9.11: the v2 server config plus `requires` (variables that must be
+// non-empty for the server to be enabled). The renderer inlines `config`
+// into each expert's opencode.jsonc and writes `requires` plus the config
+// into mcp-requirements.json; the entrypoint disables servers whose
+// requirements are unmet at container start.
+//
+// Rules honored here: every local server is pinned to an exact version and
+// installed into the image at build time (no `npx -y <unpinned>` at run
+// time); a server whose requirements are unmet ends up `disabled`;
+// `postgres`, `dbhub`, `figma`, and `linear` ship disabled (9.11); `fleet`
+// requires FLEET_MCP_TOKEN, which is not set until Stage 1d, so the
+// Director's fleet server ends up disabled in this stage (correct here).
+// Verification of each entry is recorded in docs/build-notes.md.
+{
+  "servers": {
+    "fleet": {
+      "requires": ["FLEET_MCP_TOKEN"],
+      "config": {
+        "type": "remote",
+        "url": "http://dispatcher:8080/mcp",
+        "headers": { "Authorization": "Bearer {env:FLEET_MCP_TOKEN}" },
+        "oauth": false,
+        "codemode": false,
+        "timeout": { "execution": 900000 },
+      },
+    },
+    "context7": {
+      "requires": [],
+      "config": { "type": "remote", "url": "https://mcp.context7.com/mcp" },
+    },
+    "deepwiki": {
+      "requires": [],
+      "config": { "type": "remote", "url": "https://mcp.deepwiki.com/mcp" },
+    },
+    "playwright": {
+      // npm @playwright/mcp 0.0.83, bin `playwright-mcp`, installed at
+      // build time in the frontend and qa images (with a Chromium from the
+      // matching playwright-core 1.64.0-alpha).
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": ["playwright-mcp", "--headless", "--isolated", "--no-sandbox"],
+      },
+    },
+    "chrome-devtools": {
+      // npm chrome-devtools-mcp 1.10.1, bin `chrome-devtools-mcp`. Used
+      // only by extended experts (Stage 4a); installed then.
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": ["chrome-devtools-mcp", "--headless", "--isolated"],
+      },
+    },
+    "serena": {
+      // oraios/serena at commit f9972a32c67359dd4c4a5ab597688bb10d21d1f3,
+      // installed at build time in the backend image via uv; binary on PATH.
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": [
+          "serena",
+          "start-mcp-server",
+          "--context",
+          "ide-assistant",
+          "--project",
+          "/work",
+        ],
+      },
+    },
+    "postgres": {
+      // Ships disabled (9.11): a task's database address reaches the
+      // expert as a session variable, which a container-start MCP server
+      // may not see. The DBA uses psql with the task's DATABASE_URL until
+      // a test shows the MCP server receives the per-task address.
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": ["postgres-mcp", "--access-mode=restricted"],
+        "disabled": true,
+      },
+    },
+    "dbhub": {
+      // Ships disabled (9.11), same reason as postgres. npm
+      // @bytebase/dbhub 1.5.0, bin `dbhub`.
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": ["dbhub", "--transport", "stdio", "--readonly", "--dsn", "{env:DATABASE_URL}"],
+        "disabled": true,
+      },
+    },
+    "github": {
+      // Remote GitHub MCP. Read-only use; the token that can push or open
+      // pull requests is held only by the Dispatcher (Stage 3a). Requires
+      // GITHUB_READ_TOKEN, unset until then, so this ends up disabled now.
+      "requires": ["GITHUB_READ_TOKEN"],
+      "config": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": { "Authorization": "Bearer {env:GITHUB_READ_TOKEN}" },
+      },
+    },
+    "semgrep": {
+      // Semgrep CLI 1.180.0 (PyPI) installed at build time in the security
+      // image; `semgrep mcp` is bundled with recent releases.
+      "requires": [],
+      "config": { "type": "local", "command": ["semgrep", "mcp"] },
+    },
+    "trivy": {
+      // Trivy 0.75.0 binary plus its `mcp` plugin, both installed at build
+      // time in the security image.
+      "requires": [],
+      "config": { "type": "local", "command": ["trivy", "mcp"] },
+    },
+    "terraform": {
+      // hashicorp/terraform-mcp-server 1.3.0 binary installed at build
+      // time in the platform image. ENABLE_TF_OPERATIONS is never set, so
+      // plan and apply stay off.
+      "requires": [],
+      "config": { "type": "local", "command": ["terraform-mcp-server"] },
+    },
+    "kubernetes": {
+      // npm kubernetes-mcp-server 0.0.67, bin `kubernetes-mcp-server`,
+      // installed at build time in the platform image. Disabled until a
+      // kubeconfig is mounted.
+      "requires": ["KUBECONFIG"],
+      "config": {
+        "type": "local",
+        "command": ["kubernetes-mcp-server", "--read-only"],
+      },
+    },
+    "grafana": {
+      // grafana/mcp-grafana 2.0.2 binary (linux x64 asset verified).
+      // Used only by the extended sre expert (Stage 4a); installed then.
+      // Disabled until a URL and a viewer-role token exist.
+      "requires": ["GRAFANA_URL", "GRAFANA_SERVICE_ACCOUNT_TOKEN"],
+      "config": {
+        "type": "local",
+        "command": ["mcp-grafana"],
+        "environment": {
+          "GRAFANA_URL": "{env:GRAFANA_URL}",
+          "GRAFANA_SERVICE_ACCOUNT_TOKEN": "{env:GRAFANA_SERVICE_ACCOUNT_TOKEN}",
+        },
+      },
+    },
+    "sentry": {
+      // Remote Sentry MCP (read scopes). Used only by extended experts;
+      // disabled until a token exists.
+      "requires": ["SENTRY_ACCESS_TOKEN"],
+      "config": {
+        "type": "remote",
+        "url": "https://mcp.sentry.dev/mcp",
+        "headers": { "Authorization": "Bearer {env:SENTRY_ACCESS_TOKEN}" },
+      },
+    },
+    "huggingface": {
+      // Remote Hugging Face MCP (read scopes). Used only by the extended
+      // ml expert; disabled until a token exists.
+      "requires": ["HF_TOKEN"],
+      "config": {
+        "type": "remote",
+        "url": "https://huggingface.co/mcp",
+        "headers": { "Authorization": "Bearer {env:HF_TOKEN}" },
+      },
+    },
+    "figma": {
+      // OAuth-only remote server: disabled until authorized.
+      "requires": [],
+      "config": {
+        "type": "remote",
+        "url": "https://mcp.figma.com/mcp",
+        "disabled": true,
+      },
+    },
+    "linear": {
+      // OAuth-only remote server: disabled until authorized.
+      "requires": [],
+      "config": {
+        "type": "remote",
+        "url": "https://mcp.linear.app/mcp",
+        "disabled": true,
+      },
+    },
+  },
+}

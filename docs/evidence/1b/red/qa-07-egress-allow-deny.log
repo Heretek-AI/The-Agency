@@ -1,0 +1,4 @@
+Sabotage: emptied generated egress/allowlist.txt to its header line only and recreated agency-egress (builder stopped egress instead)
+curl: (56) CONNECT tunnel failed, response 403
+CHECK 1b/07-egress-allow-deny: FAIL agency-backend: allowlisted request failed
+exit=1

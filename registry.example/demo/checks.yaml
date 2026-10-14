@@ -1,0 +1,8 @@
+# Demo check list (approved copy lives in state/registry/demo/).
+version: 1
+setup: ["bun install"]
+checks:
+  - { id: format, run: "bun run format:check", timeoutSec: 300 }
+  - { id: lint, run: "bun run lint", timeoutSec: 300 }
+  - { id: typecheck, run: "bun run typecheck", timeoutSec: 600 }
+  - { id: test, run: "bun test", timeoutSec: 900 }

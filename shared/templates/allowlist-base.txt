@@ -1,0 +1,32 @@
+# Agency egress allowlist base (Stage 1b). Handwritten input to the renderer.
+# The renderer emits egress/allowlist.txt = this base plus every expert's
+# `egress` additions from fleet.yaml (sorted, deduplicated), and refuses to
+# render when a remote MCP host from mcp/registry.jsonc is missing here.
+# Squid matches these as dstdomains (each entry also matches subdomains).
+#
+# Provider hosts (spike Q10 observed CONNECT opencode.ai:443 for the model
+# turn and CONNECT models.opencode.ai:443 at boot for catalog/config fetch).
+opencode.ai
+models.opencode.ai
+# Package registries the expert toolchains use.
+registry.npmjs.org
+pypi.org
+files.pythonhosted.org
+github.com
+# Remote MCP hosts from mcp/registry.jsonc (every one probed before listing;
+# see docs/build-notes.md).
+mcp.context7.com
+mcp.deepwiki.com
+api.githubcopilot.com
+huggingface.co
+mcp.figma.com
+mcp.linear.app
+mcp.sentry.dev
+# Toolchain-required API endpoints (documented additions beyond the
+# registries: the security expert's semgrep MCP server contacts
+# semgrep.dev at startup and exits when denied; every request is logged
+# with the expert's name).
+semgrep.dev
+# Documented documentation hosts for webfetch/websearch research.
+docs.python.org
+developer.mozilla.org

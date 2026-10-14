@@ -1,0 +1,32 @@
+{
+  "_generated": "GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.",
+  "mcpServers": {
+    "playwright": {
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": [
+          "playwright-mcp",
+          "--headless",
+          "--isolated",
+          "--no-sandbox"
+        ]
+      }
+    },
+    "context7": {
+      "requires": [],
+      "config": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp"
+      }
+    },
+    "figma": {
+      "requires": [],
+      "config": {
+        "type": "remote",
+        "url": "https://mcp.figma.com/mcp",
+        "disabled": true
+      }
+    }
+  }
+}

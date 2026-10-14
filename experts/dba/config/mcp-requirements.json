@@ -1,0 +1,31 @@
+{
+  "_generated": "GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.",
+  "mcpServers": {
+    "postgres": {
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": [
+          "postgres-mcp",
+          "--access-mode=restricted"
+        ],
+        "disabled": true
+      }
+    },
+    "dbhub": {
+      "requires": [],
+      "config": {
+        "type": "local",
+        "command": [
+          "dbhub",
+          "--transport",
+          "stdio",
+          "--readonly",
+          "--dsn",
+          "{env:DATABASE_URL}"
+        ],
+        "disabled": true
+      }
+    }
+  }
+}

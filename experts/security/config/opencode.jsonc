@@ -1,0 +1,165 @@
+// GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "{env:AGENCY_MODEL}",
+  "default_agent": "security",
+  "update": "disable",
+  "share": "disabled",
+  "snapshots": true,
+  "agents": {
+    "build": {
+      "disabled": true
+    },
+    "plan": {
+      "disabled": true
+    },
+    "general": {
+      "disabled": true
+    }
+  },
+  "permissions": [
+    {
+      "action": "*",
+      "resource": "*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "glob",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "grep",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "webfetch",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "websearch",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "subagent",
+      "resource": "explore",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/work/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/artifacts/*",
+      "effect": "allow"
+    },
+    {
+      "action": "edit",
+      "resource": "/artifacts/*",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "*.env",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.env.*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "*.env.example",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git push*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git merge*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git rebase*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git switch*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git checkout*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git worktree*",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git tag*",
+      "effect": "deny"
+    },
+    {
+      "action": "semgrep_*",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "trivy_*",
+      "resource": "*",
+      "effect": "allow"
+    }
+  ],
+  "mcp": {
+    "timeout": {
+      "startup": 60000,
+      "catalog": 30000,
+      "execution": 300000
+    },
+    "servers": {
+      "semgrep": {
+        "type": "local",
+        "command": [
+          "semgrep",
+          "mcp"
+        ]
+      },
+      "trivy": {
+        "type": "local",
+        "command": [
+          "trivy",
+          "mcp"
+        ]
+      }
+    }
+  }
+}

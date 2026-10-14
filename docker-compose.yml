@@ -1,0 +1,747 @@
+# GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml.
+services:
+  director:
+    container_name: agency-director
+    build:
+      context: .
+      dockerfile: experts/director/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-director:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: director
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_DIRECTOR}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://director:${PROXY_PW_DIRECTOR}@egress:3128
+      HTTPS_PROXY: http://director:${PROXY_PW_DIRECTOR}@egress:3128
+      http_proxy: http://director:${PROXY_PW_DIRECTOR}@egress:3128
+      https_proxy: http://director:${PROXY_PW_DIRECTOR}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/director.env
+        required: false
+    volumes:
+      - ./experts/director/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:ro,z
+      - artifacts:/artifacts
+      - director-data:/home/agent/.local/share/opencode
+      - director-state:/home/agent/.local/state/opencode
+      - director-cache:/home/agent/.cache
+  scout:
+    container_name: agency-scout
+    build:
+      context: .
+      dockerfile: experts/scout/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-scout:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: scout
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_SCOUT}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://scout:${PROXY_PW_SCOUT}@egress:3128
+      HTTPS_PROXY: http://scout:${PROXY_PW_SCOUT}@egress:3128
+      http_proxy: http://scout:${PROXY_PW_SCOUT}@egress:3128
+      https_proxy: http://scout:${PROXY_PW_SCOUT}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/scout.env
+        required: false
+    volumes:
+      - ./experts/scout/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:ro,z
+      - artifacts:/artifacts
+      - scout-data:/home/agent/.local/share/opencode
+      - scout-state:/home/agent/.local/state/opencode
+      - scout-cache:/home/agent/.cache
+  architect:
+    container_name: agency-architect
+    build:
+      context: .
+      dockerfile: experts/architect/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-architect:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: architect
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_ARCHITECT}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
+      HTTPS_PROXY: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
+      http_proxy: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
+      https_proxy: http://architect:${PROXY_PW_ARCHITECT}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/architect.env
+        required: false
+    volumes:
+      - ./experts/architect/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - architect-data:/home/agent/.local/share/opencode
+      - architect-state:/home/agent/.local/state/opencode
+      - architect-cache:/home/agent/.cache
+  product:
+    container_name: agency-product
+    build:
+      context: .
+      dockerfile: experts/product/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-product:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: product
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_PRODUCT}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://product:${PROXY_PW_PRODUCT}@egress:3128
+      HTTPS_PROXY: http://product:${PROXY_PW_PRODUCT}@egress:3128
+      http_proxy: http://product:${PROXY_PW_PRODUCT}@egress:3128
+      https_proxy: http://product:${PROXY_PW_PRODUCT}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/product.env
+        required: false
+    volumes:
+      - ./experts/product/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - product-data:/home/agent/.local/share/opencode
+      - product-state:/home/agent/.local/state/opencode
+      - product-cache:/home/agent/.cache
+  frontend:
+    container_name: agency-frontend
+    build:
+      context: .
+      dockerfile: experts/frontend/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-frontend:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 6g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: frontend
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_FRONTEND}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
+      HTTPS_PROXY: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
+      http_proxy: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
+      https_proxy: http://frontend:${PROXY_PW_FRONTEND}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/frontend.env
+        required: false
+    volumes:
+      - ./experts/frontend/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - frontend-data:/home/agent/.local/share/opencode
+      - frontend-state:/home/agent/.local/state/opencode
+      - frontend-cache:/home/agent/.cache
+    shm_size: 1g
+  backend:
+    container_name: agency-backend
+    build:
+      context: .
+      dockerfile: experts/backend/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-backend:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: backend
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_BACKEND}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://backend:${PROXY_PW_BACKEND}@egress:3128
+      HTTPS_PROXY: http://backend:${PROXY_PW_BACKEND}@egress:3128
+      http_proxy: http://backend:${PROXY_PW_BACKEND}@egress:3128
+      https_proxy: http://backend:${PROXY_PW_BACKEND}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/backend.env
+        required: false
+    volumes:
+      - ./experts/backend/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - backend-data:/home/agent/.local/share/opencode
+      - backend-state:/home/agent/.local/state/opencode
+      - backend-cache:/home/agent/.cache
+  dba:
+    container_name: agency-dba
+    build:
+      context: .
+      dockerfile: experts/dba/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-dba:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: dba
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_DBA}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://dba:${PROXY_PW_DBA}@egress:3128
+      HTTPS_PROXY: http://dba:${PROXY_PW_DBA}@egress:3128
+      http_proxy: http://dba:${PROXY_PW_DBA}@egress:3128
+      https_proxy: http://dba:${PROXY_PW_DBA}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/dba.env
+        required: false
+    volumes:
+      - ./experts/dba/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - dba-data:/home/agent/.local/share/opencode
+      - dba-state:/home/agent/.local/state/opencode
+      - dba-cache:/home/agent/.cache
+  platform:
+    container_name: agency-platform
+    build:
+      context: .
+      dockerfile: experts/platform/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-platform:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: platform
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_PLATFORM}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://platform:${PROXY_PW_PLATFORM}@egress:3128
+      HTTPS_PROXY: http://platform:${PROXY_PW_PLATFORM}@egress:3128
+      http_proxy: http://platform:${PROXY_PW_PLATFORM}@egress:3128
+      https_proxy: http://platform:${PROXY_PW_PLATFORM}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/platform.env
+        required: false
+    volumes:
+      - ./experts/platform/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - platform-data:/home/agent/.local/share/opencode
+      - platform-state:/home/agent/.local/state/opencode
+      - platform-cache:/home/agent/.cache
+  security:
+    container_name: agency-security
+    build:
+      context: .
+      dockerfile: experts/security/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-security:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: security
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_SECURITY}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://security:${PROXY_PW_SECURITY}@egress:3128
+      HTTPS_PROXY: http://security:${PROXY_PW_SECURITY}@egress:3128
+      http_proxy: http://security:${PROXY_PW_SECURITY}@egress:3128
+      https_proxy: http://security:${PROXY_PW_SECURITY}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/security.env
+        required: false
+    volumes:
+      - ./experts/security/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:ro,z
+      - artifacts:/artifacts
+      - security-data:/home/agent/.local/share/opencode
+      - security-state:/home/agent/.local/state/opencode
+      - security-cache:/home/agent/.cache
+  qa:
+    container_name: agency-qa
+    build:
+      context: .
+      dockerfile: experts/qa/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-qa:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 6g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: qa
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_QA}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://qa:${PROXY_PW_QA}@egress:3128
+      HTTPS_PROXY: http://qa:${PROXY_PW_QA}@egress:3128
+      http_proxy: http://qa:${PROXY_PW_QA}@egress:3128
+      https_proxy: http://qa:${PROXY_PW_QA}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/qa.env
+        required: false
+    volumes:
+      - ./experts/qa/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - qa-data:/home/agent/.local/share/opencode
+      - qa-state:/home/agent/.local/state/opencode
+      - qa-cache:/home/agent/.cache
+    shm_size: 1g
+  reviewer:
+    container_name: agency-reviewer
+    build:
+      context: .
+      dockerfile: experts/reviewer/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-reviewer:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: reviewer
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_REVIEWER}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
+      HTTPS_PROXY: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
+      http_proxy: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
+      https_proxy: http://reviewer:${PROXY_PW_REVIEWER}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/reviewer.env
+        required: false
+    volumes:
+      - ./experts/reviewer/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:ro,z
+      - artifacts:/artifacts
+      - reviewer-data:/home/agent/.local/share/opencode
+      - reviewer-state:/home/agent/.local/state/opencode
+      - reviewer-cache:/home/agent/.cache
+  docs:
+    container_name: agency-docs
+    build:
+      context: .
+      dockerfile: experts/docs/Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION}
+        AGENT_UID: ${AGENT_UID}
+        AGENT_GID: ${AGENT_GID}
+    image: agency-docs:${OPENCODE_VERSION}
+    restart: unless-stopped
+    working_dir: /work
+    networks:
+      - fleet
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    cpus: 2
+    mem_limit: 4g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS --noproxy '*' -u opencode:$$OPENCODE_PASSWORD
+          http://127.0.0.1:4096/api/info >/dev/null
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      AGENCY_EXPERT: docs
+      OPENCODE_CONFIG_DIR: /etc/agency
+      OPENCODE_DISABLE_PROJECT_CONFIG: "1"
+      OPENCODE_CLIENT: agency
+      OPENCODE_PASSWORD: ${PW_DOCS}
+      AGENCY_MODEL: ${AGENCY_MODEL}
+      HTTP_PROXY: http://docs:${PROXY_PW_DOCS}@egress:3128
+      HTTPS_PROXY: http://docs:${PROXY_PW_DOCS}@egress:3128
+      http_proxy: http://docs:${PROXY_PW_DOCS}@egress:3128
+      https_proxy: http://docs:${PROXY_PW_DOCS}@egress:3128
+      NO_PROXY: localhost,127.0.0.1,egress,dispatcher,verifier
+      no_proxy: localhost,127.0.0.1,egress,dispatcher,verifier
+    env_file:
+      - path: .env.provider
+        required: true
+      - path: secrets/docs.env
+        required: false
+    volumes:
+      - ./experts/docs/config:/etc/agency:ro,z
+      - ${AGENCY_WORKSPACE:-./workspace}:/work:rw,z
+      - artifacts:/artifacts
+      - docs-data:/home/agent/.local/share/opencode
+      - docs-state:/home/agent/.local/state/opencode
+      - docs-cache:/home/agent/.cache
+  egress:
+    container_name: agency-egress
+    build:
+      context: ./egress
+    image: agency-egress:1.0.0
+    restart: unless-stopped
+    networks:
+      - fleet
+      - outside
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    cpus: 1
+    mem_limit: 1g
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -sS -o /dev/null --noproxy '*' http://127.0.0.1:3128/
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    environment:
+      PROXY_PW_DIRECTOR: ${PROXY_PW_DIRECTOR}
+      PROXY_PW_SCOUT: ${PROXY_PW_SCOUT}
+      PROXY_PW_ARCHITECT: ${PROXY_PW_ARCHITECT}
+      PROXY_PW_PRODUCT: ${PROXY_PW_PRODUCT}
+      PROXY_PW_FRONTEND: ${PROXY_PW_FRONTEND}
+      PROXY_PW_BACKEND: ${PROXY_PW_BACKEND}
+      PROXY_PW_DBA: ${PROXY_PW_DBA}
+      PROXY_PW_PLATFORM: ${PROXY_PW_PLATFORM}
+      PROXY_PW_SECURITY: ${PROXY_PW_SECURITY}
+      PROXY_PW_QA: ${PROXY_PW_QA}
+      PROXY_PW_REVIEWER: ${PROXY_PW_REVIEWER}
+      PROXY_PW_DOCS: ${PROXY_PW_DOCS}
+    volumes:
+      - ./egress/allowlist.txt:/etc/squid/allowlist.txt:ro,z
+      - ./egress/squid.conf:/etc/squid/squid.conf:ro,z
+networks:
+  fleet:
+    internal: true
+  outside:
+    driver: bridge
+volumes:
+  artifacts: {}
+  director-data: {}
+  director-state: {}
+  director-cache: {}
+  scout-data: {}
+  scout-state: {}
+  scout-cache: {}
+  architect-data: {}
+  architect-state: {}
+  architect-cache: {}
+  product-data: {}
+  product-state: {}
+  product-cache: {}
+  frontend-data: {}
+  frontend-state: {}
+  frontend-cache: {}
+  backend-data: {}
+  backend-state: {}
+  backend-cache: {}
+  dba-data: {}
+  dba-state: {}
+  dba-cache: {}
+  platform-data: {}
+  platform-state: {}
+  platform-cache: {}
+  security-data: {}
+  security-state: {}
+  security-cache: {}
+  qa-data: {}
+  qa-state: {}
+  qa-cache: {}
+  reviewer-data: {}
+  reviewer-state: {}
+  reviewer-cache: {}
+  docs-data: {}
+  docs-state: {}
+  docs-cache: {}

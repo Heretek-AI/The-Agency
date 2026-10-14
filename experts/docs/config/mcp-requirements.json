@@ -1,0 +1,12 @@
+{
+  "_generated": "GENERATED, do not edit. Rendered by scripts/render.ts from fleet.yaml and mcp/registry.jsonc.",
+  "mcpServers": {
+    "context7": {
+      "requires": [],
+      "config": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp"
+      }
+    }
+  }
+}

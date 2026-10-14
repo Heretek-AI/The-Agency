@@ -1,0 +1,32 @@
+red-proofs: stage 1b acceptance checks (QA Agent, 2026-10-14 UTC, branch stage-1b-roster, HEAD 32b19df base)
+Baseline (clean tree, keyed):
+  - `make check` exit 0 (format, lint, typecheck, ts-coverage 41 files, render-check 39 files current, 109 unit tests pass / 0 fail across 19 files)
+  - `bash scripts/accept.sh 1b` exit 0, 12 pass / 0 skip / 0 fail — docs/evidence/1b/accept-20261014T011133Z.log (QA green run; Programmer's prior green log docs/evidence/1b/accept-20261014T010532Z.log agrees)
+
+Method: for each check 01..12 under scripts/accept/1b/, break the guarded invariant with a defect
+deliberately different from the builder's where practical (builder's proofs preserved under
+docs/evidence/1b/red/01..12-*.log), run the single check directly with
+`ACCEPT_STAGE=1b ACCEPT_CHECK=scripts/accept/1b/<check>.sh` (no full-stack re-runs, no extra
+evidence writes), assert exit 1 with a FAIL line, restore exactly (`git checkout --` for tracked
+files, `docker unpause`/`start`, network disconnect, compose recreate without overrides), then
+re-run the same single check and assert exit 0 PASS. Nothing committed in a sabotaged state;
+no check script modified; .env/.env.provider never written (mode 0600 throughout; 09 used an
+env override so the file was never touched). Per-check QA logs docs/evidence/1b/red/qa-*.log;
+each log's first line states the sabotage.
+
+Per check (all restored Y, all green re-verified PASS exit 0 after restore):
+01 | 1b/01-render-check | broke: appended hand-edited comment to generated experts/scout/config/opencode.jsonc (builder: docker-compose.yml) | exit: 1 | detail: CHECK 1b/01-render-check: FAIL render-check stale (opencode.jsonc) | restored: Y (git checkout; re-run PASS)
+02 | 1b/02-compose-config | broke: moved generated docker-compose.yml to /tmp (missing file; builder: appended invalid YAML) | exit: 1 | detail: CHECK 1b/02-compose-config: FAIL no configuration file provided | restored: Y (moved back; re-run PASS)
+03 | 1b/03-compose-hardening | broke: inserted `privileged: true` into scout service (builder: cap_drop []) | exit: 1 | detail: CHECK 1b/03-compose-hardening: FAIL scout: privileged | restored: Y (git checkout; re-run PASS)
+04 | 1b/04-images-pinned-and-built | broke: appended unpinned `RUN pip install requests` to egress/Dockerfile (builder: floating FROM in experts/docs/Dockerfile) | exit: 1 | detail: CHECK 1b/04-images-pinned-and-built: FAIL floating versions unpinned-pip (gate fails before any build; no image rebuilt) | restored: Y (git checkout; gate re-verified clean, images present)
+05 | 1b/05-up-healthy | broke: `docker pause agency-qa` (builder: paused agency-docs) | exit: 1 | detail: CHECK 1b/05-up-healthy: FAIL make up failed (cannot start a paused container) | restored: Y (unpause; re-run PASS)
+06 | 1b/06-smoke | broke: `docker stop agency-scout` (builder: stopped agency-director) | exit: 1 | detail: CHECK 1b/06-smoke: FAIL expert scout: container not healthy | restored: Y (start, healthy on 2nd poll; re-run PASS, no flakes)
+07 | 1b/07-egress-allow-deny | broke: emptied generated egress/allowlist.txt to header only + recreated egress (builder: stopped egress) | exit: 1 | detail: CHECK 1b/07-egress-allow-deny: FAIL allowlisted request failed (CONNECT 403) | restored: Y (git checkout, recreate, healthy; re-run PASS first try, no flakes)
+08 | 1b/08-no-direct-route | broke: attached agency-backend to bridge (SAME container as builder's: the check hardcodes agency-backend for the bypass leg) | exit: 1 | detail: CHECK 1b/08-no-direct-route: FAIL direct route out exists | restored: Y (disconnect; backend on fleet only; re-run PASS). Note: a first attempt removing only `http_access deny to_private` from squid.conf still returned the default-deny 403 (defense in depth), so it was reverted unrecorded-as-red and the bridge sabotage used instead.
+09 | 1b/09-unique-passwords | broke: recreated scout service with PW_SCOUT=director's password via env override, .env untouched (builder: .env edit, backend=director pair) | exit: 1 | detail: CHECK 1b/09-unique-passwords: FAIL scout: own password rejected (tampering detected against the untampered .env) | restored: Y (recreate from clean .env, healthy; re-run PASS). First attempt used container name instead of compose service name (`no such service`, check stayed PASS exit 0); corrected and re-proven — the passing run is not recorded as a proof.
+10 | 1b/10-protocol-examples-parse | broke: VERDICT example decision fail->bogus in shared/FLEET_PROTOCOL.md (builder: RESULT status) | exit: 1 | detail: CHECK 1b/10-protocol-examples-parse: FAIL 0 pass 1 fail | restored: Y (git checkout; re-run PASS)
+11 | 1b/11-workspace-demo | broke: emptied checks list in registry.example/demo/checks.yaml (builder: moved demo fixture) | exit: 1 | detail: CHECK 1b/11-workspace-demo: FAIL registry control files do not validate (1 fail) | restored: Y (git checkout; re-run PASS)
+12 | 1b/12-no-published-ports | broke: recreated scout with 127.0.0.1:18098:4096 via /tmp compose override, no tracked file touched (builder: compose edit on docs :18099) | exit: 1 | detail: CHECK 1b/12-no-published-ports: FAIL host port bindings exist /agency-scout 18098 | restored: Y (recreate without override, bindings {}; healthy; re-run PASS; /tmp override deleted)
+
+Result: 12/12 checks red-proven (each fails exit 1 on sabotage, all restored, no check weakened; scripts/accept/1b/*.sh unmodified throughout).
+Post-restore: `git status` shows only the new QA evidence files (12 qa-*.log + this file + QA accept log); all 13 stage containers healthy on the fleet network with no published ports; .env/.env.provider mode 0600, never written; no secret values in any new file (count-only scan clean).

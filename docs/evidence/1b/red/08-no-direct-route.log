@@ -1,0 +1,3 @@
+Sabotage: attached agency-backend to the bridge network (direct route out exists)
+CHECK 1b/08-no-direct-route: FAIL direct route out exists (bypassed the proxy successfully)
+exit=1
