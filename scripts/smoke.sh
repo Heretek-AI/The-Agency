@@ -32,9 +32,11 @@ console.log(JSON.stringify(out));
 )" || { echo "smoke: cannot read fleet roster" >&2; exit 1; }
 
 api() {
-  # api <container> <password> <method> <path> -> body on stdout
+  # api <container> <password> <method> <path> -> body on stdout.
+  # Bounded: a wedged server fails this probe in 30s instead of hanging
+  # the harness.
   local container="$1" password="$2" method="$3" path="$4" code out
-  if ! out=$(docker exec "$container" curl -sS --noproxy '*' -u "opencode:$password" -X "$method" \
+  if ! out=$(docker exec "$container" curl -sS --noproxy '*' --max-time 30 -u "opencode:$password" -X "$method" \
     -w '\n%{http_code}' "http://127.0.0.1:4096$path"); then
     echo "smoke: curl failed for $method $path" >&2
     return 1
@@ -72,33 +74,54 @@ for name in $(echo "$ROSTER" | python3 -c "import json,sys; print(' '.join(json.
     || fail "$name" "runs as uid $(docker exec "$container" id -u), want $AGENT_UID"
 
   agents=""
+  responded=""
   for _ in $(seq 1 36); do
-    agents="$(api "$container" "$pw" GET /api/agent)" || fail "$name" "/api/agent unreachable"
-    if echo "$agents" | python3 -c "import json,sys; assert '$name' in [a.get('id') for a in json.load(sys.stdin)['data']]"; then
-      break
+    # Boot-window tolerance (bounded, same 36-attempt budget): right after a
+    # (re)start /api/info is 200 while /api/agent is still [] or the listener
+    # is not up yet (proven by restarting one expert and polling both routes).
+    # A transport error therefore retries like a not-yet-listed persona; the
+    # check still fails closed when the window expires.
+    if agents="$(api "$container" "$pw" GET /api/agent)"; then
+      responded="yes"
+      if echo "$agents" | python3 -c "import json,sys; assert '$name' in [a.get('id') for a in json.load(sys.stdin)['data']]"; then
+        break
+      fi
+      agents=""
+    else
+      agents=""
     fi
-    agents=""
     sleep 5
   done
-  [ -n "$agents" ] || fail "$name" "/api/agent does not list persona $name"
+  if [ -z "$agents" ]; then
+    [ -n "$responded" ] || fail "$name" "/api/agent unreachable"
+    fail "$name" "/api/agent does not list persona $name"
+  fi
 
   for skill in $(echo "$ROSTER" | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)['$name']['skills']))"); do
     settled_skill=""
+    responded=""
     for _ in $(seq 1 36); do
-      skills="$(api "$container" "$pw" GET /api/skill)" || fail "$name" "/api/skill unreachable"
-      if echo "$skills" | python3 -c "import json,sys; assert '$skill' in [s.get('name') for s in json.load(sys.stdin)['data']]"; then
-        settled_skill="yes"
-        break
+      if skills="$(api "$container" "$pw" GET /api/skill)"; then
+        responded="yes"
+        if echo "$skills" | python3 -c "import json,sys; assert '$skill' in [s.get('name') for s in json.load(sys.stdin)['data']]"; then
+          settled_skill="yes"
+          break
+        fi
       fi
       sleep 5
     done
-    [ -n "$settled_skill" ] || fail "$name" "/api/skill does not list skill $skill"
+    if [ -z "$settled_skill" ]; then
+      [ -n "$responded" ] || fail "$name" "/api/skill unreachable"
+      fail "$name" "/api/skill does not list skill $skill"
+    fi
   done
 
   settled=""
+  responded=""
   for _ in $(seq 1 36); do
-    mcps="$(api "$container" "$pw" GET /api/mcp)" || fail "$name" "/api/mcp unreachable"
-    if echo "$mcps" | python3 -c "
+    if mcps="$(api "$container" "$pw" GET /api/mcp)"; then
+      responded="yes"
+      if echo "$mcps" | python3 -c "
 import json,sys
 for s in json.load(sys.stdin)['data']:
     st = s.get('status',{}).get('status') if isinstance(s.get('status'),dict) else s.get('status')
@@ -107,14 +130,18 @@ for s in json.load(sys.stdin)['data']:
     if st not in ('connected','disabled'):
         sys.exit(1)
 "; then
-      settled="yes"
-      break
-    elif [ $? -eq 2 ]; then
-      fail "$name" "/api/mcp shows a failed server"
+        settled="yes"
+        break
+      elif [ $? -eq 2 ]; then
+        fail "$name" "/api/mcp shows a failed server"
+      fi
     fi
     sleep 5
   done
-  [ -n "$settled" ] || fail "$name" "/api/mcp never settled (pending after 3 minutes)"
+  if [ -z "$settled" ]; then
+    [ -n "$responded" ] || fail "$name" "/api/mcp unreachable"
+    fail "$name" "/api/mcp never settled (pending after 3 minutes)"
+  fi
 
   if docker logs "$container" 2>&1 | grep -q "configuration normalization diagnostic"; then
     fail "$name" "log contains a configuration normalization diagnostic"
@@ -132,10 +159,10 @@ for s in json.load(sys.stdin)['data']:
     docker exec "$container" rm -f /work/smoke-probe
   fi
 
-  code=$(docker exec "$container" curl -sS --noproxy '*' -u "opencode:$pw" -o /dev/null \
+  code=$(docker exec "$container" curl -sS --noproxy '*' --max-time 30 -u "opencode:$pw" -o /dev/null \
     -w '%{http_code}' http://127.0.0.1:4096/api/info) || fail "$name" "own password probe failed"
   [ "$code" = "200" ] || fail "$name" "own password rejected (status $code)"
-  code=$(docker exec "$container" curl -sS --noproxy '*' -u "opencode:$other_pw" -o /dev/null \
+  code=$(docker exec "$container" curl -sS --noproxy '*' --max-time 30 -u "opencode:$other_pw" -o /dev/null \
     -w '%{http_code}' http://127.0.0.1:4096/api/info) || fail "$name" "other password probe failed"
   [ "$code" = "401" ] || fail "$name" "another expert's password accepted (status $code)"
 
