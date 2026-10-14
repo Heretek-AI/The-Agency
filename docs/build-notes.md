@@ -364,3 +364,49 @@ hexdump).
   `bash -n` failing on prettier's own output); the file is
   `.prettierignore`d with the reason recorded there, like every `*.sh`
   helper it is covered by `bash -n` and shellcheck instead.
+
+## Stage 1d notes (2026-10-14)
+
+- Dispatcher bind address (found during accept 02): `serveHttp` defaulted
+  to `127.0.0.1`, which inside the container is container-loopback, so
+  the gateway's `dispatcher:8080` route was refused (502). New
+  `dispatcherHostname()` (default loopback, fail-closed on empty);
+  compose sets `DISPATCHER_HOSTNAME=0.0.0.0`. Pinned by a render test.
+- Published ports on internal-only networks (found during accept 02/05):
+  the daemon silently drops a published port when the container joins
+  only the internal `fleet` network (verified on Docker 29.9.0). The
+  gateway is dual-homed (`fleet` + `outside`) while experts stay
+  internal-only; the ephemeral dispatcher in check 05 is created on the
+  egress network and joined to fleet second. The gateway still publishes
+  only on 127.0.0.1 and its Caddyfile only proxies to fleet upstreams.
+- Caddy file capabilities (found during accept 02): the official binary
+  carries `cap_net_bind_service=ep`; `cap_drop: ALL` empties the bounding
+  set and exec fails with EPERM, restart-looping the gateway. The
+  renderer re-adds exactly `NET_BIND_SERVICE`. Pinned by a render test.
+- Shutdown audit lock (found by review): the old SIGTERM/SIGINT handler
+  called `process.exit(0)` synchronously after kicking off `close()`, so
+  `store.close()` might never release `audit.lock`; the replacement
+  container then refused with `LockedError`. New exported
+  `shutdownService` waits for `close()` before exiting (second signal
+  ignored while closing), covered by three unit tests.
+- Concurrent editing: a second builder worked in this same worktree and
+  branch during this stage (networking fixes above, the 05 rewrite, extra
+  render tests). Their changes were reviewed hunk by hunk, verified by
+  `make check` and the accept suite, and kept; the stage report records
+  the process deviation.
+- Keyless staging: no provider key exists in this environment, and the
+  expert entrypoint correctly refuses an empty `OPENCODE_API_KEY`, so
+  `.env.provider` holds the documented marker `disabled-no-key` (non-key,
+  infra boots, model calls would fail at the provider). Live checks
+  06-14 treat the marker as absent and skip; checks 01-05, 11, 15, 16
+  need no model and pass.
+- Prettier hazard repeated: `prettier --write` reflowed extensionless
+  `scripts/accept/1d/rest.inc` into unparseable prose (same failure mode
+  as 1c's engine-live.inc). The file was rewritten and `.prettierignore`d
+  before any run consumed it; `*.sh` files are untouched by directory
+  scans (Prettier infers no parser for them).
+- 1c/04 refinement: the Dispatcher now serves its own `/api/*` control
+  plane, so the single-OpenCode-module check matches OpenCode operation
+  paths (`/api/session`, `/api/event`, `/api/experimental`, `/api/info`,
+  `openapi.json`) instead of any `/api/` string; comment lines do not
+  count, same rule as 1c/09.

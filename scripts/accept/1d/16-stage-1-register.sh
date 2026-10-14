@@ -20,6 +20,9 @@ run_guard() {
   local file="$1" name="$2" out
   out=$(bun test "$file" -t "$name" 2>&1) || fail "guard test failed [$name]: $(echo "$out" | tail -2 | tr '\n' ' ')"
   echo "$out" | grep -q "0 fail" || fail "guard test not green [$name]: $(echo "$out" | tail -2 | tr '\n' ' ')"
+  # A renamed or deleted guard matches nothing ("0 pass"); that must fail,
+  # not pass vacuously.
+  echo "$out" | grep -qE "[1-9][0-9]* pass" || fail "guard test ran nothing [$name]"
 }
 
 run_guard dispatcher/test/engine.test.ts "mission is not done without landedSha"
