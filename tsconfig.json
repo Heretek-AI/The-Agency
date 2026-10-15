@@ -7,7 +7,10 @@
     "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["bun"]
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    "typeRoots": ["./node_modules/@types", "./dispatcher/web/node_modules/@types"],
+    "types": ["bun", "react", "react-dom"]
   },
   "include": [
     "dispatcher/**/*.ts",

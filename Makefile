@@ -1,4 +1,4 @@
-.PHONY: check format-check lint typecheck ts-coverage render-check test accept
+.PHONY: check format-check lint typecheck ts-coverage render-check test accept accept-ui
 .PHONY: init render workspace build up down ps logs smoke e2e gc
 
 BUN ?= bun
@@ -37,6 +37,11 @@ test:
 
 accept:
 	bash scripts/accept.sh $(STAGE)
+
+accept-ui:
+	bun run --cwd dispatcher/web build
+	bunx playwright install chromium
+	bash scripts/accept/1e/run-e2e.inc
 
 build-base:
 	docker build -f images/base/Dockerfile \

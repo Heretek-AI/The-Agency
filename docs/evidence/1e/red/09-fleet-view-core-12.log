@@ -1,0 +1,3 @@
+Sabotage: Fleet view sliced to the first 2 experts so the 12 core-expert cards are missing
+CHECK 1e/09-fleet-view-core-12: FAIL playwright fleet.spec.ts failed:     Error: expect(locator).toBeVisible() failed     Error: element(s) not found 
+check-exit=1

@@ -127,6 +127,7 @@ export async function boot(options: BootOptions = {}): Promise<BootedService> {
     directorLocation: (mission) => `${paths.workspaceRoot}/${mission.repo}/repo`,
     notify:
       wakeClient !== undefined ? directorWakeHook(engine, { director: wakeClient }) : undefined,
+    webRoot: new URL("../dist/web", import.meta.url).pathname,
     port: options.port ?? dispatcherPort(),
     hostname: options.hostname ?? dispatcherHostname(),
   });

@@ -1,0 +1,3 @@
+Sabotage: PlanEditor save button testid renamed to plan-save-disabled so the spec cannot find or click Save
+CHECK 1e/05-plan-edit-and-approval: FAIL playwright plan-edit.spec.ts failed:     Error: locator.click: Test timeout of 60000ms exceeded.     test-results/plan-edit-approver-edits-a-4b731--and-the-server-persists-it/test-failed-1.png 
+check-exit=1

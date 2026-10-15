@@ -11,3 +11,5 @@ node_modules/
 dist/
 build/
 coverage/
+dispatcher/web/test-results/
+dispatcher/web/test/e2e-report/

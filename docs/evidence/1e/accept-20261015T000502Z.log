@@ -1,0 +1,30 @@
+accept stage 1e (2026-10-15T00:03:54Z), timeout 120s per check
+===== 1e/01-make-check (exit 1) =====
+CHECK 1e/01-make-check: FAIL make check failed: [warn] Code style issues found in 2 files. Run Prettier with --write to fix. make[1]: *** [Makefile:13: format-check] Error 1 make[1]: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-1e-web-ui' 
+===== 1e/02-web-build (exit 0) =====
+CHECK 1e/02-web-build: PASS
+===== 1e/03-auth-and-roles-ui (exit 0) =====
+CHECK 1e/03-auth-and-roles-ui: PASS
+===== 1e/04-director-chat-embedded (exit 0) =====
+CHECK 1e/04-director-chat-embedded: PASS
+===== 1e/05-plan-edit-and-approval (exit 0) =====
+CHECK 1e/05-plan-edit-and-approval: PASS
+===== 1e/06-live-pipeline-and-diff (exit 0) =====
+CHECK 1e/06-live-pipeline-and-diff: PASS
+===== 1e/07-mobile-parity-375px (exit 0) =====
+CHECK 1e/07-mobile-parity-375px: PASS
+===== 1e/08-accessibility-axe (exit 0) =====
+CHECK 1e/08-accessibility-axe: PASS
+===== 1e/09-fleet-view-core-12 (exit 0) =====
+CHECK 1e/09-fleet-view-core-12: PASS
+CHECKS for stage 1e
+1e/01-make-check             FAIL   make check failed: [warn] Code style issues found in 2 files. Run Prettier with --write to fix. make[1]: *** [Makefile:13: format-check] Error 1 make[1]: Leaving directory '/home/john/Projects/The-Agency/worktrees/wave-1e-web-ui' 
+1e/02-web-build              PASS   
+1e/03-auth-and-roles-ui      PASS   
+1e/04-director-chat-embedded PASS   
+1e/05-plan-edit-and-approval PASS   
+1e/06-live-pipeline-and-diff PASS   
+1e/07-mobile-parity-375px    PASS   
+1e/08-accessibility-axe      PASS   
+1e/09-fleet-view-core-12     PASS   
+stage 1e: 8 pass, 0 skip, 1 fail (9 checks)

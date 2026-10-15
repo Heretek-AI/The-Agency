@@ -20,3 +20,8 @@ swarm_prompts/
 # is checked by `bash -n` and shellcheck instead.
 scripts/accept/1c/engine-live.inc
 scripts/accept/1d/rest.inc
+scripts/accept/1e/_server.inc
+scripts/accept/1e/run-e2e.inc
+dispatcher/dist/
+dispatcher/web/test-results/
+dispatcher/web/test/e2e-report/

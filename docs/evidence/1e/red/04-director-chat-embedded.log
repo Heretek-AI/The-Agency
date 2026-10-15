@@ -1,0 +1,3 @@
+Sabotage: Dispatcher /chat/events route renamed to /chat/events-disabled so the SSE stream 404s and no message frame arrives
+CHECK 1e/04-director-chat-embedded: FAIL playwright director-chat.spec.ts failed:     Error: page.evaluate: Error: sse timeout     test-results/director-chat-director-cha-ce8ff-eams-the-SSE-reply-in-place/test-failed-1.png 
+check-exit=1

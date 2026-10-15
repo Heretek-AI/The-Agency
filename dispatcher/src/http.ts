@@ -12,7 +12,7 @@ import {
 import { correlatedSession, ensureDirectorSession } from "./director.js";
 import { Engine, type RepoRegistry } from "./engine.js";
 import type { FleetConfig } from "./fleet-schema.js";
-import { TaskStatuses, type Mission, type Task } from "./model.js";
+import { MissionStatuses, TaskStatuses, type Mission, type Task } from "./model.js";
 import { McpError, filterDiff, handleMcpHttp, parsePlanTasks } from "./mcp.js";
 import { OpenCodeClient } from "./opencode.js";
 import { PlanError } from "./plan.js";
@@ -47,6 +47,8 @@ export interface HttpDeps {
   directorLocation: (mission: Mission) => string;
   /** Stage 1d wake-up: called with the task id after a successful decide. */
   notify?: (taskId: string) => void;
+  /** Stage 1e: directory holding the built web UI (`dispatcher/dist/web`). */
+  webRoot?: string;
 }
 
 const REST_DIFF_DEFAULT_BYTES = 65536;
@@ -670,8 +672,108 @@ export function createHandler(deps: HttpDeps): (req: Request) => Promise<Respons
       return json(200, out);
     }
 
+    if (method === "GET" && pathname === "/api/usage") {
+      const auth = await gate("viewer");
+      if (auth instanceof Response) return auth;
+      let runningMissions = 0;
+      let waitingHuman = 0;
+      for (const id of engine.listMissionIds()) {
+        const status = engine.getMission(id).mission.status;
+        if (status === MissionStatuses.running || status === MissionStatuses.planning)
+          runningMissions += 1;
+        if (status === MissionStatuses.waitingHuman || status === MissionStatuses.halted)
+          waitingHuman += 1;
+      }
+      return json(200, {
+        runningMissions,
+        waitingHuman,
+        maxConcurrent: deps.fleet.defaults.maxConcurrent,
+        note: "mission headroom against the fleet concurrency cap; the Go dollar ledger lands in stage 3b",
+      });
+    }
+
+    if (
+      (method === "GET" || method === "HEAD") &&
+      !pathname.startsWith("/api/") &&
+      pathname !== "/mcp" &&
+      pathname !== "/healthz"
+    ) {
+      return serveWeb(deps.webRoot ?? defaultWebRoot(), pathname, method);
+    }
+
     return json(404, { error: "not found" });
   };
+}
+
+const WEB_CONTENT_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+  ".map": "application/json; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+  ".webmanifest": "application/manifest+json",
+};
+
+function defaultWebRoot(): string {
+  return new URL("../dist/web", import.meta.url).pathname;
+}
+
+/**
+ * Serve the built web UI (Stage 1e). Extensionless SPA routes fall back
+ * to `index.html`; anything else missing is a JSON 404. Path traversal
+ * is refused. When no build is present, behave as before (JSON 404) so
+ * API-only deployments and existing tests are unaffected.
+ */
+async function serveWeb(webRoot: string, pathname: string, method: string): Promise<Response> {
+  if (/%2e/i.test(pathname)) return json(403, { error: "path traversal refused" });
+  const decoded = pathname.split("/").map((s) => {
+    try {
+      return decodeURIComponent(s);
+    } catch {
+      return null;
+    }
+  });
+  if (decoded.some((s) => s === null || s === "." || s === "..")) {
+    return json(403, { error: "path traversal refused" });
+  }
+  const base = path.resolve(webRoot);
+  const rel = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+  const target = path.resolve(base, rel);
+  if (target !== base && !target.startsWith(base + path.sep)) {
+    return json(403, { error: "path traversal refused" });
+  }
+  const file = Bun.file(target);
+  if (await file.exists()) {
+    if (method === "HEAD") {
+      return new Response(null, {
+        status: 200,
+        headers: { "content-type": contentTypeFor(target) },
+      });
+    }
+    return new Response(file, {
+      headers: { "content-type": contentTypeFor(target) },
+    });
+  }
+  if (path.extname(target) !== "") return json(404, { error: "not found" });
+  const index = Bun.file(path.join(base, "index.html"));
+  if (!(await index.exists())) return json(404, { error: "not found" });
+  if (method === "HEAD") {
+    return new Response(null, {
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
+  }
+  return new Response(index, {
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
+}
+
+function contentTypeFor(target: string): string {
+  return WEB_CONTENT_TYPES[path.extname(target).toLowerCase()] ?? "application/octet-stream";
 }
 
 function parseBoundedInt(raw: string | null, fallback: number, max: number): number | undefined {

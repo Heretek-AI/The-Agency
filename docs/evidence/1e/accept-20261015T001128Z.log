@@ -1,0 +1,78 @@
+accept stage 1e (2026-10-15T00:10:30Z), timeout 120s per check
+===== 1e/01-make-check (exit 0) =====
+CHECK 1e/01-make-check: PASS
+===== 1e/02-web-build (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+===== 1e/03-auth-and-roles-ui (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+===== 1e/04-director-chat-embedded (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+===== 1e/05-plan-edit-and-approval (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+===== 1e/06-live-pipeline-and-diff (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+===== 1e/07-mobile-parity-375px (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+===== 1e/08-accessibility-axe (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+===== 1e/09-fleet-view-core-12 (exit 1) =====
+scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/accept/1e/_server.inc: line 4: port: unbound variable
+CHECKS for stage 1e
+1e/01-make-check             PASS   
+1e/02-web-build              FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+1e/03-auth-and-roles-ui      FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+1e/04-director-chat-embedded FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+1e/05-plan-edit-and-approval FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+1e/06-live-pipeline-and-diff FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+1e/07-mobile-parity-375px    FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+1e/08-accessibility-axe      FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+1e/09-fleet-view-core-12     FAIL   exit 1: scripts/accept/1e/_server.inc: line 2: boot: command not found
+scripts/accept/1e/_server.inc: line 3: curl.: command not found
+scripts/accept/1e/_server.inc: line 5: -t: command not found
+scripts/acce
+stage 1e: 1 pass, 0 skip, 8 fail (9 checks)

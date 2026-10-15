@@ -1,0 +1,3 @@
+Sabotage: Fleet view gained an <img> with no alt text so the axe audit reports an image-alt violation
+CHECK 1e/08-accessibility-axe: FAIL playwright axe.spec.ts failed:     Error: axe violations on /fleet: ["image-alt"]     test-results/axe-axe-audit-reports-zero-violations-on-every-primary-view/test-failed-1.png 
+check-exit=1

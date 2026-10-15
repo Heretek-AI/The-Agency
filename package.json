@@ -5,6 +5,7 @@
   "type": "module",
   "workspaces": [
     "dispatcher",
+    "dispatcher/web",
     "verifier"
   ],
   "scripts": {
