@@ -1,0 +1,1 @@
+CHECK ?/03-auth-and-roles-ui: FAIL playwright auth&roles failed:     Error: expect(locator).toHaveAttribute(expected) failed     test-results/auth-roles-viewer-session--92922--and-gates-approval-actions/test-failed-1.png 

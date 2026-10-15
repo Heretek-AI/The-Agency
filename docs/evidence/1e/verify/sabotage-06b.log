@@ -1,0 +1,17 @@
+1e server died during startup; log:
+249 |         }).then(async (res: Response) => {
+250 |           if (res.status === 404 || res.status === 501)
+251 |             throw new OpenCodeError("wait unavailable", res.status, "");
+252 |           if (res.status === 204) return;
+253 |           if (!res.ok)
+254 |             throw new OpenCodeError(
+                            ^
+OpenCodeError: opencode POST /api/experimental/session/ses-1/wait failed: 500
+ status: 500,
+   body: "{\"error\":\"fake git commit failed: \"}",
+
+      at /home/john/Projects/The-Agency/worktrees/wave-1e-web-ui/dispatcher/src/opencode.ts:254:23
+      at processTicksAndRejections (unknown:7:39)
+
+Bun v1.4.2 (Linux x64)
+CHECK ?/06-live-pipeline-and-diff: FAIL seeded server failed to start

@@ -1,0 +1,55 @@
+# Stage 1e QA red proofs (independent QA agent, 2026-10-15)
+# 7-step protocol per check: identify condition, sabotage, run check (expect exit 1),
+# revert with `git checkout -- <file>`, verify `git status --short` clean, record logs.
+# Builder red proofs under docs/evidence/1e/red/ are left untouched.
+
+## 1e/01-make-check — RED (exit 1)
+Sabotage: appended unformatted `export const __RED_PROOF__=1` to dispatcher/web/src/lib/cn.ts (breaks Prettier format-check inside `make check`).
+Run: `bash scripts/accept/1e/01-make-check.sh` => `CHECK ?/01-make-check: FAIL make check failed: [warn] dispatcher/web/src/lib/cn.ts [warn] Code style issues found ... make: *** [Makefile:13: format-check] Error 1`, exit 1.
+Restore: `git checkout -- dispatcher/web/src/lib/cn.ts`; `git status --short` shows only `?? docs/evidence/1e/red-proofs.log`. CLEAN.
+
+## 1e/02-web-build — RED (exit 1)
+Sabotage: moved dispatcher/web/index.html away (vite build entry missing).
+Run: `bash scripts/accept/1e/02-web-build.sh` => `CHECK ?/02-web-build: FAIL web build failed: ... error: script "build" exited with code 1`, exit 1.
+Restore: `git checkout -- dispatcher/web/index.html`; `git status --short` shows only `?? docs/evidence/1e/red-proofs.log`. CLEAN.
+
+## 1e/03-auth-and-roles-ui — RED (exit 1)
+Sabotage: made RequireRole fail-open (`if (true) return <>{children}</>`) in dispatcher/web/src/components/RequireRole.tsx, then rebuilt the bundle (`bun run --cwd dispatcher/web build`) because the seeded server serves dispatcher/dist/web (gitignored build output).
+Note: first attempt without rebuild stayed green (exit 0) — the check serves the stale clean bundle, not live source. QA re-ran after rebuild.
+Run: `bash scripts/accept/1e/03-auth-and-roles-ui.sh` => `CHECK ?/03-auth-and-roles-ui: FAIL playwright auth&roles failed: Error: expect(locator).toBeVisible() failed Error: element(s) not found`, exit 1 (no `role-gated` node for viewer).
+Restore: `git checkout -- dispatcher/web/src/components/RequireRole.tsx` + rebuilt clean bundle; `git status --short` shows only `?? docs/evidence/1e/red-proofs.log`. CLEAN.
+
+## 1e/04-director-chat-embedded — RED (exit 1)
+Sabotage: renamed the SSE route `/chat/events` to `/chat/broken` in dispatcher/src/http.ts:511 (server-side; bun runs TS directly, no rebuild needed).
+Run: `bash scripts/accept/1e/04-director-chat-embedded.sh` => `CHECK ?/04-director-chat-embedded: FAIL playwright director-chat.spec.ts failed: Error: page.evaluate: Error: sse timeout`, exit 1 (raw in-page EventSource assertion trips; REST poll cannot mask it).
+Restore: `git checkout -- dispatcher/src/http.ts`; `git status --short` shows only evidence artifacts + red-proofs.log. CLEAN of code changes.
+
+## 1e/05-plan-edit-and-approval — RED (exit 1)
+Sabotage: renamed `data-testid="plan-save"` to `plan-save-BROKEN` in dispatcher/web/src/components/PlanEditor.tsx + rebuilt bundle.
+Run: `bash scripts/accept/1e/05-plan-edit-and-approval.sh` => `CHECK ?/05-plan-edit-and-approval: FAIL playwright plan-edit.spec.ts failed: Error: locator.click: Test timeout of 60000ms exceeded`, exit 1.
+Restore: `git checkout -- dispatcher/web/src/components/PlanEditor.tsx` + rebuilt clean bundle; no code diff remains. CLEAN.
+
+## 1e/06-live-pipeline-and-diff — RED (exit 1)
+Sabotage: short-circuited `parseUnified` in dispatcher/web/src/components/DiffViewer.tsx to return `{ lines: [], added: 0, removed: 0 }` + rebuilt bundle.
+Run: `bash scripts/accept/1e/06-live-pipeline-and-diff.sh` => `CHECK ?/06-live-pipeline-and-diff: FAIL playwright pipeline-diff.spec.ts failed: Error: expect(locator).toBeVisible() failed Error: element(s) not found`, exit 1 (no diff-added nodes, stats +0/-0).
+Restore: `git checkout -- dispatcher/web/src/components/DiffViewer.tsx` + rebuilt clean bundle; no code diff remains. CLEAN.
+
+## 1e/07-mobile-parity-375px — RED (exit 1)
+Sabotage: renamed `data-testid="mobile-dock"` to `mobile-dock-BROKEN` in dispatcher/web/src/components/Shell.tsx + rebuilt bundle.
+Run: `bash scripts/accept/1e/07-mobile-parity-375px.sh` => `CHECK ?/07-mobile-parity-375px: FAIL playwright mobile.spec.ts failed: Error: expect(locator).toBeVisible() failed Error: element(s) not found`, exit 1 (dock not found at 375px).
+Restore: `git checkout -- dispatcher/web/src/components/Shell.tsx` + rebuilt clean bundle; no code diff remains. CLEAN.
+
+## 1e/08-accessibility-axe — RED (exit 1)
+Sabotage: inserted alt-less `<img src="/red-proof.png" />` into the Fleet view header in dispatcher/web/src/views/Fleet.tsx + rebuilt bundle.
+Run: `bash scripts/accept/1e/08-accessibility-axe.sh` => `CHECK ?/08-accessibility-axe: FAIL playwright axe.spec.ts failed: Error: axe violations on /fleet: ["image-alt"]`, exit 1.
+Restore: `git checkout -- dispatcher/web/src/views/Fleet.tsx` + rebuilt clean bundle; no code diff remains. CLEAN.
+
+## 1e/09-fleet-view-core-12 — RED (exit 1)
+Sabotage: sliced the fleet grid to 2 experts (`fleet.data.experts.slice(0, 2).map`) in dispatcher/web/src/views/Fleet.tsx + rebuilt bundle.
+Run: `bash scripts/accept/1e/09-fleet-view-core-12.sh` => `CHECK ?/09-fleet-view-core-12: FAIL playwright fleet.spec.ts failed: Error: expect(locator).toBeVisible() failed Error: element(s) not found`, exit 1 (core expert cards missing).
+Restore: `git checkout -- dispatcher/web/src/views/Fleet.tsx` + rebuilt clean bundle; no code diff remains. CLEAN.
+
+## Restoration (all checks green after reverts)
+Run: `make accept STAGE=1e` after all 9 reverts + clean rebuilds => `stage 1e: 9 pass, 0 skip, 0 fail (9 checks)`, exit 0. Log: docs/evidence/1e/accept-20261015T004604Z.log (QA run; removed to keep tree clean, table quoted above and in QA report).
+Builder red proofs under docs/evidence/1e/red/ untouched.
+Note: web-source sabotages (03, 05-09) require a bundle rebuild to take effect — the seeded server serves dispatcher/dist/web (gitignored), not live source. A sabotage without rebuild stays green; QA rebuilt for each.
