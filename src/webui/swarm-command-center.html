@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Agency — SwarmOS v1.0 Live Command Center WebUI</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --surface-0: #0D0E11;
+      --surface-1: #14161B;
+      --surface-2: #1C1F26;
+      --surface-3: #252932;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text-primary: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      --accent-emerald: #10B981;
+      --accent-sky: #38BDF8;
+      --accent-amber: #F59E0B;
+      --accent-rose: #F43F5E;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background-color: var(--surface-0);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-variant-numeric: tabular-nums;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .surface-1 {
+      background-color: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+    }
+    .surface-2 {
+      background-color: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+    }
+    .surface-3 {
+      background-color: var(--surface-3);
+      border: 1px solid var(--border-strong);
+    }
+    .tab-btn {
+      transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .tab-btn.active {
+      background-color: var(--surface-2);
+      color: #F3F4F6;
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: inset 0 -2px 0 0 #38BDF8;
+    }
+    .btn-action {
+      transition: all 140ms ease;
+    }
+    .btn-action:hover {
+      filter: brightness(1.12);
+    }
+    .btn-action:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation & Live Connection Bar -->
+  <header class="surface-1 sticky top-0 z-30 px-4 py-3 sm:px-6">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-md bg-sky-500/15 border border-sky-400/40 flex items-center justify-center font-mono-code font-semibold text-sky-400 text-sm">
+          S1
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-semibold tracking-tight text-gray-100">SwarmOS v1.1 · The Agency Command Center</h1>
+            <span id="connBadge" class="px-2 py-0.5 text-[11px] font-mono-code rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              LIVE STATE READY
+            </span>
+          </div>
+          <p id="charterSubtitle" class="text-xs text-gray-400">
+            Unified Heretek Platform · Archetype: <span class="font-mono-code text-gray-300">High-Craft Technical Dark</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <div id="releaseGatePill" class="px-3 py-1 rounded-full text-xs font-mono-code font-semibold border"></div>
+        <button id="btnOpenTaskModal" type="button" class="btn-action px-3 py-1.5 rounded-md text-xs font-medium bg-sky-500/20 text-sky-300 border border-sky-400/40">
+          + New Task
+        </button>
+        <button id="btnOpenContractModal" type="button" class="btn-action px-3 py-1.5 rounded-md text-xs font-medium surface-2 text-gray-200">
+          + Lock Contract
+        </button>
+        <button id="btnResetDemo" type="button" class="btn-action px-2.5 py-1.5 rounded-md text-xs font-mono-code text-gray-400 hover:text-gray-200 surface-2" title="Reset demo workspace state">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="max-w-7xl mx-auto mt-3 pt-2 border-t border-white/5 flex flex-wrap gap-1.5" aria-label="Command Center Views">
+      <button type="button" data-tab="kanban" class="tab-btn active px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 border border-transparent">
+        1. 5-Gate Kanban &amp; Tournaments
+      </button>
+      <button type="button" data-tab="fleet" class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 border border-transparent">
+        2. Agent Fleet &amp; Dispatch (<span id="navAgentCount">13</span>)
+      </button>
+      <button type="button" data-tab="uxjudge" class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 border border-transparent">
+        3. 100-Point UI/UX Visual Judge
+      </button>
+      <button type="button" data-tab="epistemic" class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 border border-transparent">
+        4. IUMBTEMS Epistemic &amp; /grill
+      </button>
+      <button type="button" data-tab="packs" class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 border border-transparent">
+        5. Domain Packs &amp; .claude Bridge
+      </button>
+      <button type="button" data-tab="selfheal" class="tab-btn px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 border border-transparent">
+        6. v1.1 Self-Healing &amp; AST Workbench
+      </button>
+    </nav>
+  </header>
+
+  <!-- Main Workspace Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-5 sm:px-6 space-y-5">
+
+    <!-- Top KPI Strip -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Key Swarm Metrics">
+      <div class="surface-1 rounded-lg p-3.5 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Gate 1 Contracts</span>
+          <span class="text-[11px] font-mono-code text-sky-400">architect</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiContracts" class="text-2xl font-semibold font-mono-code text-gray-100">0</span>
+          <span class="text-xs text-gray-400">Schema &amp; Token Locks</span>
+        </div>
+      </div>
+
+      <div class="surface-1 rounded-lg p-3.5 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Verified Tasks</span>
+          <span class="text-[11px] font-mono-code text-emerald-400">qa-adversary</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTasks" class="text-2xl font-semibold font-mono-code text-gray-100">0 / 0</span>
+          <span id="kpiTournaments" class="text-xs text-gray-400">0 Active Tournaments</span>
+        </div>
+      </div>
+
+      <div class="surface-1 rounded-lg p-3.5 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">UI/UX Visual Score</span>
+          <span id="kpiUxGrade" class="text-[11px] font-mono-code px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300">Grade S</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiUxScore" class="text-2xl font-semibold font-mono-code text-gray-100">94 / 100</span>
+          <span class="text-xs text-gray-400">Gate Threshold &ge; 85</span>
+        </div>
+      </div>
+
+      <div class="surface-1 rounded-lg p-3.5 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Epistemic &amp; Packs</span>
+          <span class="text-[11px] font-mono-code text-amber-300">SHA-256 Verified</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiEpistemic" class="text-2xl font-semibold font-mono-code text-gray-100">3 src</span>
+          <span id="kpiActivePacks" class="text-xs font-mono-code text-gray-300">godot, gdevelop, re</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 1: 5-GATE KANBAN BOARD, CONTRACTS & WORKTREE TOURNAMENTS       -->
+    <!-- ================================================================== -->
+    <section id="view-kanban" class="space-y-5">
+      <!-- Filter & Tournament Action Bar -->
+      <div class="surface-1 rounded-lg p-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <label for="roleFilter" class="text-xs text-gray-400">Filter Role:</label>
+          <select id="roleFilter" class="surface-2 text-xs text-gray-200 rounded px-2.5 py-1.5 font-mono-code focus:outline-none focus:border-sky-400">
+            <option value="all">All Roles</option>
+            <option value="staff-backend">staff-backend</option>
+            <option value="staff-ui">staff-ui</option>
+            <option value="architect">architect</option>
+            <option value="specialist-godot">specialist-godot</option>
+            <option value="specialist-gdevelop">specialist-gdevelop</option>
+            <option value="specialist-re">specialist-re</option>
+          </select>
+          <input id="taskSearch" type="text" placeholder="Search task ID, title, or owned path..." class="surface-2 text-xs text-gray-200 rounded px-3 py-1.5 w-56 sm:w-64 focus:outline-none focus:border-sky-400" />
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnSpawnTournament" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-mono-code bg-amber-500/15 text-amber-300 border border-amber-500/30">
+            + Spawn Best-of-2 Worktree Tournament
+          </button>
+        </div>
+      </div>
+
+      <!-- 4-Column Kanban Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div class="surface-1 rounded-lg p-3 flex flex-col gap-2.5 min-h-[280px]">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gray-300">Pending</span>
+            <span id="countPending" class="text-xs font-mono-code px-2 py-0.5 rounded surface-2 text-gray-300">0</span>
+          </div>
+          <div id="colPending" class="space-y-2.5 flex-1"></div>
+        </div>
+
+        <div class="surface-1 rounded-lg p-3 flex flex-col gap-2.5 min-h-[280px]">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-sky-300">In Progress / Ready QA</span>
+            <span id="countInProgress" class="text-xs font-mono-code px-2 py-0.5 rounded bg-sky-500/15 text-sky-300">0</span>
+          </div>
+          <div id="colInProgress" class="space-y-2.5 flex-1"></div>
+        </div>
+
+        <div class="surface-1 rounded-lg p-3 flex flex-col gap-2.5 min-h-[280px]">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-rose-300">QA Rejected</span>
+            <span id="countRejected" class="text-xs font-mono-code px-2 py-0.5 rounded bg-rose-500/15 text-rose-300">0</span>
+          </div>
+          <div id="colRejected" class="space-y-2.5 flex-1"></div>
+        </div>
+
+        <div class="surface-1 rounded-lg p-3 flex flex-col gap-2.5 min-h-[280px]">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-300">Verified (PASS)</span>
+            <span id="countVerified" class="text-xs font-mono-code px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300">0</span>
+          </div>
+          <div id="colVerified" class="space-y-2.5 flex-1"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Locked Contracts & Worktree Tournaments -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">Gate 1 · Locked Architecture Contracts</h2>
+            <span class="text-[11px] font-mono-code text-gray-400">Immutable by non-architect roles</span>
+          </div>
+          <div id="contractsList" class="space-y-2"></div>
+        </div>
+
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">Gate 2 · Isolated Git Worktree Tournaments</h2>
+            <span class="text-[11px] font-mono-code text-amber-300">.worktrees/&lt;candidate&gt;</span>
+          </div>
+          <div id="tournamentsList" class="space-y-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 2: THE AGENCY FLEET & LIVE PROMPT STEERING CONSOLE            -->
+    <!-- ================================================================== -->
+    <section id="view-fleet" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">Synchronized 13-Agent Roster (SwarmOS + The Agency + Domain Specialists)</h2>
+            <span class="text-xs font-mono-code text-sky-400">subagent_depth: 4</span>
+          </div>
+          <div id="agentRosterGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <!-- Live Agent Dispatch & Steering Console -->
+        <div class="surface-1 rounded-lg p-4 flex flex-col justify-between space-y-3">
+          <div class="space-y-3">
+            <div class="border-b border-white/10 pb-2 flex items-center justify-between">
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">Live Agent Steering Console</h2>
+              <span class="text-[11px] font-mono-code text-emerald-400">delivery: "steer"</span>
+            </div>
+            <div>
+              <label for="dispatchAgentSelect" class="block text-xs text-gray-400 mb-1">Target Agent Role</label>
+              <select id="dispatchAgentSelect" class="w-full surface-2 rounded px-2.5 py-1.5 text-xs font-mono-code text-gray-200"></select>
+            </div>
+            <div>
+              <label for="dispatchPromptInput" class="block text-xs text-gray-400 mb-1">Steering Directive / Task Prompt</label>
+              <textarea id="dispatchPromptInput" rows="3" placeholder="e.g. Run 100-point UX audit on DashboardHeader and fix baseline jitter..." class="w-full surface-2 rounded p-2.5 text-xs text-gray-200 focus:outline-none focus:border-sky-400"></textarea>
+            </div>
+            <button id="btnSendDispatch" type="button" class="btn-action w-full py-2 rounded-md text-xs font-semibold bg-sky-500 text-slate-950">
+              Dispatch Steering Prompt to Agent
+            </button>
+          </div>
+
+          <div class="space-y-2 pt-3 border-t border-white/10">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Live Telemetry Stream</span>
+              <button id="btnClearLog" type="button" class="text-[11px] text-gray-400 hover:text-gray-200 font-mono-code">Clear</button>
+            </div>
+            <div id="dispatchLog" class="surface-2 rounded p-2.5 h-48 overflow-y-auto font-mono-code text-[11px] space-y-1.5 text-gray-300"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 3: 100-POINT VISUAL QUALITY & UI/UX JUDGE                     -->
+    <!-- ================================================================== -->
+    <section id="view-uxjudge" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Interactive DOM Metrics Sliders / Presets -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">Live DOM Metric Inspector</h2>
+            <div class="flex gap-1">
+              <button type="button" data-uxpreset="clean" class="ux-preset-btn px-2 py-0.5 rounded text-[11px] font-mono-code bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Clean UI</button>
+              <button type="button" data-uxpreset="sloppy" class="ux-preset-btn px-2 py-0.5 rounded text-[11px] font-mono-code bg-rose-500/15 text-rose-300 border border-rose-500/30">AI Slop UI</button>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 text-xs">
+            <div>
+              <label for="uxViewport" class="flex justify-between text-gray-300 mb-1">
+                <span>Target Viewport</span>
+                <span id="lblViewport" class="font-mono-code text-sky-400">1440x900</span>
+              </label>
+              <select id="uxViewport" class="w-full surface-2 rounded px-2.5 py-1.5 font-mono-code text-xs text-gray-200">
+                <option value="1440x900">Desktop (1440x900)</option>
+                <option value="768x1024">Tablet (768x1024)</option>
+                <option value="375x812">Mobile (375x812)</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="uxOverflowPx" class="flex justify-between text-gray-300">
+                <span>Horizontal Overflow (px)</span>
+                <span id="valOverflowPx" class="font-mono-code text-sky-300">0px</span>
+              </label>
+              <input id="uxOverflowPx" type="range" min="0" max="60" value="0" class="w-full accent-sky-400" />
+            </div>
+
+            <div>
+              <label for="uxCollisions" class="flex justify-between text-gray-300">
+                <span>Sibling Box Collisions</span>
+                <span id="valCollisions" class="font-mono-code text-sky-300">0</span>
+              </label>
+              <input id="uxCollisions" type="range" min="0" max="6" value="0" class="w-full accent-sky-400" />
+            </div>
+
+            <div>
+              <label for="uxJitter" class="flex justify-between text-gray-300">
+                <span>Row Baseline Jitter (1–3.5px)</span>
+                <span id="valJitter" class="font-mono-code text-sky-300">1</span>
+              </label>
+              <input id="uxJitter" type="range" min="0" max="8" value="1" class="w-full accent-sky-400" />
+            </div>
+
+            <div>
+              <label for="uxLowContrast" class="flex justify-between text-gray-300">
+                <span>WCAG Low-Contrast Nodes (&lt;4.5:1)</span>
+                <span id="valLowContrast" class="font-mono-code text-sky-300">0</span>
+              </label>
+              <input id="uxLowContrast" type="range" min="0" max="8" value="0" class="w-full accent-sky-400" />
+            </div>
+
+            <div>
+              <label for="uxTinyTargets" class="flex justify-between text-gray-300">
+                <span>Tiny Click Targets (&lt;24x24px)</span>
+                <span id="valTinyTargets" class="font-mono-code text-sky-300">1</span>
+              </label>
+              <input id="uxTinyTargets" type="range" min="0" max="8" value="1" class="w-full accent-sky-400" />
+            </div>
+
+            <div>
+              <label for="uxInlineHex" class="flex justify-between text-gray-300">
+                <span>Hardcoded Inline Hex Colors</span>
+                <span id="valInlineHex" class="font-mono-code text-sky-300">1</span>
+              </label>
+              <input id="uxInlineHex" type="range" min="0" max="10" value="1" class="w-full accent-sky-400" />
+            </div>
+
+            <div>
+              <label for="uxConsoleErr" class="flex justify-between text-gray-300">
+                <span>Uncaught Console / Network Errors</span>
+                <span id="valConsoleErr" class="font-mono-code text-sky-300">0</span>
+              </label>
+              <input id="uxConsoleErr" type="range" min="0" max="5" value="0" class="w-full accent-sky-400" />
+            </div>
+          </div>
+
+          <button id="btnCopyAuditScript" type="button" class="btn-action w-full py-2 rounded text-xs font-mono-code surface-2 text-sky-300 border border-sky-400/30">
+            Copy tools.ui.get_ux_scorecard_script()
+          </button>
+        </div>
+
+        <!-- 6-Axis Chart & Scorecard Breakdown -->
+        <div class="lg:col-span-2 surface-1 rounded-lg p-4 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">Deterministic 6-Axis Visual Quality Scorecard</h2>
+              <p class="text-xs text-gray-400">Requires Score &ge; 85 (Grade A/S) and 0px Horizontal Overflow for QA PASS</p>
+            </div>
+            <div id="uxVerdictBadge" class="px-3 py-1 rounded-md text-xs font-mono-code font-semibold"></div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div class="relative h-64 w-full">
+              <canvas id="uxRadarChart"></canvas>
+            </div>
+            <div id="uxAxisBreakdown" class="space-y-2"></div>
+          </div>
+
+          <div class="surface-2 rounded-lg p-3 space-y-2">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-300">Automated Remediation Directives for staff-ui</h3>
+            <ul id="uxRemediationList" class="text-xs font-mono-code space-y-1 text-gray-300 list-disc list-inside"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 4: IUMBTEMS EPISTEMIC CACHE & SOCRATIC /GRILL                 -->
+    <!-- ================================================================== -->
+    <section id="view-epistemic" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Left: Content-Addressed SHA-256 Source Cache & Claim Verifier -->
+        <div class="surface-1 rounded-lg p-4 space-y-4">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">SHA-256 Epistemic Source Cache (.opencode/epistemic/)</h2>
+            <span class="text-[11px] font-mono-code text-emerald-400">SPDX License Guard</span>
+          </div>
+
+          <!-- Add New Epistemic Source Form -->
+          <div class="surface-2 rounded p-3 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input id="epiTitle" type="text" placeholder="Source Title (e.g. RFC 9110)" class="surface-1 rounded px-2.5 py-1.5 text-xs text-gray-200 sm:col-span-2" />
+              <select id="epiLicense" class="surface-1 rounded px-2.5 py-1.5 text-xs font-mono-code text-gray-200">
+                <option value="MIT">MIT (Permissive)</option>
+                <option value="Apache-2.0">Apache-2.0 (Permissive)</option>
+                <option value="MPL-2.0">MPL-2.0 (Weak Copyleft)</option>
+                <option value="AGPL-3.0-only">AGPL-3.0 (Contaminating)</option>
+              </select>
+            </div>
+            <textarea id="epiContent" rows="2" placeholder="Paste primary source excerpt to hash and cache..." class="w-full surface-1 rounded p-2 text-xs text-gray-200"></textarea>
+            <button id="btnAddEpistemic" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              + Hash &amp; Cache Source
+            </button>
+          </div>
+
+          <div id="epistemicSourcesList" class="space-y-2 max-h-56 overflow-y-auto"></div>
+
+          <!-- Live Verbatim Quote Verifier -->
+          <div class="border-t border-white/10 pt-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="claimMarkdownInput" class="text-xs font-semibold uppercase tracking-wider text-gray-300">Live [VERIFIED: &lt;hash&gt; | "quote"] Verifier</label>
+              <button id="btnRunClaimVerify" type="button" class="btn-action px-2.5 py-1 rounded text-xs font-mono-code bg-sky-500/20 text-sky-300 border border-sky-400/40">
+                Verify Claims
+              </button>
+            </div>
+            <textarea id="claimMarkdownInput" rows="3" class="w-full surface-2 rounded p-2.5 text-xs font-mono-code text-gray-200"></textarea>
+            <div id="claimVerifyResult" class="surface-2 rounded p-2.5 text-xs font-mono-code"></div>
+          </div>
+        </div>
+
+        <!-- Right: Socratic /grill Spec Stress-Tester -->
+        <div class="surface-1 rounded-lg p-4 space-y-4">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-200">IUMBTEMS Socratic /grill Stress-Tester</h2>
+            <span class="text-[11px] font-mono-code text-amber-300">Pre-Contract Dialectic Gate</span>
+          </div>
+          <div class="space-y-2">
+            <label for="grillSpecInput" class="block text-xs text-gray-400">Architecture or Feature Specification</label>
+            <input id="grillSpecInput" type="text" value="Multi-Agent WebSocket State Sync with SQLite WAL Locking" class="w-full surface-2 rounded px-3 py-1.5 text-xs text-gray-200" />
+            <button id="btnRunGrill" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              Generate Socratic /grill Stress-Test Questions
+            </button>
+          </div>
+          <div id="grillQuestionsOutput" class="space-y-2.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 5: DOMAIN PACKS (GODOT, GDEVELOP, RE) & CLAUDE BRIDGE         -->
+    <!-- ================================================================== -->
+    <section id="view-packs" class="hidden space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Godot 4 Pack -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-sky-300">Godot 4.x Pack (godot-opencode)</h2>
+              <p class="text-[11px] text-gray-400">Parses .tscn/.tres scene trees, Node hierarchies &amp; signal connections</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-emerald-500/15 text-emerald-300">specialist-godot</span>
+          </div>
+          <textarea id="godotTscnInput" rows="4" class="w-full surface-2 rounded p-2 text-xs font-mono-code text-gray-200">[gd_scene load_steps=3 format=3]
+[ext_resource type="Script" path="res://Player.gd" id="1"]
+[node name="Player" type="CharacterBody2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="."]
+[connection signal="health_depleted" from="." to="." method="_on_health_depleted"]</textarea>
+          <button id="btnInspectGodot" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-mono-code surface-2 text-sky-300 border border-sky-400/30">
+            Run tools.packs.godot_inspect_scene()
+          </button>
+          <pre id="godotInspectOutput" class="surface-2 rounded p-2.5 text-[11px] font-mono-code text-gray-300 overflow-x-auto"></pre>
+        </div>
+
+        <!-- GDevelop 5 Unlocked Pack -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-amber-300">GDevelop 5 Pack (GDevelop-Unlocked)</h2>
+              <p class="text-[11px] text-gray-400">Inspects game.json event sheets &amp; generates custom local AI endpoint config</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-emerald-500/15 text-emerald-300">specialist-gdevelop</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input id="gdevEndpointInput" type="text" value="http://127.0.0.1:4096/v1" class="surface-2 rounded px-2.5 py-1.5 text-xs font-mono-code text-gray-200" placeholder="Custom AI Endpoint URL" />
+            <input id="gdevModelInput" type="text" value="swarmos-director" class="surface-2 rounded px-2.5 py-1.5 text-xs font-mono-code text-gray-200" placeholder="Model ID" />
+          </div>
+          <button id="btnGenerateGdevConfig" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-mono-code surface-2 text-amber-300 border border-amber-400/30">
+            Run tools.packs.gdevelop_unlock_ai_config()
+          </button>
+          <pre id="gdevConfigOutput" class="surface-2 rounded p-2.5 text-[11px] font-mono-code text-gray-300 overflow-x-auto"></pre>
+        </div>
+
+        <!-- Reverse Engineering Pack (opencode-rea) -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-rose-300">Reverse Engineering Pack (opencode-rea)</h2>
+              <p class="text-[11px] text-gray-400">Static ELF/PE/Mach-O/WASM triage, Shannon entropy &amp; indicator extraction</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-emerald-500/15 text-emerald-300">specialist-re</span>
+          </div>
+          <input id="reSampleInput" type="text" value="\x7fELF...https://telemetry.internal.local/v2/auth_token...VirtualAlloc...AES_256_GCM" class="w-full surface-2 rounded px-2.5 py-1.5 text-xs font-mono-code text-gray-200" />
+          <button id="btnInspectBinary" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-mono-code surface-2 text-rose-300 border border-rose-400/30">
+            Run tools.packs.re_inspect_binary()
+          </button>
+          <pre id="reInspectOutput" class="surface-2 rounded p-2.5 text-[11px] font-mono-code text-gray-300 overflow-x-auto"></pre>
+        </div>
+
+        <!-- claude-4-opencode Bridge -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-emerald-300">claude-4-opencode Compatibility Bridge</h2>
+              <p class="text-[11px] text-gray-400">Auto-discovers .claude/commands/*.md, .claude/agents/*.md &amp; .claude/skills/*/SKILL.md</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-sky-500/15 text-sky-300">Auto-Bridged</span>
+          </div>
+          <div id="claudeBridgeList" class="space-y-2 text-xs font-mono-code text-gray-300"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 6: V1.1 SELF-HEALING, AST CODEMODS, FAULT LOCALIZER & COVERAGE-->
+    <!-- ================================================================== -->
+    <section id="view-selfheal" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Upgrade 2: Structural AST Codemods & Module Mover -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-sky-300">Structural AST Codemod &amp; Import Rewriter</h2>
+              <p class="text-[11px] text-gray-400">tools.fs.ast_rewrite({ pattern, replacement }) with automatic checkpointing</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-sky-500/15 text-sky-300">Upgrade #2</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input id="astPatternInput" type="text" value="console.log($MSG)" class="surface-2 rounded px-2.5 py-1.5 text-xs font-mono-code text-gray-200" placeholder="AST Pattern ($VAR)" />
+            <input id="astReplaceInput" type="text" value="telemetry.info($MSG)" class="surface-2 rounded px-2.5 py-1.5 text-xs font-mono-code text-gray-200" placeholder="Replacement ($VAR)" />
+          </div>
+          <textarea id="astSampleCode" rows="3" class="w-full surface-2 rounded p-2 text-xs font-mono-code text-gray-200">export function handleOrder(id) {
+  console.log(id);
+  return { ok: true };
+}</textarea>
+          <button id="btnRunAstRewrite" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-mono-code surface-2 text-sky-300 border border-sky-400/30">
+            Run tools.fs.ast_rewrite()
+          </button>
+          <pre id="astRewriteOutput" class="surface-2 rounded p-2.5 text-[11px] font-mono-code text-emerald-300 overflow-x-auto"></pre>
+        </div>
+
+        <!-- Upgrade 3: Automatic Stack-Frame Fault Localizer -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-amber-300">Automatic Stack-Frame Fault Localizer (&lt;fault-context&gt;)</h2>
+              <p class="text-[11px] text-gray-400">Auto-hydrates hash-anchored source lines around crashing stack frames</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-amber-500/15 text-amber-300">Upgrade #3</span>
+          </div>
+          <textarea id="faultTraceInput" rows="3" class="w-full surface-2 rounded p-2 text-xs font-mono-code text-gray-200">TypeError: Cannot read properties of undefined (reading 'verdict')
+    at verifyReleaseReady (src/board/board.ts:242:18)
+    at execute (src/codemode/org-tools.ts:189:22)</textarea>
+          <button id="btnRunFaultLocalizer" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-mono-code surface-2 text-amber-300 border border-amber-400/30">
+            Hydrate Stack Frames (&lt;fault-context&gt;)
+          </button>
+          <pre id="faultLocalizerOutput" class="surface-2 rounded p-2.5 text-[11px] font-mono-code text-gray-300 overflow-x-auto"></pre>
+        </div>
+
+        <!-- Upgrade 4: Diff-Coverage Gate & Anti-Mock-Tautology Linter -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-emerald-300">Diff-Coverage Gate &amp; Anti-Mock-Tautology Linter</h2>
+              <p class="text-[11px] text-gray-400">tools.verify.diff_coverage intersects LCOV hits with git diff lines</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-emerald-500/15 text-emerald-300">Upgrade #4</span>
+          </div>
+          <textarea id="lcovSampleInput" rows="3" class="w-full surface-2 rounded p-2 text-xs font-mono-code text-gray-200">SF:src/omni/nextgen-v110.ts
+DA:12,4
+DA:13,4
+DA:14,0
+end_of_record</textarea>
+          <button id="btnRunDiffCoverage" type="button" class="btn-action px-3 py-1.5 rounded text-xs font-mono-code surface-2 text-emerald-300 border border-emerald-400/30">
+            Run tools.verify.diff_coverage()
+          </button>
+          <pre id="diffCoverageOutput" class="surface-2 rounded p-2.5 text-[11px] font-mono-code text-gray-300 overflow-x-auto"></pre>
+        </div>
+
+        <!-- Upgrades 5, 8, 9: Installed-Pkg Inspector, Skill Graduation & Worktree Sandbox -->
+        <div class="surface-1 rounded-lg p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-rose-300">Installed-Pkg Inspector &amp; Speculative Worktree Sandbox</h2>
+              <p class="text-[11px] text-gray-400">Offline node_modules .d.ts epistemic caching &amp; conflict-free integration</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono-code bg-rose-500/15 text-rose-300">Upgrades #5, #8, #9</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnRunPkgInspector" type="button" class="btn-action px-2.5 py-1.5 rounded text-xs font-mono-code surface-2 text-sky-300 border border-sky-400/30">
+              Inspect node_modules/effect
+            </button>
+            <button id="btnRunSkillGraduate" type="button" class="btn-action px-2.5 py-1.5 rounded text-xs font-mono-code surface-2 text-emerald-300 border border-emerald-400/30">
+              Graduate Memory &rarr; SKILL.md
+            </button>
+            <button id="btnRunWorktreeSandbox" type="button" class="btn-action px-2.5 py-1.5 rounded text-xs font-mono-code surface-2 text-amber-300 border border-amber-400/30">
+              Test Speculative Integration
+            </button>
+          </div>
+          <pre id="v110CombinedOutput" class="surface-2 rounded p-2.5 text-[11px] font-mono-code text-gray-300 overflow-x-auto"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Create Engineering Task -->
+  <div id="modalTask" class="fixed inset-0 z-50 hidden bg-black/75 flex items-center justify-center p-4">
+    <div class="surface-2 rounded-lg max-w-md w-full p-5 space-y-4 border border-white/15">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <h3 class="text-sm font-semibold text-gray-100">Create SwarmOS Engineering Task</h3>
+        <button id="btnCloseTaskModal" type="button" class="text-xs text-gray-400 hover:text-gray-200 font-mono-code">ESC</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="newTaskId" class="block text-gray-400 mb-1">Task ID</label>
+          <input id="newTaskId" type="text" placeholder="e.g. task-auth-session" class="w-full surface-1 rounded px-3 py-1.5 font-mono-code text-gray-100" />
+        </div>
+        <div>
+          <label for="newTaskTitle" class="block text-gray-400 mb-1">Task Title &amp; Acceptance Criteria</label>
+          <input id="newTaskTitle" type="text" placeholder="e.g. Implement Effect LayerMap session store" class="w-full surface-1 rounded px-3 py-1.5 text-gray-100" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label for="newTaskOwner" class="block text-gray-400 mb-1">Assigned Role</label>
+            <select id="newTaskOwner" class="w-full surface-1 rounded px-2.5 py-1.5 font-mono-code text-gray-100">
+              <option value="staff-backend">staff-backend</option>
+              <option value="staff-ui">staff-ui</option>
+              <option value="architect">architect</option>
+              <option value="specialist-godot">specialist-godot</option>
+              <option value="specialist-gdevelop">specialist-gdevelop</option>
+              <option value="specialist-re">specialist-re</option>
+            </select>
+          </div>
+          <div>
+            <label for="newTaskBudget" class="block text-gray-400 mb-1">Max Tool Calls Budget</label>
+            <input id="newTaskBudget" type="number" value="25" class="w-full surface-1 rounded px-2.5 py-1.5 font-mono-code text-gray-100" />
+          </div>
+        </div>
+        <div>
+          <label for="newTaskPaths" class="block text-gray-400 mb-1">Disjoint Owned Paths (comma-separated)</label>
+          <input id="newTaskPaths" type="text" value="src/session/**, test/session.test.ts" class="w-full surface-1 rounded px-3 py-1.5 font-mono-code text-gray-100" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="btnCancelTaskModal" type="button" class="px-3 py-1.5 rounded text-xs surface-1 text-gray-300">Cancel</button>
+        <button id="btnSaveTaskModal" type="button" class="btn-action px-3.5 py-1.5 rounded text-xs font-semibold bg-sky-500 text-slate-950">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Lock Architecture Contract -->
+  <div id="modalContract" class="fixed inset-0 z-50 hidden bg-black/75 flex items-center justify-center p-4">
+    <div class="surface-2 rounded-lg max-w-md w-full p-5 space-y-4 border border-white/15">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <h3 class="text-sm font-semibold text-gray-100">Gate 1 · Lock Architecture Contract</h3>
+        <button id="btnCloseContractModal" type="button" class="text-xs text-gray-400 hover:text-gray-200 font-mono-code">ESC</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="newContractId" class="block text-gray-400 mb-1">Contract ID</label>
+          <input id="newContractId" type="text" placeholder="e.g. contract-plugin-schema" class="w-full surface-1 rounded px-3 py-1.5 font-mono-code text-gray-100" />
+        </div>
+        <div>
+          <label for="newContractTitle" class="block text-gray-400 mb-1">Contract Title</label>
+          <input id="newContractTitle" type="text" placeholder="e.g. OpenCode V2 Effect Schema &amp; Design Tokens" class="w-full surface-1 rounded px-3 py-1.5 text-gray-100" />
+        </div>
+        <div>
+          <label for="newContractFiles" class="block text-gray-400 mb-1">Locked Contract Files (comma-separated)</label>
+          <input id="newContractFiles" type="text" value="src/board/types.ts, src/host/contract.ts" class="w-full surface-1 rounded px-3 py-1.5 font-mono-code text-gray-100" />
+        </div>
+        <div>
+          <label for="newContractInvariants" class="block text-gray-400 mb-1">Enforced Invariants</label>
+          <input id="newContractInvariants" type="text" value="Zero any in public schemas; 4px spacing token grid" class="w-full surface-1 rounded px-3 py-1.5 text-gray-100" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="btnCancelContractModal" type="button" class="px-3 py-1.5 rounded text-xs surface-1 text-gray-300">Cancel</button>
+        <button id="btnSaveContractModal" type="button" class="btn-action px-3.5 py-1.5 rounded text-xs font-semibold bg-emerald-500 text-slate-950">Lock Contract</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastBox" class="fixed bottom-4 right-4 z-50 hidden px-4 py-2.5 rounded-lg surface-3 text-xs font-mono-code text-sky-300 shadow-lg"></div>
+
+  <script>
+    const STORAGE_KEY = "swarmos_v100_command_center_state";
+
+    const DEFAULT_AGENTS = [
+      { id: "director", name: "Director", tier: "L0 Primary", desc: "VP of Product & Engineering. Orchestrates 5-Gate Protocol.", status: "active" },
+      { id: "architect", name: "Architect", tier: "L1 Subagent", desc: "Locks TypeScript schemas & CSS design tokens at Gate 1.", status: "active" },
+      { id: "manager", name: "Manager", tier: "L1 Subagent", desc: "Decomposes tasks, spawns parallel worktrees & enforces QA.", status: "active" },
+      { id: "staff-backend", name: "Staff Backend", tier: "L2 Subagent", desc: "Implements APIs, state machines & unit tests with warm LSP.", status: "busy" },
+      { id: "staff-ui", name: "Staff UI", tier: "L2 Subagent", desc: "Crafts anti-slop interfaces verified by the 100-Pt UX Judge.", status: "busy" },
+      { id: "qa-adversary", name: "QA Adversary", tier: "L2 Red-Team", desc: "Zero-trust verifier. Forbidden from editing src/**.", status: "active" },
+      { id: "release-ops", name: "Release Ops", tier: "L1 Subagent", desc: "Merges winning worktrees & runs full-repo verification.", status: "idle" },
+      { id: "studio-gui", name: "Studio GUI", tier: "Omni Primary", desc: "Web, Electron, Tauri & Desktop GUI spatial studio.", status: "idle" },
+      { id: "researcher", name: "Researcher", tier: "Omni Primary", desc: "Parallel deep research with SHA-256 citation verification.", status: "idle" },
+      { id: "office-analyst", name: "Office Analyst", tier: "Omni Primary", desc: "Word, Excel, PowerPoint, PDF & SQLite architect.", status: "idle" },
+      { id: "specialist-godot", name: "Godot 4 Specialist", tier: "Domain Pack", desc: "GDScript 2.0, .tscn scene tree & signal specialist.", status: "ready" },
+      { id: "specialist-gdevelop", name: "GDevelop 5 Specialist", tier: "Domain Pack", desc: "game.json event sheets & custom AI endpoint bridge.", status: "ready" },
+      { id: "specialist-re", name: "RE Binary Analyst", tier: "Domain Pack", desc: "Static ELF/PE/Mach-O triage & protocol reconstruction.", status: "ready" }
+    ];
+
+    function createInitialState() {
+      return {
+        contracts: [
+          {
+            id: "contract-host-v2",
+            title: "OpenCode V2.0.26 Plugin Host & Effect Schema Contract",
+            files: ["src/host/contract.ts", "src/board/types.ts"],
+            invariants: ["All 11 host capabilities probed at startup", "Atomic board.json locking via withBoardLock"]
+          },
+          {
+            id: "contract-ui-tokens",
+            title: "High-Craft Technical Dark Design Token Contract",
+            files: ["src/skills/ui-craft/skill.ts", "src/omni/ux-judge.ts"],
+            invariants: ["Surface luminance stepping (#0D0E11 -> #14161B -> #1C1F26)", "Minimum 85/100 UX Judge score required"]
+          }
+        ],
+        tasks: [
+          {
+            id: "task-epistemic-engine",
+            title: "Integrate IUMBTEMS SHA-256 Source Cache & [VERIFIED] Verifier",
+            owner: "staff-backend",
+            ownedPaths: ["src/epistemic/**"],
+            status: "verified",
+            worktree: "",
+            budget: { maxToolCalls: 20, usedCalls: 9 },
+            qaReceipt: { verdict: "PASS", summary: "All SHA-256 quote & SPDX checks pass in unified-v100.test.ts" }
+          },
+          {
+            id: "task-ux-judge-100",
+            title: "Build 6-Axis 100-Point Visual Quality & UI/UX Judge",
+            owner: "staff-ui",
+            ownedPaths: ["src/omni/ux-judge.ts"],
+            status: "verified",
+            worktree: "",
+            budget: { maxToolCalls: 25, usedCalls: 12 },
+            qaReceipt: { verdict: "PASS", summary: "Zero overflow, Grade S (94/100) verified across 3 viewports" }
+          },
+          {
+            id: "task-domain-packs",
+            title: "Consolidate Godot 4, GDevelop 5 & RE Binary Packs",
+            owner: "specialist-godot",
+            ownedPaths: ["src/packs/**"],
+            status: "in_progress",
+            worktree: ".worktrees/task-domain-packs",
+            budget: { maxToolCalls: 30, usedCalls: 14 },
+            qaReceipt: null
+          },
+          {
+            id: "task-claude-bridge",
+            title: "Auto-Bridge .claude/commands, agents & skills into OpenCode V2",
+            owner: "staff-backend",
+            ownedPaths: ["src/compat/claude-code.ts"],
+            status: "verified",
+            worktree: "",
+            budget: { maxToolCalls: 15, usedCalls: 7 },
+            qaReceipt: { verdict: "PASS", summary: "Discovers and registers .claude markdown assets cleanly" }
+          }
+        ],
+        tournaments: [
+          {
+            id: "tourney-webui-renderer",
+            title: "Best-of-2 Live Swarm Command Center Renderer",
+            role: "staff-ui",
+            status: "active",
+            candidates: [
+              { label: "candidate-a", taskId: "tourney-webui-a", worktree: ".worktrees/tourney-webui-a", score: 94 },
+              { label: "candidate-b", taskId: "tourney-webui-b", worktree: ".worktrees/tourney-webui-b", score: 81 }
+            ],
+            winner: null
+          }
+        ],
+        epistemicSources: [
+          {
+            shortHash: "a94f2c81e03b",
+            title: "OpenCode V2 SessionExecution & LayerMap Spec",
+            spdxLicense: "MIT",
+            licenseCategory: "permissive",
+            content: "SessionExecution separates prompt admission from execution fibers and persists write-ahead claims in SQLite."
+          },
+          {
+            shortHash: "7c31d809b412",
+            title: "SwarmOS Anti-Slop Spatial UI Contract",
+            spdxLicense: "Apache-2.0",
+            licenseCategory: "permissive",
+            content: "Every interactive control must have a minimum 24x24px target box and WCAG AA 4.5:1 foreground-to-background contrast."
+          },
+          {
+            shortHash: "e5109b44d19a",
+            title: "External Copyleft Reference Sample",
+            spdxLicense: "AGPL-3.0-only",
+            licenseCategory: "copyleft-contaminating",
+            content: "Network copyleft module — flagged by SwarmOS SPDX guard so agents never copy code into MIT/Apache packages."
+          }
+        ],
+        claudeAssets: [
+          { kind: "command", name: "/review-architecture", source: ".claude/commands/review-architecture.md" },
+          { kind: "command", name: "/security-audit", source: ".claude/commands/security-audit.md" },
+          { kind: "agent", name: "sec-auditor", source: ".claude/agents/sec-auditor.md" },
+          { kind: "skill", name: "hexagonal-boundaries", source: ".claude/skills/hexagonal-boundaries/SKILL.md" }
+        ],
+        telemetryLog: [
+          "[11:42:08] [host.probe] All 11/11 OpenCode V2 host capabilities verified.",
+          "[11:43:15] [architect] Locked contract [contract-host-v2] (2 files).",
+          "[11:44:02] [staff-ui] Evaluated 100-Point UI/UX Scorecard -> 94/100 (Grade A, PASS).",
+          "[11:45:19] [epistemic] Verified 2/2 [VERIFIED] citations against SHA-256 cache."
+        ]
+      };
+    }
+
+    let state = loadState();
+    let uxChartInstance = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return createInitialState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById("toastBox");
+      box.textContent = msg;
+      box.classList.remove("hidden");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        box.classList.add("hidden");
+      }, 2800);
+    }
+
+    function simpleHash(str) {
+      let h1 = 0xdeadbeef ^ str.length;
+      let h2 = 0x41c6ce57 ^ str.length;
+      for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return ((h2 >>> 0).toString(16).padStart(8, "0") + (h1 >>> 0).toString(16).padStart(8, "0")).slice(0, 12);
+    }
+
+    // =========================================================================
+    // RENDER KANBAN, CONTRACTS & TOURNAMENTS
+    // =========================================================================
+    function renderAll() {
+      const roleFilter = document.getElementById("roleFilter").value;
+      const searchQ = document.getElementById("taskSearch").value.trim().toLowerCase();
+
+      const filteredTasks = state.tasks.filter((t) => {
+        if (roleFilter !== "all" && t.owner !== roleFilter) return false;
+        if (searchQ) {
+          const hay = (t.id + " " + t.title + " " + t.owner + " " + (t.ownedPaths || []).join(" ")).toLowerCase();
+          if (!hay.includes(searchQ)) return false;
+        }
+        return true;
+      });
+
+      const cols = {
+        pending: filteredTasks.filter((t) => t.status === "pending"),
+        in_progress: filteredTasks.filter((t) => t.status === "in_progress"),
+        qa_rejected: filteredTasks.filter((t) => t.status === "qa_rejected"),
+        verified: filteredTasks.filter((t) => t.status === "verified")
+      };
+
+      document.getElementById("countPending").textContent = String(cols.pending.length);
+      document.getElementById("countInProgress").textContent = String(cols.in_progress.length);
+      document.getElementById("countRejected").textContent = String(cols.qa_rejected.length);
+      document.getElementById("countVerified").textContent = String(cols.verified.length);
+
+      renderTaskColumn("colPending", cols.pending);
+      renderTaskColumn("colInProgress", cols.in_progress);
+      renderTaskColumn("colRejected", cols.qa_rejected);
+      renderTaskColumn("colVerified", cols.verified);
+
+      // Update KPIs & Release Gate
+      const totalTasks = state.tasks.length;
+      const verifiedCount = state.tasks.filter((t) => t.status === "verified").length;
+      const activeTourneys = state.tournaments.filter((tr) => tr.status === "active").length;
+      document.getElementById("kpiContracts").textContent = String(state.contracts.length);
+      document.getElementById("kpiTasks").textContent = verifiedCount + " / " + totalTasks;
+      document.getElementById("kpiTournaments").textContent = activeTourneys + " Active Tournament(s)";
+      document.getElementById("kpiEpistemic").textContent = state.epistemicSources.length + " src";
+
+      const readyToShip = state.contracts.length > 0 && totalTasks > 0 && verifiedCount === totalTasks && activeTourneys === 0;
+      const gatePill = document.getElementById("releaseGatePill");
+      if (readyToShip) {
+        gatePill.className = "px-3 py-1 rounded-full text-xs font-mono-code font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40";
+        gatePill.textContent = "RELEASE GATE: READY TO SHIP";
+      } else {
+        const blockers = (totalTasks - verifiedCount) + activeTourneys;
+        gatePill.className = "px-3 py-1 rounded-full text-xs font-mono-code font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/40";
+        gatePill.textContent = "RELEASE GATE: " + blockers + " BLOCKER(S)";
+      }
+
+      // Render Contracts
+      const cList = document.getElementById("contractsList");
+      cList.innerHTML = state.contracts.map((c) => `
+        <div class="surface-2 rounded p-2.5 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="font-mono-code text-xs text-sky-400 font-semibold">${c.id}</span>
+            <span class="text-[11px] font-mono-code text-gray-400">${c.files.join(", ")}</span>
+          </div>
+          <div class="text-xs font-medium text-gray-100">${c.title}</div>
+          <div class="text-[11px] text-gray-400">Invariants: ${c.invariants.join(" · ")}</div>
+        </div>
+      `).join("");
+
+      // Render Tournaments
+      const tList = document.getElementById("tournamentsList");
+      tList.innerHTML = state.tournaments.map((tr) => `
+        <div class="surface-2 rounded p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-mono-code text-xs text-amber-300 font-semibold">${tr.id}</span>
+              <span class="ml-2 text-xs text-gray-200 font-medium">${tr.title}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono-code ${tr.status === "resolved" ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/15 text-amber-300"}">
+              ${tr.status.toUpperCase()}
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            ${tr.candidates.map((cand) => `
+              <div class="surface-1 rounded p-2 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-mono-code text-gray-200">${cand.label} (${cand.score} pts)</div>
+                  <div class="text-[10px] font-mono-code text-gray-400">${cand.worktree}</div>
+                </div>
+                ${tr.status === "active" ? `
+                  <button type="button" onclick="resolveTourneyWinner('${tr.id}', '${cand.taskId}')" class="btn-action px-2 py-1 rounded text-[10px] font-mono-code bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Merge Winner
+                  </button>
+                ` : (tr.winner === cand.taskId ? `<span class="text-[10px] font-mono-code text-emerald-400 font-semibold">WINNER</span>` : `<span class="text-[10px] font-mono-code text-gray-500">SUPERSEDED</span>`)}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+
+      renderFleet();
+      renderEpistemic();
+      renderClaudeBridge();
+    }
+
+    function renderTaskColumn(containerId, tasks) {
+      const el = document.getElementById(containerId);
+      if (tasks.length === 0) {
+        el.innerHTML = `<div class="text-xs text-gray-500 font-mono-code py-4 text-center">No tasks in this stage</div>`;
+        return;
+      }
+      el.innerHTML = tasks.map((t) => {
+        const badge = t.qaReceipt
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono-code ${t.qaReceipt.verdict === "PASS" ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}">QA: ${t.qaReceipt.verdict}</span>`
+          : `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono-code bg-white/5 text-gray-400">QA: PENDING</span>`;
+        const used = t.budget?.usedCalls ?? 0;
+        const max = t.budget?.maxToolCalls ?? 25;
+        return `
+          <div class="surface-2 rounded-md p-2.5 space-y-2">
+            <div class="flex items-center justify-between gap-1">
+              <span class="font-mono-code text-[11px] text-sky-400 font-medium">${t.id}</span>
+              ${badge}
+            </div>
+            <div class="text-xs font-medium text-gray-100 leading-snug">${t.title}</div>
+            <div class="flex items-center justify-between text-[11px] text-gray-400">
+              <span>Role: <strong class="text-gray-200 font-mono-code">${t.owner}</strong></span>
+              <span class="font-mono-code">${used}/${max} calls</span>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              ${(t.ownedPaths || []).map((p) => `<code class="text-[10px] font-mono-code px-1.5 py-0.5 rounded surface-1 text-gray-300">${p}</code>`).join("")}
+            </div>
+            <div class="pt-1.5 border-t border-white/5 flex flex-wrap gap-1.5">
+              ${t.status !== "in_progress" && t.status !== "verified" ? `
+                <button type="button" onclick="transitionTask('${t.id}', 'in_progress')" class="btn-action px-2 py-0.5 rounded text-[10px] font-mono-code bg-sky-500/15 text-sky-300">Start</button>
+              ` : ""}
+              ${t.status !== "verified" ? `
+                <button type="button" onclick="transitionTask('${t.id}', 'verified')" class="btn-action px-2 py-0.5 rounded text-[10px] font-mono-code bg-emerald-500/15 text-emerald-300">QA PASS</button>
+              ` : ""}
+              ${t.status !== "qa_rejected" ? `
+                <button type="button" onclick="transitionTask('${t.id}', 'qa_rejected')" class="btn-action px-2 py-0.5 rounded text-[10px] font-mono-code bg-rose-500/15 text-rose-300">QA Reject</button>
+              ` : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.transitionTask = function(taskId, nextStatus) {
+      const task = state.tasks.find((t) => t.id === taskId);
+      if (!task) return;
+      task.status = nextStatus;
+      if (nextStatus === "verified") {
+        task.qaReceipt = { verdict: "PASS", summary: "Verified by qa-adversary with 0 defects" };
+      } else if (nextStatus === "qa_rejected") {
+        task.qaReceipt = { verdict: "REJECT", summary: "Rejected by qa-adversary: fix edge case and re-verify" };
+      }
+      const ts = new Date().toTimeString().slice(0, 8);
+      state.telemetryLog.unshift(`[${ts}] [board.task] Task [${taskId}] transitioned to ${nextStatus.toUpperCase()}.`);
+      saveState();
+      renderAll();
+      showToast(`Task [${taskId}] -> ${nextStatus.toUpperCase()}`);
+    };
+
+    window.resolveTourneyWinner = function(tourneyId, winningTaskId) {
+      const tr = state.tournaments.find((t) => t.id === tourneyId);
+      if (!tr) return;
+      tr.status = "resolved";
+      tr.winner = winningTaskId;
+      const ts = new Date().toTimeString().slice(0, 8);
+      state.telemetryLog.unshift(`[${ts}] [worktree.merge] Tournament [${tourneyId}] resolved -> merged winner ${winningTaskId}.`);
+      saveState();
+      renderAll();
+      showToast(`Merged tournament winner: ${winningTaskId}`);
+    };
+
+    // =========================================================================
+    // RENDER FLEET & STEERING CONSOLE
+    // =========================================================================
+    function renderFleet() {
+      const grid = document.getElementById("agentRosterGrid");
+      grid.innerHTML = DEFAULT_AGENTS.map((ag) => {
+        const assignedCount = state.tasks.filter((t) => t.owner === ag.id && t.status !== "verified").length;
+        const dotColor = ag.status === "busy" ? "bg-amber-400" : ag.status === "active" ? "bg-emerald-400" : "bg-sky-400";
+        return `
+          <div class="surface-2 rounded p-3 flex flex-col justify-between gap-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+                <span class="font-mono-code text-xs font-semibold text-gray-100">${ag.id}</span>
+              </div>
+              <span class="text-[10px] font-mono-code px-1.5 py-0.5 rounded surface-1 text-gray-400">${ag.tier}</span>
+            </div>
+            <p class="text-xs text-gray-400 leading-relaxed">${ag.desc}</p>
+            <div class="flex items-center justify-between pt-1 border-t border-white/5 text-[11px] font-mono-code">
+              <span class="text-gray-400">Active tasks: <strong class="text-gray-200">${assignedCount}</strong></span>
+              <button type="button" onclick="selectAgentForSteer('${ag.id}')" class="text-sky-400 hover:underline">Steer &rarr;</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const select = document.getElementById("dispatchAgentSelect");
+      if (!select.options.length) {
+        select.innerHTML = DEFAULT_AGENTS.map((a) => `<option value="${a.id}">${a.id} (${a.name})</option>`).join("");
+      }
+
+      const logEl = document.getElementById("dispatchLog");
+      logEl.innerHTML = state.telemetryLog.map((line) => `<div>${line}</div>`).join("");
+    }
+
+    window.selectAgentForSteer = function(agentId) {
+      document.getElementById("dispatchAgentSelect").value = agentId;
+      document.getElementById("dispatchPromptInput").focus();
+      showToast(`Selected ${agentId} for steering`);
+    };
+
+    // =========================================================================
+    // 100-POINT UI/UX JUDGE CALCULATOR & RADAR CHART
+    // =========================================================================
+    function computeAndRenderUXJudge() {
+      const vpStr = document.getElementById("uxViewport").value;
+      document.getElementById("lblViewport").textContent = vpStr;
+
+      const overflowPx = Number(document.getElementById("uxOverflowPx").value);
+      const collisions = Number(document.getElementById("uxCollisions").value);
+      const jitter = Number(document.getElementById("uxJitter").value);
+      const lowContrast = Number(document.getElementById("uxLowContrast").value);
+      const tinyTargets = Number(document.getElementById("uxTinyTargets").value);
+      const inlineHex = Number(document.getElementById("uxInlineHex").value);
+      const consoleErr = Number(document.getElementById("uxConsoleErr").value);
+
+      document.getElementById("valOverflowPx").textContent = overflowPx + "px";
+      document.getElementById("valCollisions").textContent = String(collisions);
+      document.getElementById("valJitter").textContent = String(jitter);
+      document.getElementById("valLowContrast").textContent = String(lowContrast);
+      document.getElementById("valTinyTargets").textContent = String(tinyTargets);
+      document.getElementById("valInlineHex").textContent = String(inlineHex);
+      document.getElementById("valConsoleErr").textContent = String(consoleErr);
+
+      const remediation = [];
+      let spatial = 25;
+      if (overflowPx > 2) {
+        spatial -= 15;
+        remediation.push(`Eliminate horizontal page overflow (${overflowPx}px wider than ${vpStr} viewport).`);
+      }
+      spatial = Math.max(0, spatial);
+
+      let alignment = 20;
+      if (collisions > 0) {
+        alignment -= Math.min(14, collisions * 7);
+        remediation.push(`Resolve ${collisions} sibling bounding-box overlap collision(s).`);
+      }
+      if (jitter > 0) {
+        alignment -= Math.min(8, jitter * 2);
+        remediation.push(`Align ${jitter} sibling row element(s) with 1px–3.5px vertical baseline jitter.`);
+      }
+      alignment = Math.max(0, alignment);
+
+      let typography = 20;
+      if (lowContrast > 0) {
+        typography -= Math.min(14, lowContrast * 4);
+        remediation.push(`Increase foreground/background contrast on ${lowContrast} text node(s) to meet WCAG AA (>= 4.5:1).`);
+      }
+      typography = Math.max(0, typography);
+
+      let interactive = 15;
+      if (tinyTargets > 0) {
+        interactive -= Math.min(9, tinyTargets * 3);
+        remediation.push(`Enlarge ${tinyTargets} interactive control(s) smaller than 24x24px minimum target size.`);
+      }
+      interactive = Math.max(0, interactive);
+
+      let tokens = 10;
+      if (inlineHex > 0) {
+        tokens -= Math.min(5, inlineHex);
+        remediation.push(`Replace ${inlineHex} hardcoded inline hex style(s) with semantic CSS variables.`);
+      }
+      tokens = Math.max(0, tokens);
+
+      let runtime = 10;
+      if (consoleErr > 0) {
+        runtime -= Math.min(10, consoleErr * 6);
+        remediation.push(`Fix ${consoleErr} uncaught browser console/network error(s).`);
+      }
+      runtime = Math.max(0, runtime);
+
+      const total = spatial + alignment + typography + interactive + tokens + runtime;
+      const grade = total >= 95 ? "S" : total >= 85 ? "A" : total >= 75 ? "B" : total >= 60 ? "C" : "F";
+      const passed = total >= 85 && overflowPx <= 2 && collisions === 0 && consoleErr === 0;
+
+      document.getElementById("kpiUxScore").textContent = total + " / 100";
+      document.getElementById("kpiUxGrade").textContent = "Grade " + grade;
+
+      const badge = document.getElementById("uxVerdictBadge");
+      if (passed) {
+        badge.className = "px-3 py-1 rounded-md text-xs font-mono-code font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40";
+        badge.textContent = `SCORE: ${total}/100 (GRADE ${grade}) · QA PASS`;
+      } else {
+        badge.className = "px-3 py-1 rounded-md text-xs font-mono-code font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/40";
+        badge.textContent = `SCORE: ${total}/100 (GRADE ${grade}) · QA REJECT (<85 or blocker)`;
+      }
+
+      const axes = [
+        { label: "Spatial & Viewport Integrity", score: spatial, max: 25 },
+        { label: "Alignment & Grid Harmony", score: alignment, max: 20 },
+        { label: "Typography & WCAG Contrast", score: typography, max: 20 },
+        { label: "Interactive Completeness", score: interactive, max: 15 },
+        { label: "Design Token Discipline", score: tokens, max: 10 },
+        { label: "Runtime Console/Net Health", score: runtime, max: 10 }
+      ];
+
+      document.getElementById("uxAxisBreakdown").innerHTML = axes.map((a) => {
+        const pct = Math.round((a.score / a.max) * 100);
+        const barColor = pct >= 85 ? "bg-emerald-400" : pct >= 65 ? "bg-amber-400" : "bg-rose-500";
+        return `
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-300">${a.label}</span>
+              <span class="font-mono-code text-gray-100">${a.score} / ${a.max}</span>
+            </div>
+            <div class="w-full h-1.5 rounded bg-white/10 overflow-hidden">
+              <div class="${barColor} h-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const remEl = document.getElementById("uxRemediationList");
+      if (remediation.length === 0) {
+        remEl.innerHTML = `<li class="text-emerald-300">Zero visual or geometric defects detected. Ready for QA PASS receipt.</li>`;
+      } else {
+        remEl.innerHTML = remediation.map((r) => `<li>${r}</li>`).join("");
+      }
+
+      const pctData = axes.map((a) => Math.round((a.score / a.max) * 100));
+      const ctx = document.getElementById("uxRadarChart");
+      if (typeof Chart !== "undefined" && ctx) {
+        if (uxChartInstance) {
+          uxChartInstance.data.datasets[0].data = pctData;
+          uxChartInstance.update();
+        } else {
+          uxChartInstance = new Chart(ctx, {
+            type: "radar",
+            data: {
+              labels: ["Spatial (25)", "Alignment (20)", "Typography (20)", "Interactive (15)", "Tokens (10)", "Runtime (10)"],
+              datasets: [{
+                label: "Axis Score (%)",
+                data: pctData,
+                backgroundColor: "rgba(56, 189, 248, 0.18)",
+                borderColor: "#38BDF8",
+                pointBackgroundColor: "#10B981",
+                borderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                r: {
+                  min: 0,
+                  max: 100,
+                  ticks: { display: false },
+                  grid: { color: "rgba(255,255,255,0.08)" },
+                  angleLines: { color: "rgba(255,255,255,0.08)" },
+                  pointLabels: { color: "#9CA3AF", font: { size: 10, family: "JetBrains Mono" } }
+                }
+              },
+              plugins: { legend: { display: false } }
+            }
+          });
+        }
+      }
+    }
+
+    // =========================================================================
+    // EPISTEMIC SOURCE CACHE & SOCRATIC /GRILL
+    // =========================================================================
+    function renderEpistemic() {
+      const listEl = document.getElementById("epistemicSourcesList");
+      listEl.innerHTML = state.epistemicSources.map((s) => {
+        const badgeClass = s.licenseCategory === "permissive"
+          ? "bg-emerald-500/15 text-emerald-300"
+          : s.licenseCategory === "copyleft-contaminating"
+            ? "bg-rose-500/15 text-rose-300"
+            : "bg-amber-500/15 text-amber-300";
+        return `
+          <div class="surface-2 rounded p-2.5 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-mono-code text-xs text-sky-400 font-semibold">[${s.shortHash}] ${s.title}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono-code ${badgeClass}">${s.spdxLicense} · ${s.licenseCategory}</span>
+            </div>
+            <p class="text-xs text-gray-300 font-mono-code">"${s.content}"</p>
+          </div>
+        `;
+      }).join("");
+
+      const claimInput = document.getElementById("claimMarkdownInput");
+      if (!claimInput.value.trim() && state.epistemicSources.length > 0) {
+        const first = state.epistemicSources[0];
+        claimInput.value = `OpenCode V2 guarantees crash recovery [VERIFIED: ${first.shortHash} | "separates prompt admission from execution fibers"].`;
+      }
+    }
+
+    function verifyClaimsNow() {
+      const text = document.getElementById("claimMarkdownInput").value;
+      const re = /\[VERIFIED:\s*([a-fA-F0-9]{6,64})(?:\s*\|\s*"([^"]+)")?\]/g;
+      let match;
+      let total = 0;
+      let passed = 0;
+      const errors = [];
+      while ((match = re.exec(text)) !== null) {
+        total++;
+        const hash = match[1].toLowerCase();
+        const quote = match[2] || "";
+        const src = state.epistemicSources.find((s) => s.shortHash.toLowerCase() === hash);
+        if (!src) {
+          errors.push(`Unknown hash [${hash}] not found in .opencode/epistemic/index.json`);
+        } else if (quote && !src.content.includes(quote)) {
+          errors.push(`Quote "${quote}" not found verbatim in source [${src.shortHash}]`);
+        } else {
+          passed++;
+        }
+      }
+      const resEl = document.getElementById("claimVerifyResult");
+      if (total === 0) {
+        resEl.innerHTML = `<span class="text-amber-300">No [VERIFIED: &lt;hash&gt; | "quote"] tags found in input text.</span>`;
+      } else if (errors.length === 0) {
+        resEl.innerHTML = `<span class="text-emerald-300">PASS: ${passed}/${total} epistemic claim(s) cryptographically verified against SHA-256 cache.</span>`;
+      } else {
+        resEl.innerHTML = `<div class="text-rose-300 space-y-1"><div>FAIL (${passed}/${total} verified):</div>${errors.map((e) => `<div>• ${e}</div>`).join("")}</div>`;
+      }
+    }
+
+    function generateGrillNow() {
+      const topic = document.getElementById("grillSpecInput").value.trim() || "Workspace Specification";
+      const questions = [
+        `[State & Concurrency] What happens in "${topic}" if two subagents mutate state concurrently or a process crashes mid-write?`,
+        `[Failure & Rollback] Which I/O or network boundary in "${topic}" can time out, and what is the deterministic checkpoint rollback path?`,
+        `[Boundary Validation] What untrusted external inputs enter "${topic}", and where is the Effect/Zod schema enforced?`,
+        `[Verification Proof] What single automated command in tools.verify.run proves "${topic}" works with zero human guesswork?`,
+        `[Blast Radius] Which existing locked contracts or reverse-import dependents could break when "${topic}" lands?`
+      ];
+      document.getElementById("grillQuestionsOutput").innerHTML = questions.map((q, idx) => `
+        <div class="surface-2 rounded p-2.5 text-xs text-gray-200 flex gap-2">
+          <span class="font-mono-code text-amber-300 font-semibold">Q${idx + 1}.</span>
+          <span>${q}</span>
+        </div>
+      `).join("");
+    }
+
+    // =========================================================================
+    // DOMAIN PACKS & CLAUDE BRIDGE
+    // =========================================================================
+    function renderClaudeBridge() {
+      document.getElementById("claudeBridgeList").innerHTML = state.claudeAssets.map((a) => `
+        <div class="surface-2 rounded p-2 flex items-center justify-between">
+          <div>
+            <span class="px-1.5 py-0.5 rounded text-[10px] bg-sky-500/15 text-sky-300 mr-2">${a.kind.toUpperCase()}</span>
+            <span class="text-gray-100 font-semibold">${a.name}</span>
+          </div>
+          <span class="text-[11px] text-gray-400">${a.source}</span>
+        </div>
+      `).join("");
+    }
+
+    function runGodotInspect() {
+      const raw = document.getElementById("godotTscnInput").value;
+      const nodes = [];
+      const signals = [];
+      const nodeRe = /\[node\s+name="([^"]+)"(?:\s+type="([^"]+)")?(?:\s+parent="([^"]+)")?[^\]]*\]/g;
+      const sigRe = /\[connection\s+signal="([^"]+)"\s+from="([^"]+)"\s+to="([^"]+)"\s+method="([^"]+)"[^\]]*\]/g;
+      let m;
+      while ((m = nodeRe.exec(raw)) !== null) {
+        nodes.push({ name: m[1], type: m[2] || "Instance", parent: m[3] || "." });
+      }
+      while ((m = sigRe.exec(raw)) !== null) {
+        signals.push({ signal: m[1], from: m[2], to: m[3], method: m[4] });
+      }
+      document.getElementById("godotInspectOutput").textContent = JSON.stringify({ nodeCount: nodes.length, nodes, signals }, null, 2);
+    }
+
+    function runGdevConfig() {
+      const endpointUrl = document.getElementById("gdevEndpointInput").value.trim();
+      const modelId = document.getElementById("gdevModelInput").value.trim();
+      const cfg = {
+        provider: "gdevelop-unlocked-bridge",
+        endpointUrl,
+        modelId,
+        enableDebugTelemetry: true,
+        configPath: ".opencode/gdevelop-unlocked.json"
+      };
+      document.getElementById("gdevConfigOutput").textContent = JSON.stringify(cfg, null, 2);
+      showToast("Generated GDevelop-Unlocked local AI endpoint config");
+    }
+
+    function runBinaryInspect() {
+      const sample = document.getElementById("reSampleInput").value;
+      const format = sample.includes("ELF") ? "ELF (Executable & Linkable Format)" : sample.startsWith("MZ") ? "PE/COFF" : "RAW_BINARY";
+      const urls = sample.match(/https?:\/\/[^\s.]+(?:\.[^\s.]+)+/g) || [];
+      const apis = sample.match(/\b(?:VirtualAlloc|LoadLibrary|ptrace|dlopen|AES_256_GCM)\b/g) || [];
+      const report = {
+        format,
+        sha256: simpleHash(sample) + "9e4102b8c7d1",
+        entropyBitsPerByte: 6.412,
+        suspiciousIndicators: [...urls, ...apis]
+      };
+      document.getElementById("reInspectOutput").textContent = JSON.stringify(report, null, 2);
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS & INITIALIZATION
+    // =========================================================================
+    window.addEventListener("DOMContentLoaded", () => {
+      // Tab switching
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const target = btn.getAttribute("data-tab");
+          ["kanban", "fleet", "uxjudge", "epistemic", "packs", "selfheal"].forEach((id) => {
+            const sec = document.getElementById("view-" + id);
+            if (id === target) sec.classList.remove("hidden");
+            else sec.classList.add("hidden");
+          });
+          if (target === "uxjudge") computeAndRenderUXJudge();
+        });
+      });
+
+      // Filters
+      document.getElementById("roleFilter").addEventListener("change", renderAll);
+      document.getElementById("taskSearch").addEventListener("input", renderAll);
+
+      // Modals
+      const modalTask = document.getElementById("modalTask");
+      document.getElementById("btnOpenTaskModal").addEventListener("click", () => modalTask.classList.remove("hidden"));
+      document.getElementById("btnCloseTaskModal").addEventListener("click", () => modalTask.classList.add("hidden"));
+      document.getElementById("btnCancelTaskModal").addEventListener("click", () => modalTask.classList.add("hidden"));
+      document.getElementById("btnSaveTaskModal").addEventListener("click", () => {
+        const id = document.getElementById("newTaskId").value.trim() || ("task-" + Math.random().toString(36).slice(2, 6));
+        const title = document.getElementById("newTaskTitle").value.trim() || "New Engineering Milestone";
+        const owner = document.getElementById("newTaskOwner").value;
+        const maxToolCalls = Number(document.getElementById("newTaskBudget").value) || 25;
+        const ownedPaths = document.getElementById("newTaskPaths").value.split(",").map((s) => s.trim()).filter(Boolean);
+        state.tasks.push({
+          id,
+          title,
+          owner,
+          ownedPaths: ownedPaths.length ? ownedPaths : ["src/**"],
+          status: "pending",
+          worktree: "",
+          budget: { maxToolCalls, usedCalls: 0 },
+          qaReceipt: null
+        });
+        saveState();
+        renderAll();
+        modalTask.classList.add("hidden");
+        showToast("Created task [" + id + "]");
+      });
+
+      const modalContract = document.getElementById("modalContract");
+      document.getElementById("btnOpenContractModal").addEventListener("click", () => modalContract.classList.remove("hidden"));
+      document.getElementById("btnCloseContractModal").addEventListener("click", () => modalContract.classList.add("hidden"));
+      document.getElementById("btnCancelContractModal").addEventListener("click", () => modalContract.classList.add("hidden"));
+      document.getElementById("btnSaveContractModal").addEventListener("click", () => {
+        const id = document.getElementById("newContractId").value.trim() || ("contract-" + Math.random().toString(36).slice(2, 6));
+        const title = document.getElementById("newContractTitle").value.trim() || "Architectural Schema Lock";
+        const files = document.getElementById("newContractFiles").value.split(",").map((s) => s.trim()).filter(Boolean);
+        const invariants = document.getElementById("newContractInvariants").value.split(";").map((s) => s.trim()).filter(Boolean);
+        state.contracts.push({ id, title, files, invariants });
+        saveState();
+        renderAll();
+        modalContract.classList.add("hidden");
+        showToast("Locked contract [" + id + "]");
+      });
+
+      // Spawn Best-of-2 Tournament
+      document.getElementById("btnSpawnTournament").addEventListener("click", () => {
+        const tid = "tourney-" + Math.random().toString(36).slice(2, 6);
+        state.tournaments.push({
+          id: tid,
+          title: "Parallel Worktree Optimization Tournament",
+          role: "staff-backend",
+          status: "active",
+          candidates: [
+            { label: "candidate-a", taskId: tid + "-a", worktree: ".worktrees/" + tid + "-a", score: 91 },
+            { label: "candidate-b", taskId: tid + "-b", worktree: ".worktrees/" + tid + "-b", score: 86 }
+          ],
+          winner: null
+        });
+        saveState();
+        renderAll();
+        showToast("Provisioned 2 Git worktrees for tournament [" + tid + "]");
+      });
+
+      // Reset Demo
+      document.getElementById("btnResetDemo").addEventListener("click", () => {
+        state = createInitialState();
+        saveState();
+        renderAll();
+        computeAndRenderUXJudge();
+        showToast("Workspace state reset to v1.0.0 defaults");
+      });
+
+      // Dispatch Steering Console
+      document.getElementById("btnSendDispatch").addEventListener("click", () => {
+        const agent = document.getElementById("dispatchAgentSelect").value;
+        const promptEl = document.getElementById("dispatchPromptInput");
+        const text = promptEl.value.trim();
+        if (!text) {
+          showToast("Enter a steering prompt first");
+          return;
+        }
+        const ts = new Date().toTimeString().slice(0, 8);
+        state.telemetryLog.unshift(`[${ts}] [steer -> ${agent}] "${text}"`);
+        promptEl.value = "";
+        saveState();
+        renderFleet();
+        showToast("Dispatched steering prompt to " + agent);
+      });
+
+      document.getElementById("btnClearLog").addEventListener("click", () => {
+        state.telemetryLog = [];
+        saveState();
+        renderFleet();
+      });
+
+      // UX Judge sliders & presets
+      ["uxViewport", "uxOverflowPx", "uxCollisions", "uxJitter", "uxLowContrast", "uxTinyTargets", "uxInlineHex", "uxConsoleErr"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", computeAndRenderUXJudge);
+      });
+
+      document.querySelectorAll(".ux-preset-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const preset = btn.getAttribute("data-uxpreset");
+          if (preset === "clean") {
+            document.getElementById("uxOverflowPx").value = "0";
+            document.getElementById("uxCollisions").value = "0";
+            document.getElementById("uxJitter").value = "0";
+            document.getElementById("uxLowContrast").value = "0";
+            document.getElementById("uxTinyTargets").value = "0";
+            document.getElementById("uxInlineHex").value = "0";
+            document.getElementById("uxConsoleErr").value = "0";
+          } else {
+            document.getElementById("uxOverflowPx").value = "38";
+            document.getElementById("uxCollisions").value = "2";
+            document.getElementById("uxJitter").value = "4";
+            document.getElementById("uxLowContrast").value = "3";
+            document.getElementById("uxTinyTargets").value = "3";
+            document.getElementById("uxInlineHex").value = "6";
+            document.getElementById("uxConsoleErr").value = "1";
+          }
+          computeAndRenderUXJudge();
+        });
+      });
+
+      document.getElementById("btnCopyAuditScript").addEventListener("click", () => {
+        const snippet = "const metrics = await tools.browser.evaluate({ tabID, script: (await tools.ui.get_ux_scorecard_script({})).script }); await tools.ui.score_ux(metrics);";
+        const ta = document.createElement("textarea");
+        ta.value = snippet;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta);
+        showToast("Copied Code Mode UX Scorecard snippet to clipboard");
+      });
+
+      // Epistemic cache & Grill
+      document.getElementById("btnAddEpistemic").addEventListener("click", () => {
+        const title = document.getElementById("epiTitle").value.trim();
+        const spdxLicense = document.getElementById("epiLicense").value;
+        const content = document.getElementById("epiContent").value.trim();
+        if (!title || !content) {
+          showToast("Provide both a source title and excerpt content");
+          return;
+        }
+        const shortHash = simpleHash(content);
+        const licenseCategory = (spdxLicense === "MIT" || spdxLicense === "Apache-2.0")
+          ? "permissive"
+          : spdxLicense.startsWith("AGPL")
+            ? "copyleft-contaminating"
+            : "weak-copyleft";
+        state.epistemicSources.unshift({ shortHash, title, spdxLicense, licenseCategory, content });
+        document.getElementById("epiTitle").value = "";
+        document.getElementById("epiContent").value = "";
+        saveState();
+        renderAll();
+        showToast("Cached epistemic source [" + shortHash + "]");
+      });
+
+      document.getElementById("btnRunClaimVerify").addEventListener("click", verifyClaimsNow);
+      document.getElementById("btnRunGrill").addEventListener("click", generateGrillNow);
+
+      // Domain Packs
+      document.getElementById("btnInspectGodot").addEventListener("click", runGodotInspect);
+      document.getElementById("btnGenerateGdevConfig").addEventListener("click", runGdevConfig);
+      document.getElementById("btnInspectBinary").addEventListener("click", runBinaryInspect);
+
+      // v1.1 Self-Healing & AST Workbench Handlers
+      const runAstDemo = () => {
+        const pat = document.getElementById("astPatternInput").value.trim();
+        const rep = document.getElementById("astReplaceInput").value.trim();
+        const code = document.getElementById("astSampleCode").value;
+        const escaped = pat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\$([A-Z][A-Z0-9_]*)/g, "(?<$1>[^,;\\n]+?)");
+        const re = new RegExp(escaped, "g");
+        let hits = 0;
+        const rewritten = code.replace(re, (...args) => {
+          hits++;
+          const groups = args[args.length - 1] && typeof args[args.length - 1] === "object" ? args[args.length - 1] : {};
+          return rep.replace(/\$([A-Z][A-Z0-9_]*)/g, (_m, v) => groups[v] ?? ("$" + v));
+        });
+        document.getElementById("astRewriteOutput").textContent = JSON.stringify({ checkpointId: "chk-ast-v110", totalReplacements: hits, preview: rewritten }, null, 2);
+      };
+      const runFaultDemo = () => {
+        const trace = document.getElementById("faultTraceInput").value;
+        const re = /\(([^():]+):(\d+):(\d+)\)/g;
+        const frames = [];
+        let m;
+        while ((m = re.exec(trace)) !== null) {
+          frames.push({
+            file: m[1],
+            line: Number(m[2]),
+            hashAnchoredSnippet: (Number(m[2]) - 1) + "#4a: const latestReceipt = task.qaReceipts[task.qaReceipts.length - 1];\n" + m[2] + "#f1: if (task.status === 'verified' && latestReceipt.verdict === 'PASS') {"
+          });
+        }
+        document.getElementById("faultLocalizerOutput").textContent = JSON.stringify({ hydratedFrames: frames.length, frames }, null, 2);
+      };
+      const runCovDemo = () => {
+        const lcov = document.getElementById("lcovSampleInput").value;
+        const da = lcov.match(/DA:\d+,\d+/g) || [];
+        const covered = da.filter((x) => !x.endsWith(",0")).length;
+        const pct = da.length ? Math.round((covered / da.length) * 100) : 100;
+        document.getElementById("diffCoverageOutput").textContent = JSON.stringify({
+          totalChangedLines: da.length,
+          coveredChangedLines: covered,
+          coveragePercent: pct,
+          tautologyWarnings: [],
+          passed: pct >= 80
+        }, null, 2);
+      };
+      document.getElementById("btnRunAstRewrite").addEventListener("click", runAstDemo);
+      document.getElementById("btnRunFaultLocalizer").addEventListener("click", runFaultDemo);
+      document.getElementById("btnRunDiffCoverage").addEventListener("click", runCovDemo);
+      document.getElementById("btnRunPkgInspector").addEventListener("click", () => {
+        document.getElementById("v110CombinedOutput").textContent = JSON.stringify({
+          pkgName: "effect",
+          version: "4.0.1",
+          spdxLicense: "MIT",
+          epistemicShortHash: "8f02b9c41d7e",
+          exportedDeclarations: ["export declare const LayerMap: ...", "export declare const ServiceMap: ..."]
+        }, null, 2);
+        showToast("Cached local node_modules/effect .d.ts signatures");
+      });
+      document.getElementById("btnRunSkillGraduate").addEventListener("click", () => {
+        document.getElementById("v110CombinedOutput").textContent = JSON.stringify({
+          skillId: "swarmos-learned-invariants",
+          skillPath: ".opencode/skills/swarmos-learned-invariants/SKILL.md",
+          graduatedLessonCount: 4
+        }, null, 2);
+        showToast("Graduated episodic lessons to SKILL.md");
+      });
+      document.getElementById("btnRunWorktreeSandbox").addEventListener("click", () => {
+        document.getElementById("v110CombinedOutput").textContent = JSON.stringify({
+          sandboxPath: ".worktrees/_integration",
+          integratedTasks: state.tasks.map((t) => t.id),
+          conflicts: [],
+          readyToFastForward: true
+        }, null, 2);
+        showToast("Speculative integration passed with 0 conflicts");
+      });
+      runAstDemo();
+      runFaultDemo();
+      runCovDemo();
+      document.getElementById("btnRunPkgInspector").click();
+
+      // Initial renders
+      renderAll();
+      computeAndRenderUXJudge();
+      verifyClaimsNow();
+      generateGrillNow();
+      runGodotInspect();
+      runGdevConfig();
+      runBinaryInspect();
+    });
+  </script>
+</body>
+</html>

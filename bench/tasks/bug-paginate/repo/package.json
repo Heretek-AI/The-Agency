@@ -1,0 +1,1 @@
+{ "name": "bench-paginate", "type": "module", "scripts": { "test": "bun test" } }

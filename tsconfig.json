@@ -2,23 +2,22 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["bun", "node"],
     "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noEmit": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx",
-    "allowImportingTsExtensions": true,
-    "typeRoots": ["./node_modules/@types", "./dispatcher/web/node_modules/@types"],
-    "types": ["bun", "react", "react-dom"]
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": [
-    "dispatcher/**/*.ts",
-    "dispatcher/**/*.tsx",
-    "verifier/**/*.ts",
-    "verifier/**/*.tsx",
-    "scripts/**/*.ts",
-    "scripts/**/*.tsx"
-  ],
-  "exclude": ["review", "node_modules", "workspace", "state", "fixtures"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "review", "test"]
 }

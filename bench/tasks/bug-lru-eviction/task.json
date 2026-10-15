@@ -1,0 +1,8 @@
+{
+  "id": "bug-lru-eviction",
+  "category": "bug",
+  "title": "Session cache evicts the session that was just used",
+  "prompt": "Our session service keeps logging users out: a user who is actively making requests gets evicted from the session cache while idle sessions stay. Find the root cause and fix it. Keep the public API of src/session-service.ts unchanged.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 600
+}

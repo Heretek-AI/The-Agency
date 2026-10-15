@@ -1,15 +1,45 @@
-# The Agency Ingo: see shared context section 8.
-review/
-.env
-.env.*
-!.env.example
-secrets/
-state/
-workspace/
-packs/installed/
+# Dependencies
 node_modules/
+
+# Build artifacts
 dist/
-build/
+
+# Exclude embedded review source tree (545MB OpenCode V2 core audit)
+review/
+
+# Local OpenCode runtime state & board
+.opencode/
+tool-output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun.lockb.bak
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Coverage / Test
 coverage/
-dispatcher/web/test-results/
-dispatcher/web/test/e2e-report/
+.turbo/
+
+# Benchmark output
+bench/results/

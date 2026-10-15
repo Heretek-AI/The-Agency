@@ -1,0 +1,8 @@
+{
+  "id": "bug-async-batch",
+  "category": "bug",
+  "title": "Batch import reports success before records are saved",
+  "prompt": "importBatch() in src/importer.ts returns { saved: 0 } and the caller sees an empty store, even though every record is valid. Records that fail validation should be reported in `failed` with their index, and saving must keep the original record order. Fix it.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 600
+}

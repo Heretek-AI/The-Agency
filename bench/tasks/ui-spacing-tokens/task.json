@@ -1,0 +1,8 @@
+{
+  "id": "ui-spacing-tokens",
+  "category": "ui",
+  "title": "Replace hard-coded spacing with design tokens",
+  "prompt": "Our components use ad-hoc pixel paddings, margins and gaps (p-3 next to p-5 style drift). Replace every padding, margin and gap value in styles/components/*.css with the spacing tokens defined in styles/tokens.css (var(--space-1) ... var(--space-6)), picking the nearest token for each value. Do not change tokens.css. Values of 0 may stay 0.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 600
+}

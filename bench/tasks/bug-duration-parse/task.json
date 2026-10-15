@@ -1,0 +1,8 @@
+{
+  "id": "bug-duration-parse",
+  "category": "bug",
+  "title": "Duration parser mis-reads minutes and seconds",
+  "prompt": "parseDuration in src/duration.ts should turn strings like \"1h30m\", \"45s\", \"2h\", \"1h5m10s\" and \"90m\" into milliseconds. Right now \"45s\" and \"90m\" come back wrong and garbage like \"5x\" or \"\" is silently accepted. Fix it so valid inputs work and invalid input throws a RangeError.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 600
+}

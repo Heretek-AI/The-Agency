@@ -1,0 +1,8 @@
+{
+  "id": "py-median-stats",
+  "category": "bug",
+  "title": "Python stats helpers return wrong medians and mutate input",
+  "prompt": "stats/summary.py: median() is wrong for even-length lists and the caller's list comes back reordered after calling summarize(). Fix both bugs. summarize() must return the same keys as today. Use only the standard library.",
+  "verify": "python3 -m unittest discover -s __hidden__ -t .",
+  "timeoutSec": 600
+}

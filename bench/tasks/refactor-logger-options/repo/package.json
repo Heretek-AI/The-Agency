@@ -1,0 +1,1 @@
+{ "name": "bench-logger", "type": "module", "scripts": { "test": "bun test" } }

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "plugins": [
+    "@heretek-ai/swarmos"
+    // Or if using the standalone single-file bundle:
+    // "~/.config/opencode/plugins/swarmos-plugin.ts"
+  ],
+
+  "experimental": {
+    // Unlocks the 4-tier organizational hierarchy:
+    // Director [L0] -> Architect & Manager [L1] -> Staff Backend, Staff UI, QA Adversary [L2] -> Explore [L3]
+    "subagent_depth": 4,
+    "batch_tool": true
+  },
+
+  "compaction": {
+    "auto": true,
+    // Expanded retention limits for high-context Muse 1.3 models ($10 / 10B tokens)
+    "keep": 48000,
+    "buffer": 24000
+  }
+}

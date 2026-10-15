@@ -1,0 +1,8 @@
+{
+  "id": "feature-env-parser",
+  "category": "constraints",
+  "title": "Implement a .env parser with strict rules",
+  "prompt": "Implement parseEnv(text) in src/env.ts returning Record<string, string>. Rules: blank lines and lines starting with # are ignored; an optional leading `export ` is allowed; keys match [A-Za-z_][A-Za-z0-9_]*; values may be unquoted (trimmed, with an inline ` #comment` removed), single-quoted (taken literally) or double-quoted (supporting \\n, \\t, \\\" and \\\\ escapes); duplicate keys: last one wins; any other line throws SyntaxError whose message contains `line N` (1-based). Then make src/config.ts use parseEnv instead of its naive split.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 900
+}

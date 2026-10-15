@@ -1,0 +1,8 @@
+{
+  "id": "bug-paginate",
+  "category": "bug",
+  "title": "Pagination repeats an item across pages",
+  "prompt": "Users report that page 2 of the product list starts with the last product from page 1, and the last page sometimes comes back empty. Fix the pagination so pages are 1-indexed, never overlap, and the reported totalPages is correct. Do not change the function signatures in src/paginate.ts.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 600
+}

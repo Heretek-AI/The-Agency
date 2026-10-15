@@ -1,0 +1,1 @@
+{ "name": "bench-env", "type": "module", "scripts": { "test": "bun test" } }

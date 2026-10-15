@@ -1,0 +1,10 @@
+.panel {
+  padding: 22px;
+  margin-bottom: 30px;
+  display: flex;
+  gap: 13px;
+}
+
+.panel-header {
+  padding: 0 0 11px;
+}

@@ -1,14 +1,23 @@
-name: ci
+name: CI
+
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+
 jobs:
-  check:
+  test:
+    name: Typecheck & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.4.2"
-      - run: bun install --frozen-lockfile
-      - run: make check
+          bun-version: latest
+
+      - run: bun install
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run build

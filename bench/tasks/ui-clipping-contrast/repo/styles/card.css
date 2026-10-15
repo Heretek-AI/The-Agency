@@ -1,0 +1,25 @@
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.card-title {
+  font-size: 22px;
+  line-height: 1;
+  height: 22px;
+  overflow: hidden;
+  color: #1a1a1a;
+}
+
+.card-meta {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #b8b8b8;
+}
+
+.card-body {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #444444;
+}

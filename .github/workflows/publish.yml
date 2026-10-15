@@ -1,0 +1,45 @@
+name: Publish Package to npm
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # Required for npm Trusted Publishing with OIDC
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run automated test suite
+        run: bun test
+
+      - name: Build package & standalone bundle
+        run: bun run build
+
+      - name: Setup Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Upgrade npm to latest (required for OIDC trusted publishing)
+        run: npm install -g npm@latest
+
+      - name: Publish to npm with OIDC Trusted Publishing & Provenance
+        run: npm publish --provenance --access public

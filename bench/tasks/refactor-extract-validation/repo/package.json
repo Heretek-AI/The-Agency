@@ -1,0 +1,1 @@
+{ "name": "bench-extract", "type": "module", "scripts": { "test": "bun test" } }

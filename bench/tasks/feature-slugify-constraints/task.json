@@ -1,0 +1,8 @@
+{
+  "id": "feature-slugify-constraints",
+  "category": "constraints",
+  "title": "Implement slugify with eight constraints",
+  "prompt": "Implement slugify(input, options?) in src/slugify.ts. Requirements, all mandatory: (1) lowercase output; (2) strip accents (\"Crème Brûlée\" -> \"creme-brulee\"); (3) any run of characters that are not a-z or 0-9 becomes a single separator; (4) no leading or trailing separator; (5) options.separator overrides the default \"-\"; (6) options.maxLength truncates the result without leaving a trailing separator and without cutting a word in half when the word boundary is within the limit; (7) \"&\" becomes the word \"and\"; (8) an input that produces an empty slug throws TypeError(\"empty slug\"). Do not add dependencies.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 900
+}

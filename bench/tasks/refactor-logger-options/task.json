@@ -1,0 +1,8 @@
+{
+  "id": "refactor-logger-options",
+  "category": "refactor",
+  "title": "Change createLogger to take an options object with a level",
+  "prompt": "Change createLogger(name) in src/logger.ts to createLogger({ name, level }) where level is \"debug\" | \"info\" | \"warn\" | \"error\" (default \"info\"). A logger must drop messages below its level. Update every caller in src/: the db and http loggers should use level \"warn\", the job logger \"debug\". Keep the log line format exactly as it is today.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 900
+}

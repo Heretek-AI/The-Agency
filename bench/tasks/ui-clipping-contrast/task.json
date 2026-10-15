@@ -1,0 +1,8 @@
+{
+  "id": "ui-clipping-contrast",
+  "category": "ui",
+  "title": "Card titles clip descenders and muted text is unreadable",
+  "prompt": "On the product cards (styles/card.css) the titles cut off the bottom of letters like g, y and p, and the muted metadata text is very hard to read on the white card. Fix both in styles/card.css. Text colours must reach WCAG AA (4.5:1) against the card background. Do not change any font-size, the grid in styles/layout.css, or the card background colour.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 600
+}

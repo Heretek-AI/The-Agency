@@ -1,0 +1,8 @@
+{
+  "id": "refactor-extract-validation",
+  "category": "refactor",
+  "title": "Extract validation helpers into their own module",
+  "prompt": "src/handlers.ts mixes HTTP handlers with input validation. Move isEmail, isStrongPassword and validateSignup into a new src/validation.ts (exported from there), import them in src/handlers.ts, and make src/admin.ts import them from src/validation.ts too instead of duplicating isEmail. Behaviour must not change. src/handlers.ts must no longer define any of those functions.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 900
+}

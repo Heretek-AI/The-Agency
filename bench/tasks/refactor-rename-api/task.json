@@ -1,0 +1,8 @@
+{
+  "id": "refactor-rename-api",
+  "category": "refactor",
+  "title": "Rename getUserById to findUser across the codebase",
+  "prompt": "Rename the function getUserById (src/users/repo.ts) to findUser everywhere in src/. findUser must return undefined instead of throwing when the user does not exist, and every caller must keep its current behaviour (callers that relied on the throw should now throw their own Error with the same message). Keep a deprecated getUserById export in src/users/repo.ts that delegates to findUser and still throws, for external consumers. No file other than src/users/repo.ts may reference getUserById.",
+  "verify": "bun test ./__hidden__",
+  "timeoutSec": 900
+}

@@ -1,24 +1,88 @@
 {
-  "name": "the-agency",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@heretek-ai/swarmos",
+  "version": "1.1.0",
+  "description": "SwarmOS v1.1.0 \u2014 The Unified Heretek Autonomous Engineering Platform with Self-Healing Fault Localization, AST Codemods, Diff-Coverage Gates, and Live Bidirectional WebUI",
   "type": "module",
-  "workspaces": [
-    "dispatcher",
-    "dispatcher/web",
-    "verifier"
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./plugin": {
+      "types": "./dist/index.d.ts",
+      "import": "./swarmos-plugin.ts",
+      "default": "./swarmos-plugin.ts"
+    },
+    "./standalone": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/swarmos.standalone.js",
+      "default": "./dist/swarmos.standalone.js"
+    }
+  },
+  "files": [
+    "dist",
+    "swarmos-plugin.ts",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "check": "make check"
+    "build": "bun run build:bundle && bun run build:types",
+    "build:bundle": "bun build src/index.ts --target bun --outfile dist/index.js && bun build src/index.ts --target bun --outfile dist/swarmos.standalone.js && cp dist/swarmos.standalone.js ./swarmos-plugin.ts",
+    "build:types": "tsc --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.bench.json",
+    "test": "bun test test/",
+    "bench": "bun bench/run.ts",
+    "bench:check": "bun bench/run.ts --driver reference && bun bench/run.ts --driver noop",
+    "contract:check": "bun scripts/check-host-contract.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Heretek-AI/SwarmOS.git"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "swarmos",
+    "multi-agent",
+    "autonomous-company",
+    "dom-geometry",
+    "ui-craft",
+    "muse",
+    "heretek"
+  ],
+  "author": "Heretek AI",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Heretek-AI/SwarmOS/issues"
+  },
+  "homepage": "https://github.com/Heretek-AI/SwarmOS#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": ">=2.0.0",
+    "effect": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opencode/plugin": {
+      "optional": true
+    },
+    "effect": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "@types/bun": "1.4.3",
-    "oxlint": "1.87.0",
-    "prettier": "3.6.2",
-    "typescript": "5.9.2"
-  },
-  "dependencies": {
-    "jsonc-parser": "3.3.1",
-    "yaml": "2.9.1"
+    "@types/bun": "^1.2.0",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
   }
 }

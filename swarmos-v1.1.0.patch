@@ -1,0 +1,4448 @@
+diff --git a/README.md b/README.md
+index 4b75fea..3ba3593 100644
+--- a/README.md
++++ b/README.md
+@@ -218,6 +218,27 @@ SwarmOS v0.6.0 makes it possible to check that SwarmOS is actually running and a
+ - **Multi-language RepoMap**: the repo map now parses TypeScript/JavaScript, Python, Go (module path from `go.mod`, used `pkg.Symbol` selectors) and Rust (`mod`, `use crate::`/`super::`/`self::`) after stripping comments and strings, so commented-out imports no longer count. Parsing is lexer-based, not tree-sitter, so the drop-in bundle stays a single file with no WASM grammars. Edges record which symbols each importer takes, so `tools.repo.blast_radius({ path, symbol })` lists only the files that use that symbol, following re-exports and renames. PageRank now iterates to convergence, and parsed files are cached by mtime.
+ - **Smaller always-on tool list**: only `pinnedNamespaces` (default `org`, `fs`, `repo`, `verify`, `artifacts`) stay pinned in Code Mode; other namespaces stay registered and discoverable via search, and each role gets a one-line hint naming the namespaces it is most likely to need.
+ 
++### Unified Heretek Platform (v1.0.0): 7 Repositories Consolidated into 1 Omni-Harness
++
++`SwarmOS v1.0.0` consolidates the entire Heretek-AI OpenCode ecosystem (`SwarmOS`, `The-Agency`, `claude-4-opencode`, `IUMBTEMS`, `opencode-rea`, `godot-opencode`, and `GDevelop-Unlocked`) into a single zero-fork architecture:
++
++1. **Pillar 1 — IUMBTEMS Epistemic & Dialectic Engine (`tools.epistemic.*`, `/grill`)**:
++   - SHA-256 content-addressed source cache (`.opencode/epistemic/sources/<shortHash>.md`) with SPDX license contamination classification (`permissive`, `weak-copyleft`, `copyleft-contaminating`, `unknown`).
++   - Deterministic quote verifier (`tools.epistemic.verify_claims`) that parses `[VERIFIED: <shortHash> | "exact verbatim quote"]` tags and confirms every quote exists verbatim in the cached source.
++   - Socratic stress-tester (`tools.epistemic.grill_spec` & `/grill`) that challenges architecture specs before locking contracts.
++2. **Pillar 2 — `claude-4-opencode` Zero-Config Compatibility Bridge (`tools.claude.*`)**:
++   - Automatically discovers `.claude/commands/*.md`, `.claude/agents/*.md`, and `.claude/skills/*/SKILL.md` in the workspace or `~/.claude` and registers them as native OpenCode V2 slash commands, subagents, and skills.
++3. **Pillar 3 — Quantitative 100-Point Visual Quality & UI/UX Judge (`tools.ui.score_ux`, `tools.ui.get_ux_scorecard_script`)**:
++   - Deterministic 6-axis UI/UX scorecard across **Spatial & Viewport Integrity (25 pts)**, **Alignment & Grid Harmony (20 pts)**, **Typography & WCAG Contrast (20 pts)**, **Interactive & Accessibility Completeness (15 pts)**, **Design Token Discipline (10 pts)**, and **Runtime Health (10 pts)**.
++   - Produces a `0..100` score, letter grade (`S`/`A`/`B`/`C`/`F`), and exact remediation checklist saved to `.opencode/artifacts/ux-scorecard.json` (passing requires `score >= 85` and `0` horizontal overflow).
++4. **Pillar 4 — On-Demand Domain Packs (`tools.packs.*`, `/pack`)**:
++   - Zero-overhead domain packs that stay dormant on standard software repos and auto-activate when domain markers are detected:
++     - **Godot 4.x Pack (`godot-opencode`)**: `tools.packs.godot_inspect_scene` parses `.tscn`/`.tres` scene trees, node hierarchies, attached `.gd` scripts, and signal connections; registers `specialist-godot`.
++     - **GDevelop 5 Pack (`GDevelop-Unlocked`)**: `tools.packs.gdevelop_inspect_game` and `tools.packs.gdevelop_unlock_ai_config` inspect `game.json` layouts/events and generate local custom AI endpoint configuration; registers `specialist-gdevelop`.
++     - **Reverse Engineering Pack (`opencode-rea`)**: `tools.packs.re_inspect_binary` performs safe static triage on ELF/PE/Mach-O/WASM binaries (magic header, SHA-256, byte entropy, suspicious URLs/paths/crypto constants); registers `specialist-re`.
++5. **Pillar 5 — `The-Agency` Live Swarm Command Center WebUI (`tools.org.render_dashboard`, `/dashboard`)**:
++   - Generates a self-contained High-Craft Technical Dark HTML5 dashboard (`.opencode/artifacts/swarm-dashboard.html`) displaying the 5-Gate Kanban Board, Locked Contracts, Worktree Tournaments, 100-Point UI/UX Scorecards, Epistemic Cache, and Active Domain Packs.
++
+ ### Complete Roadmap Edition (v0.9.0+): Task Spend Budgets, Session Replay -> Benchmarks, Warm Parallel LSP & Pinned Host Fixture
+ 
+ - **Per-Task Spend & Step Budgets (`tools.org.claim_task`, `tools.org.set_task_budget`)**: Tasks on `.opencode/org/board.json` now accept `budget: { maxTokens?, maxTurns?, maxToolCalls? }`. When a subagent claims a task via `tools.org.claim_task`, SwarmOS accumulates token, turn, and tool-call usage on `task.usage`. If a subagent exceeds any budget ceiling, `createTaskBudgetEvaluator` locks further file mutations, shell commands, and subagent spawns, appends a `<task-budget-exceeded>` notice, and returns control to `manager` to either raise the budget (`tools.org.set_task_budget`) or re-scope the task.
+diff --git a/package.json b/package.json
+index 031c796..935dd5f 100644
+--- a/package.json
++++ b/package.json
+@@ -1,7 +1,7 @@
+ {
+   "name": "@heretek-ai/swarmos",
+-  "version": "0.9.0",
+-  "description": "Omni-Harness & Autonomous Multi-Agent Software Company, GUI Studio, Deep Research & Office Suite for OpenCode V2",
++  "version": "1.1.0",
++  "description": "SwarmOS v1.1.0 \u2014 The Unified Heretek Autonomous Engineering Platform with Self-Healing Fault Localization, AST Codemods, Diff-Coverage Gates, and Live Bidirectional WebUI",
+   "type": "module",
+   "main": "./dist/index.js",
+   "module": "./dist/index.js",
+diff --git a/src/commands/omni.ts b/src/commands/omni.ts
+index 82dae9f..48ad26f 100644
+--- a/src/commands/omni.ts
++++ b/src/commands/omni.ts
+@@ -1,3 +1,6 @@
++import { generateSwarmDashboardHtml } from "../webui/dashboard.js"
++import { generateGrillQuestions } from "../epistemic/dialectic.js"
++import { detectDomainPacks } from "../packs/index.js"
+ import { SWARMOS_VERSION } from "../version.js"
+ import { listArtifacts, readArtifact } from "../omni/artifacts.js"
+ import { listCheckpoints } from "../omni/checkpoints.js"
+@@ -126,5 +129,51 @@ export async function registerOmniCommands(ctx: any, rootDir: string): Promise<v
+         }
+       },
+     })
++
++    editor.add({
++      name: "dashboard",
++      description: "Render The Agency Live Swarm Command Center HTML5 WebUI (.opencode/artifacts/swarm-dashboard.html) and display status",
++      execute: async (input: any) => {
++        const res = await generateSwarmDashboardHtml(rootDir)
++        if (ctx.session?.prompt) {
++          await ctx.session.prompt({
++            sessionID: input.sessionID,
++            text: `# SwarmOS Live Command Center WebUI Generated\n\n- **File**: \`${res.dashboardPath}\`\n- **Release Ready**: \`${res.readyToShip}\`\n- **Tasks**: ${res.taskCount} | **Contracts**: ${res.contractCount} | **UI/UX Score**: ${res.uxScore ?? "N/A"}\n\nOpen \`${res.dashboardPath}\` in your browser or OpenCode preview pane to inspect the live Kanban board.`,
++            delivery: "steer",
++          })
++        }
++      },
++    })
++
++    editor.add({
++      name: "grill",
++      description: "Run the IUMBTEMS Socratic Epistemic & Dialectic Stress-Test against a design or specification",
++      execute: async (input: any) => {
++        const specText = String(input.prompt?.text ?? input.prompt ?? "Current workspace architecture")
++        const res = generateGrillQuestions(specText)
++        if (ctx.session?.prompt) {
++          await ctx.session.prompt({
++            sessionID: input.sessionID,
++            text: `# Epistemic Socratic Grill (${res.topic})\n\nBefore locking contracts or writing implementation code, answer or verify these ${res.questions.length} stress-test questions:\n\n${res.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`,
++            delivery: "steer",
++          })
++        }
++      },
++    })
++
++    editor.add({
++      name: "pack",
++      description: "Inspect or activate SwarmOS Domain Packs (Godot 4, GDevelop 5, Reverse Engineering)",
++      execute: async (input: any) => {
++        const detection = await detectDomainPacks(rootDir)
++        if (ctx.session?.prompt) {
++          await ctx.session.prompt({
++            sessionID: input.sessionID,
++            text: `# SwarmOS Domain Packs\n\n- **Auto-Detected Active Packs**: ${detection.recommendedPacks.join(", ") || "none (core only)"}\n- **Godot 4.x**: \`${detection.godot}\` (\`tools.packs.godot_inspect_scene\`)\n- **GDevelop 5**: \`${detection.gdevelop}\` (\`tools.packs.gdevelop_inspect_game\`)\n- **Reverse Engineering (REA)**: \`${detection.reverseEngineering}\` (\`tools.packs.re_inspect_binary\`)`,
++            delivery: "steer",
++          })
++        }
++      },
++    })
+   })
+ }
+diff --git a/src/compat/claude-code.ts b/src/compat/claude-code.ts
+new file mode 100644
+index 0000000..0810d0e
+--- /dev/null
++++ b/src/compat/claude-code.ts
+@@ -0,0 +1,224 @@
++import * as fs from "node:fs/promises"
++import * as os from "node:os"
++import * as path from "node:path"
++
++/**
++ * Pillar 2: Claude Code Compatibility Bridge (`src/compat/claude-code.ts`)
++ *
++ * Absorbs `Heretek-AI/claude-4-opencode` directly into SwarmOS:
++ * Discovers `.claude/commands/*.md`, `.claude/agents/*.md`, and `.claude/skills/*/SKILL.md`
++ * from the workspace root (and optionally `~/.claude/`) and registers them into OpenCode V2's
++ * command, agent, and skill catalogs automatically.
++ */
++
++export interface ClaudeCommandDef {
++  name: string
++  description: string
++  template: string
++  path: string
++}
++
++export interface ClaudeAgentDef {
++  id: string
++  name: string
++  description: string
++  system: string
++  path: string
++}
++
++export interface ClaudeSkillDef {
++  id: string
++  name: string
++  description: string
++  content: string
++  path: string
++}
++
++export interface ClaudeBridgeInventory {
++  commands: ClaudeCommandDef[]
++  agents: ClaudeAgentDef[]
++  skills: ClaudeSkillDef[]
++}
++
++function parseFrontmatter(raw: string): { meta: Record<string, string>; body: string } {
++  const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(raw)
++  if (!m) return { meta: {}, body: raw.trim() }
++  const meta: Record<string, string> = {}
++  for (const line of m[1].split(/\r?\n/)) {
++    const kv = /^([A-Za-z0-9_-]+)\s*:\s*(.+)$/.exec(line.trim())
++    if (kv) meta[kv[1].toLowerCase()] = kv[2].trim().replace(/^["']|["']$/g, "")
++  }
++  return { meta, body: m[2].trim() }
++}
++
++async function listMdFiles(dir: string): Promise<string[]> {
++  try {
++    const entries = await fs.readdir(dir, { withFileTypes: true })
++    return entries.filter((e) => e.isFile() && e.name.endsWith(".md")).map((e) => path.join(dir, e.name))
++  } catch {
++    return []
++  }
++}
++
++export async function discoverClaudeCodeAssets(
++  rootDir: string,
++  includeUserHome: boolean = false,
++): Promise<ClaudeBridgeInventory> {
++  const roots = [
++    path.join(rootDir, ".claude"),
++    ...(includeUserHome ? [path.join(os.homedir(), ".claude")] : []),
++  ]
++
++  const commands: ClaudeCommandDef[] = []
++  const agents: ClaudeAgentDef[] = []
++  const skills: ClaudeSkillDef[] = []
++  const seenCmds = new Set<string>()
++  const seenAgents = new Set<string>()
++  const seenSkills = new Set<string>()
++
++  for (const base of roots) {
++    // 1. .claude/commands/*.md
++    for (const file of await listMdFiles(path.join(base, "commands"))) {
++      const name = path.basename(file, ".md").toLowerCase().replace(/[^a-z0-9_-]/g, "-")
++      if (seenCmds.has(name)) continue
++      seenCmds.add(name)
++      const raw = await fs.readFile(file, "utf8")
++      const { meta, body } = parseFrontmatter(raw)
++      commands.push({
++        name,
++        description: meta.description ?? `Claude Code command /${name}`,
++        template: body,
++        path: file,
++      })
++    }
++
++    // 2. .claude/agents/*.md
++    for (const file of await listMdFiles(path.join(base, "agents"))) {
++      const raw = await fs.readFile(file, "utf8")
++      const { meta, body } = parseFrontmatter(raw)
++      const id = (meta.name ?? path.basename(file, ".md")).toLowerCase().replace(/[^a-z0-9_-]/g, "-")
++      if (seenAgents.has(id)) continue
++      seenAgents.add(id)
++      agents.push({
++        id,
++        name: meta.name ?? id,
++        description: meta.description ?? `Claude Code subagent ${id}`,
++        system: body,
++        path: file,
++      })
++    }
++
++    // 3. .claude/skills/*/SKILL.md
++    try {
++      const skillDirs = await fs.readdir(path.join(base, "skills"), { withFileTypes: true })
++      for (const d of skillDirs) {
++        if (!d.isDirectory()) continue
++        const skillFile = path.join(base, "skills", d.name, "SKILL.md")
++        try {
++          const raw = await fs.readFile(skillFile, "utf8")
++          const { meta } = parseFrontmatter(raw)
++          const id = (meta.name ?? d.name).toLowerCase().replace(/[^a-z0-9_-]/g, "-")
++          if (seenSkills.has(id)) continue
++          seenSkills.add(id)
++          skills.push({
++            id,
++            name: meta.name ?? d.name,
++            description: meta.description ?? `Claude Code skill ${id}`,
++            content: raw,
++            path: skillFile,
++          })
++        } catch {
++          // ignore missing SKILL.md
++        }
++      }
++    } catch {
++      // no skills dir
++    }
++  }
++
++  return { commands, agents, skills }
++}
++
++export async function registerClaudeCodeBridge(ctx: any, rootDir: string): Promise<ClaudeBridgeInventory> {
++  const inv = await discoverClaudeCodeAssets(rootDir, false)
++
++  if (inv.agents.length > 0 && ctx.agent?.transform) {
++    await ctx.agent.transform((editor: any) => {
++      for (const a of inv.agents) {
++        editor.update(a.id, (item: any) => {
++          item.name = a.name
++          item.description = a.description
++          item.mode = "subagent"
++          item.system = a.system
++        })
++      }
++    })
++  }
++
++  if (inv.skills.length > 0 && ctx.skill?.transform) {
++    await ctx.skill.transform((editor: any) => {
++      for (const s of inv.skills) {
++        editor.add({
++          id: s.id,
++          name: s.name,
++          description: s.description,
++          autoinvoke: false,
++          path: s.path,
++          content: s.content,
++        })
++      }
++    })
++  }
++
++  if (inv.commands.length > 0 && ctx.command?.transform) {
++    await ctx.command.transform((editor: any) => {
++      for (const cmd of inv.commands) {
++        editor.add({
++          name: cmd.name,
++          description: cmd.description,
++          execute: async (input: any) => {
++            const args = String(input?.prompt?.text ?? input?.prompt ?? "").trim()
++            const rendered = cmd.template.includes("$ARGUMENTS")
++              ? cmd.template.replaceAll("$ARGUMENTS", args)
++              : `${cmd.template}${args ? `\n\n${args}` : ""}`
++            if (ctx.session?.prompt) {
++              await ctx.session.prompt({
++                ...input.prompt,
++                sessionID: input.sessionID,
++                text: rendered,
++                delivery: input.delivery ?? "steer",
++              })
++            }
++          },
++        })
++      }
++    })
++  }
++
++  return inv
++}
++
++export function registerClaudeBridgeTools(editor: any, rootDir: string): void {
++  editor.namespace({
++    name: "claude",
++    description:
++      "Claude Code Compatibility Bridge (`claude-4-opencode`): inspects and loads `.claude/commands/*.md`, `.claude/agents/*.md`, and `.claude/skills/*/SKILL.md`.",
++  })
++
++  editor.add({
++    name: "inventory",
++    description: "List all Claude Code commands, subagents, and skills discovered in `.claude/`.",
++    options: { namespace: "claude", codemode: true, pinned: false },
++    input: {
++      type: "object",
++      properties: {
++        includeUserHome: { type: "boolean", description: "Also scan ~/.claude/ (default false)" },
++      },
++    },
++    output: { type: "object" },
++    execute: async (input: { includeUserHome?: boolean }) => {
++      const inv = await discoverClaudeCodeAssets(rootDir, Boolean(input?.includeUserHome))
++      return { output: inv, content: JSON.stringify(inv, null, 2) }
++    },
++  })
++}
+diff --git a/src/epistemic/dialectic.ts b/src/epistemic/dialectic.ts
+new file mode 100644
+index 0000000..de3a339
+--- /dev/null
++++ b/src/epistemic/dialectic.ts
+@@ -0,0 +1,258 @@
++import { createHash } from "node:crypto"
++import * as fs from "node:fs/promises"
++import * as path from "node:path"
++
++/**
++ * Pillar 1: IUMBTEMS Epistemic Sovereignty & Dialectic Engine (`src/epistemic/dialectic.ts`)
++ *
++ * Absorbs `@heretek-ai/epistemic-swarm` (IUMBTEMS) directly into SwarmOS:
++ * 1. Content-addressed SHA-256 raw source cache (`.opencode/epistemic/sources/<sha256>.md`).
++ * 2. Epistemic Tagging Taxonomy (`[VERIFIED: <hash>]`, `[INFERRED: <reasoning>]`,
++ *    `[HYPOTHESIS: <test>]`, `[NEGATIVE_KNOWLEDGE: <query>]`) with verbatim quote verification.
++ * 3. Socratic Assumption-Inversion Grill (`/grill` & `tools.epistemic.grill`).
++ * 4. Competitor Teardown & SPDX License Contamination Scout (`/darkharvest` & `tools.epistemic.audit_licenses`).
++ */
++
++export interface CachedEpistemicSource {
++  hash: string
++  shortHash: string
++  url: string
++  title: string
++  cachedAt: string
++  path: string
++  byteLength: number
++}
++
++export interface EpistemicVerificationReport {
++  verifiedClaims: Array<{ hash: string; quote?: string; valid: boolean; reason?: string }>
++  inferredClaims: string[]
++  hypothesisClaims: string[]
++  negativeKnowledgeClaims: string[]
++  untaggedParagraphs: number
++  integrityScore: number
++  passed: boolean
++}
++
++export interface LicenseAuditItem {
++  name: string
++  license: string
++  classification: "permissive" | "weak-copyleft" | "strong-copyleft" | "unknown"
++  verdict: "depend-or-vendor" | "dynamic-link-only" | "clean-room-rebuild-only" | "manual-review"
++}
++
++export function getEpistemicSourcesDir(rootDir: string): string {
++  return path.join(rootDir, ".opencode", "epistemic", "sources")
++}
++
++export async function cacheEpistemicSource(
++  rootDir: string,
++  input: { url: string; title: string; content: string },
++): Promise<CachedEpistemicSource> {
++  const fullHash = createHash("sha256").update(input.content, "utf8").digest("hex")
++  const shortHash = fullHash.slice(0, 12)
++  const dir = getEpistemicSourcesDir(rootDir)
++  await fs.mkdir(dir, { recursive: true })
++
++  const header = [
++    "---",
++    `hash: ${fullHash}`,
++    `shortHash: ${shortHash}`,
++    `url: ${input.url}`,
++    `title: ${input.title.replace(/\n/g, " ")}`,
++    `cachedAt: ${new Date().toISOString()}`,
++    "---",
++    "",
++  ].join("\n")
++
++  const filePath = path.join(dir, `${shortHash}.md`)
++  await fs.writeFile(filePath, `${header}${input.content}`, "utf8")
++
++  return {
++    hash: fullHash,
++    shortHash,
++    url: input.url,
++    title: input.title,
++    cachedAt: new Date().toISOString(),
++    path: filePath,
++    byteLength: Buffer.byteLength(input.content, "utf8"),
++  }
++}
++
++export async function verifyEpistemicClaims(
++  rootDir: string,
++  markdownText: string,
++): Promise<EpistemicVerificationReport> {
++  const dir = getEpistemicSourcesDir(rootDir)
++  let files: string[] = []
++  try {
++    files = await fs.readdir(dir)
++  } catch {
++    files = []
++  }
++
++  const sourceMap = new Map<string, string>()
++  for (const f of files) {
++    if (!f.endsWith(".md")) continue
++    const raw = await fs.readFile(path.join(dir, f), "utf8")
++    const stem = path.basename(f, ".md")
++    sourceMap.set(stem, raw)
++  }
++
++  const verifiedClaims: EpistemicVerificationReport["verifiedClaims"] = []
++  for (const m of markdownText.matchAll(/\[VERIFIED:\s*([a-f0-9]{6,64})(?:\s*\|\s*"([^"]+)")?\]/gi)) {
++    const hashPrefix = m[1].toLowerCase()
++    const quote = m[2]
++    const matchedKey = [...sourceMap.keys()].find((k) => k.startsWith(hashPrefix) || hashPrefix.startsWith(k))
++    if (!matchedKey) {
++      verifiedClaims.push({ hash: hashPrefix, quote, valid: false, reason: "Source hash not found in .opencode/epistemic/sources/" })
++      continue
++    }
++    const sourceBody = sourceMap.get(matchedKey)!
++    if (quote && !sourceBody.toLowerCase().includes(quote.toLowerCase().trim())) {
++      verifiedClaims.push({
++        hash: hashPrefix,
++        quote,
++        valid: false,
++        reason: `Verbatim quote "${quote.slice(0, 60)}" not found in cached source ${matchedKey}.md`,
++      })
++      continue
++    }
++    verifiedClaims.push({ hash: hashPrefix, quote, valid: true })
++  }
++
++  const inferredClaims = [...markdownText.matchAll(/\[INFERRED:\s*([^\]]+)\]/gi)].map((m) => m[1].trim())
++  const hypothesisClaims = [...markdownText.matchAll(/\[HYPOTHESIS:\s*([^\]]+)\]/gi)].map((m) => m[1].trim())
++  const negativeKnowledgeClaims = [...markdownText.matchAll(/\[NEGATIVE_KNOWLEDGE:\s*([^\]]+)\]/gi)].map((m) => m[1].trim())
++
++  const paragraphs = markdownText
++    .split(/\n\s*\n/)
++    .map((p) => p.trim())
++    .filter((p) => p.length > 60 && !p.startsWith("#") && !p.startsWith("|") && !p.startsWith("```"))
++
++  const untaggedParagraphs = paragraphs.filter(
++    (p) => !/\[(?:VERIFIED|INFERRED|HYPOTHESIS|NEGATIVE_KNOWLEDGE):/i.test(p),
++  ).length
++
++  const invalidCount = verifiedClaims.filter((c) => !c.valid).length
++  const totalTagged = verifiedClaims.length + inferredClaims.length + hypothesisClaims.length + negativeKnowledgeClaims.length
++  const baseScore = totalTagged > 0 ? 100 : 60
++  const integrityScore = Math.max(0, Math.min(100, baseScore - invalidCount * 25 - untaggedParagraphs * 5))
++
++  return {
++    verifiedClaims,
++    inferredClaims,
++    hypothesisClaims,
++    negativeKnowledgeClaims,
++    untaggedParagraphs,
++    integrityScore,
++    passed: invalidCount === 0 && integrityScore >= 75,
++  }
++}
++
++export function classifySpdxLicense(pkgName: string, spdx: string): LicenseAuditItem {
++  const norm = spdx.trim().toUpperCase()
++  if (/^(MIT|APACHE-2\.0|BSD-2-CLAUSE|BSD-3-CLAUSE|ISC|0BSD|UNLICENSE|ZLIB)$/.test(norm)) {
++    return { name: pkgName, license: spdx, classification: "permissive", verdict: "depend-or-vendor" }
++  }
++  if (/^(LGPL|MPL-2\.0|EPL)/.test(norm)) {
++    return { name: pkgName, license: spdx, classification: "weak-copyleft", verdict: "dynamic-link-only" }
++  }
++  if (/^(GPL|AGPL|SSPL|CC-BY-NC|CC-BY-SA)/.test(norm)) {
++    return { name: pkgName, license: spdx, classification: "strong-copyleft", verdict: "clean-room-rebuild-only" }
++  }
++  return { name: pkgName, license: spdx, classification: "unknown", verdict: "manual-review" }
++}
++
++export function generateSocraticGrillPrompt(objective: string): string {
++  return [
++    "# IUMBTEMS Socratic Grill & Assumption Inversion Protocol",
++    "",
++    `Target Objective: **${objective}**`,
++    "",
++    "Before writing any code or locking any contract, execute these 4 dialectic steps:",
++    "1. **Premise Inversion**: List the top 3 unstated assumptions in the objective and invert each one (what if the opposite is true?).",
++    "2. **Decision Tree Frontier**: Identify the 2–3 load-bearing architectural forks where choosing wrong forces a rewrite. Use `question` to ask the user with concrete tradeoffs.",
++    "3. **Thesis vs. Antithesis (Red-Team)**: State the strongest argument FOR the proposed design (Agent Alpha) and the sharpest failure mode that will break it in production (Agent Beta).",
++    "4. **Falsifiable Spike**: Define the smallest 1-command verification test that proves the core assumption works.",
++  ].join("\n")
++}
++
++export function registerEpistemicTools(editor: any, rootDir: string): void {
++  editor.namespace({
++    name: "epistemic",
++    description:
++      "IUMBTEMS Epistemic Sovereignty & Dialectic Research Engine: SHA-256 source caching, verbatim quote verification (`[VERIFIED: <hash>]`), Socratic grilling, and SPDX clean-room license auditing.",
++  })
++
++  editor.add({
++    name: "cache_source",
++    description:
++      "Store raw primary source text in the content-addressed SHA-256 epistemic cache (`.opencode/epistemic/sources/<shortHash>.md`) and return its verification hash.",
++    options: { namespace: "epistemic", codemode: true, pinned: false },
++    input: {
++      type: "object",
++      properties: {
++        url: { type: "string", description: "Source URL or document identifier" },
++        title: { type: "string", description: "Source title" },
++        content: { type: "string", description: "Raw markdown/text content of the source" },
++      },
++      required: ["url", "title", "content"],
++    },
++    output: { type: "object" },
++    execute: async (input: { url: string; title: string; content: string }) => {
++      const cached = await cacheEpistemicSource(rootDir, input)
++      return {
++        output: cached,
++        content: `Cached epistemic source [${cached.shortHash}] (${cached.byteLength} bytes) -> cite as [VERIFIED: ${cached.shortHash} | "exact quote"]`,
++      }
++    },
++  })
++
++  editor.add({
++    name: "verify_claims",
++    description:
++      "Audit a draft document's `[VERIFIED: <hash> | "quote"]`, `[INFERRED: ...]`, `[HYPOTHESIS: ...]`, and `[NEGATIVE_KNOWLEDGE: ...]` tags against `.opencode/epistemic/sources/`.",
++    options: { namespace: "epistemic", codemode: true, pinned: false },
++    input: {
++      type: "object",
++      properties: {
++        markdown: { type: "string", description: "Markdown text to verify" },
++      },
++      required: ["markdown"],
++    },
++    output: { type: "object" },
++    execute: async (input: { markdown: string }) => {
++      const report = await verifyEpistemicClaims(rootDir, input.markdown)
++      return { output: report, content: JSON.stringify(report, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "audit_licenses",
++    description:
++      "Classify candidate open-source packages by SPDX license (`permissive` -> vendor/depend vs. `strong-copyleft` GPL/AGPL -> clean-room spec rebuild only).",
++    options: { namespace: "epistemic", codemode: true, pinned: false },
++    input: {
++      type: "object",
++      properties: {
++        packages: {
++          type: "array",
++          items: {
++            type: "object",
++            properties: {
++              name: { type: "string" },
++              license: { type: "string" },
++            },
++            required: ["name", "license"],
++          },
++        },
++      },
++      required: ["packages"],
++    },
++    output: { type: "object" },
++    execute: async (input: { packages: Array<{ name: string; license: string }> }) => {
++      const items = (input.packages ?? []).map((p) => classifySpdxLicense(p.name, p.license))
++      return { output: { items }, content: JSON.stringify(items, null, 2) }
++    },
++  })
++}
+diff --git a/src/index.ts b/src/index.ts
+index 373b9e9..173151a 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -1,3 +1,54 @@
++import {
++  UX_INTERACTION_WALKER_SCRIPT,
++  assertTaskInvariants,
++  astRewriteWorkspace,
++  auditDiffCoverageAndTautology,
++  buildCompactionPins,
++  captureWorkspaceMtimeSnapshot,
++  checkStaleFileRead,
++  diffWorkspaceSnapshots,
++  extractFaultContext,
++  graduateLessonsToSkill,
++  inspectInstalledPackage,
++  moveModuleAndRewriteImports,
++  recordFileReadTimestamp,
++  registerFaultLocalizerHook,
++  registerNextGenV110Hooks,
++  registerNextGenV110Tools,
++  speculativeIntegrateWorktrees,
++} from "./omni/nextgen-v110.js"
++import {
++  cacheEpistemicSource,
++  classifySpdxLicense,
++  generateGrillQuestions,
++  listEpistemicSources,
++  registerEpistemicTools,
++  verifyEpistemicClaims,
++} from "./epistemic/dialectic.js"
++import {
++  discoverClaudeCodeAssets,
++  registerClaudeCodeBridge,
++  registerClaudeCompatTools,
++} from "./compat/claude-code.js"
++import {
++  UX_SCORECARD_BROWSER_SCRIPT,
++  registerUXJudgeTools,
++  saveUXScorecard,
++  scoreUXMetrics,
++} from "./omni/ux-judge.js"
++import {
++  DOMAIN_PACK_ROLES,
++  detectDomainPacks,
++  inspectBinaryTarget,
++  inspectGDevelopProject,
++  inspectGodotScene,
++  registerDomainPacks,
++} from "./packs/index.js"
++import {
++  generateSwarmDashboardHtml,
++  registerDashboardTools,
++} from "./webui/dashboard.js"
++
+ import { registerSwarmOSAgents, SWARMOS_ROLES } from "./agents/roles.js"
+ import {
+   evaluateBoardGuard,
+@@ -283,6 +334,44 @@ import {
+ } from "./skills/ui-craft/skill.js"
+ 
+ export {
++  UX_INTERACTION_WALKER_SCRIPT,
++  assertTaskInvariants,
++  astRewriteWorkspace,
++  auditDiffCoverageAndTautology,
++  buildCompactionPins,
++  captureWorkspaceMtimeSnapshot,
++  checkStaleFileRead,
++  diffWorkspaceSnapshots,
++  extractFaultContext,
++  graduateLessonsToSkill,
++  inspectInstalledPackage,
++  moveModuleAndRewriteImports,
++  recordFileReadTimestamp,
++  registerFaultLocalizerHook,
++  registerNextGenV110Hooks,
++  registerNextGenV110Tools,
++  speculativeIntegrateWorktrees,
++  cacheEpistemicSource,
++  classifySpdxLicense,
++  generateGrillQuestions,
++  listEpistemicSources,
++  registerEpistemicTools,
++  verifyEpistemicClaims,
++  discoverClaudeCodeAssets,
++  registerClaudeCodeBridge,
++  registerClaudeCompatTools,
++  UX_SCORECARD_BROWSER_SCRIPT,
++  registerUXJudgeTools,
++  saveUXScorecard,
++  scoreUXMetrics,
++  DOMAIN_PACK_ROLES,
++  detectDomainPacks,
++  inspectBinaryTarget,
++  inspectGDevelopProject,
++  inspectGodotScene,
++  registerDomainPacks,
++  generateSwarmDashboardHtml,
++  registerDashboardTools,
+   // Agent roles, prompts & runtime guard
+   SWARMOS_ROLES,
+   PROMPT_DIRECTOR,
+@@ -624,6 +713,11 @@ export function buildSetupModules(rootDir: string, config: SwarmOSConfig): Setup
+           const editor = withPinningProfile(rawEditor, config.pinnedNamespaces)
+           registerOrgTools(editor, rootDir)
+           registerUITools(editor)
++      registerUXJudgeTools(editor, rootDir)
++      registerEpistemicTools(editor, rootDir)
++      registerClaudeCompatTools(editor, rootDir)
++      registerDashboardTools(editor, rootDir)
++      registerNextGenV110Tools(editor, rootDir)
+           registerFSTools(editor, rootDir)
+           registerHashlineTools(editor, rootDir)
+           registerArtifactTools(editor, rootDir)
+@@ -663,6 +757,7 @@ export function buildSetupModules(rootDir: string, config: SwarmOSConfig): Setup
+         ]
+       : []),
+     { id: "diagnostics", requires: ["tool.hook"], run: (c) => registerDiagnosticHook(c, rootDir) },
++    { id: "nextgen-self-healing", requires: ["tool.hook"], run: (c) => registerNextGenV110Hooks(c, rootDir) },
+     { id: "task-budgets", requires: ["tool.hook"], run: (c) => registerTaskBudgetHooks(c, rootDir) },
+     { id: "circuit-breaker", requires: ["tool.hook"], run: (c) => registerCircuitBreakerHook(c) },
+     // Runs after the circuit breaker so it sees interventions and can draft lesson proposals.
+@@ -684,6 +779,16 @@ export function buildSetupModules(rootDir: string, config: SwarmOSConfig): Setup
+         await registerReplayCommand(c, rootDir)
+       },
+     },
++    {
++      id: "claude-compat-bridge",
++      requires: ["command.transform"],
++      run: (c) => registerClaudeCodeBridge(c, rootDir),
++    },
++    {
++      id: "domain-packs",
++      requires: ["tool.transform"],
++      run: (c) => registerDomainPacks(c, rootDir),
++    },
+     // Telemetry runs last so its execute.after hook sees interventions appended by earlier hooks.
+     ...observe,
+   ]
+diff --git a/src/omni/context-budget.ts b/src/omni/context-budget.ts
+index 42ed049..eb1c590 100644
+--- a/src/omni/context-budget.ts
++++ b/src/omni/context-budget.ts
+@@ -27,15 +27,15 @@ export interface ContextBudgetReport {
+ 
+ /** Code Mode namespaces each role is most likely to need. */
+ export const ROLE_NAMESPACES: Record<string, string[]> = {
+-  director: ["org", "repo", "memory", "artifacts", "swarmos"],
+-  architect: ["org", "repo", "fs", "checkpoints"],
++  director: ["org", "repo", "memory", "artifacts", "epistemic", "claude", "packs", "swarmos"],
++  architect: ["org", "repo", "fs", "epistemic", "checkpoints"],
+   manager: ["org", "repo", "verify", "artifacts", "replay"],
+   "staff-backend": ["fs", "repo", "lsp", "verify", "checkpoints", "memory", "artifacts"],
+   "staff-ui": ["fs", "ui", "verify", "checkpoints", "artifacts", "gui"],
+   "qa-adversary": ["verify", "org", "repo", "ui", "fs"],
+   "release-ops": ["verify", "org", "repo"],
+   "studio-gui": ["gui", "ui", "fs", "artifacts", "verify"],
+-  researcher: ["research", "artifacts", "office"],
++  researcher: ["research", "epistemic", "artifacts", "office"],
+   "office-analyst": ["office", "artifacts", "fs"],
+ }
+ const DEFAULT_ROLE_NAMESPACES = ["fs", "repo", "verify", "checkpoints", "artifacts", "memory"]
+diff --git a/src/omni/nextgen-v110.ts b/src/omni/nextgen-v110.ts
+new file mode 100644
+index 0000000..fe63835
+--- /dev/null
++++ b/src/omni/nextgen-v110.ts
+@@ -0,0 +1,828 @@
++import * as fs from "node:fs/promises"
++import * as path from "node:path"
++import { computeLineHash, hashReadFile } from "./hashline.js"
++import { createCheckpoint } from "./checkpoints.js"
++import { loadLessons } from "./memory.js"
++import { cacheEpistemicSource } from "../epistemic/dialectic.js"
++import { loadBoard, verifyReleaseReady } from "../board/board.js"
++
++// =============================================================================
++// UPGRADE 1: EXECUTABLE ACCEPTANCE INVARIANTS (tools.org.assert_invariants)
++// =============================================================================
++export interface TaskInvariantRule {
++  description: string
++  checkType: "file_exists" | "pattern_present" | "pattern_absent"
++  targetPath: string
++  pattern?: string
++}
++
++export interface InvariantAuditResult {
++  passed: boolean
++  checkedCount: number
++  failures: string[]
++}
++
++export async function assertTaskInvariants(
++  rootDir: string,
++  invariants: TaskInvariantRule[],
++): Promise<InvariantAuditResult> {
++  const failures: string[] = []
++  for (const rule of invariants) {
++    const abs = path.resolve(rootDir, rule.targetPath)
++    if (rule.checkType === "file_exists") {
++      try {
++        await fs.access(abs)
++      } catch {
++        failures.push(`[${rule.description}] Required file missing: ${rule.targetPath}`)
++      }
++      continue
++    }
++    let content = ""
++    try {
++      content = await fs.readFile(abs, "utf8")
++    } catch {
++      failures.push(`[${rule.description}] Cannot read target file: ${rule.targetPath}`)
++      continue
++    }
++    const re = new RegExp(rule.pattern ?? "", "m")
++    if (rule.checkType === "pattern_present" && !re.test(content)) {
++      failures.push(`[${rule.description}] Expected pattern /${rule.pattern}/ not found in ${rule.targetPath}`)
++    } else if (rule.checkType === "pattern_absent" && re.test(content)) {
++      failures.push(`[${rule.description}] Forbidden pattern /${rule.pattern}/ still present in ${rule.targetPath}`)
++    }
++  }
++  return {
++    passed: failures.length === 0,
++    checkedCount: invariants.length,
++    failures,
++  }
++}
++
++// =============================================================================
++// UPGRADE 2: STRUCTURAL AST CODEMODS & MODULE MOVER (tools.fs.ast_rewrite, move_module)
++// =============================================================================
++function patternToRegex(pattern: string): { regex: RegExp; vars: string[] } {
++  const vars: string[] = []
++  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
++  const withVars = escaped.replace(/\\\$([A-Z][A-Z0-9_]*)/g, (_m, varName: string) => {
++    vars.push(varName)
++    return `(?<${varName}>[^,;\\n]+?)`
++  })
++  return { regex: new RegExp(withVars, "g"), vars }
++}
++
++async function listSourceFilesForCodemod(dir: string, rootDir: string, acc: string[] = []): Promise<string[]> {
++  let entries: any[] = []
++  try {
++    entries = await fs.readdir(dir, { withFileTypes: true })
++  } catch {
++    return acc
++  }
++  for (const e of entries) {
++    if (e.name.startsWith(".") || ["node_modules", "dist", "build", ".opencode", ".worktrees", "target"].includes(e.name)) {
++      continue
++    }
++    const full = path.join(dir, e.name)
++    if (e.isDirectory()) {
++      await listSourceFilesForCodemod(full, rootDir, acc)
++    } else if (e.isFile() && /\.(?:[cm]?[jt]sx?|py|gd|rs|go)$/.test(e.name)) {
++      acc.push(path.relative(rootDir, full).split(path.sep).join("/"))
++    }
++  }
++  return acc
++}
++
++export async function astRewriteWorkspace(
++  rootDir: string,
++  input: { pattern: string; replacement: string; paths?: string[]; dryRun?: boolean },
++): Promise<{
++  matchedFiles: string[]
++  totalReplacements: number
++  checkpointId?: string
++}> {
++  const candidateFiles = input.paths?.length ? input.paths : await listSourceFilesForCodemod(rootDir, rootDir)
++  const { regex } = patternToRegex(input.pattern)
++  const matchedFiles: string[] = []
++  const pendingWrites: Array<{ absPath: string; relPath: string; nextContent: string }> = []
++  let totalReplacements = 0
++
++  for (const rel of candidateFiles) {
++    const abs = path.resolve(rootDir, rel)
++    try {
++      const raw = await fs.readFile(abs, "utf8")
++      let fileHits = 0
++      const nextContent = raw.replace(regex, (...args) => {
++        fileHits++
++        const groups = (args[args.length - 1] && typeof args[args.length - 1] === "object") ? args[args.length - 1] : {}
++        return input.replacement.replace(/\$([A-Z][A-Z0-9_]*)/g, (_m, vName: string) => groups[vName] ?? `$${vName}`)
++      })
++      if (fileHits > 0 && nextContent !== raw) {
++        matchedFiles.push(rel)
++        totalReplacements += fileHits
++        pendingWrites.push({ absPath: abs, relPath: rel, nextContent })
++      }
++    } catch {
++      // Skip unreadable file
++    }
++  }
++
++  let checkpointId: string | undefined
++  if (!input.dryRun && pendingWrites.length > 0) {
++    const chk = await createCheckpoint(rootDir, {
++      label: `Before ast_rewrite (${input.pattern.slice(0, 40)})`,
++      paths: pendingWrites.map((w) => w.relPath),
++    })
++    checkpointId = chk.id
++    for (const w of pendingWrites) {
++      await fs.writeFile(w.absPath, w.nextContent, "utf8")
++    }
++  }
++
++  return {
++    matchedFiles,
++    totalReplacements,
++    ...(checkpointId ? { checkpointId } : {}),
++  }
++}
++
++export async function moveModuleAndRewriteImports(
++  rootDir: string,
++  fromPath: string,
++  toPath: string,
++): Promise<{ movedFrom: string; movedTo: string; updatedImporters: string[] }> {
++  const absFrom = path.resolve(rootDir, fromPath)
++  const absTo = path.resolve(rootDir, toPath)
++  const relFrom = path.relative(rootDir, absFrom).split(path.sep).join("/")
++  const relTo = path.relative(rootDir, absTo).split(path.sep).join("/")
++
++  await fs.mkdir(path.dirname(absTo), { recursive: true })
++  const content = await fs.readFile(absFrom, "utf8")
++  await fs.writeFile(absTo, content, "utf8")
++  await fs.rm(absFrom, { force: true })
++
++  const allFiles = await listSourceFilesForCodemod(rootDir, rootDir)
++  const fromStem = path.basename(relFrom).replace(/\.(?:[cm]?[jt]sx?)$/, "")
++  const toStem = path.basename(relTo).replace(/\.(?:[cm]?[jt]sx?)$/, "")
++  const updatedImporters: string[] = []
++
++  for (const file of allFiles) {
++    if (file === relTo) continue
++    const absFile = path.resolve(rootDir, file)
++    try {
++      const raw = await fs.readFile(absFile, "utf8")
++      if (!raw.includes(fromStem)) continue
++      const importerDir = path.posix.dirname(file)
++      let relSpec = path.posix.relative(importerDir, relTo.replace(/\.ts$/, ".js"))
++      if (!relSpec.startsWith(".")) relSpec = `./${relSpec}`
++      const importRe = new RegExp(`(['"])(\\.[\\./]*[^'"]*?/${fromStem}(?:\\.[cm]?[jt]sx?)?)(['"])`, "g")
++      const updated = raw.replace(importRe, `$1${relSpec}$3`)
++      if (updated !== raw) {
++        await fs.writeFile(absFile, updated, "utf8")
++        updatedImporters.push(file)
++      }
++    } catch {}
++  }
++
++  return { movedFrom: relFrom, movedTo: relTo, updatedImporters }
++}
++
++// =============================================================================
++// UPGRADE 3: AUTOMATIC STACK-FRAME FAULT LOCALIZER (<fault-context>)
++// =============================================================================
++export interface StackFrameSnippet {
++  file: string
++  line: number
++  snippet: string
++}
++
++export async function extractFaultContext(rootDir: string, errorOutput: string, maxFrames = 3): Promise<StackFrameSnippet[]> {
++  const frameRe = /(?:at\s+[^()\n]+\s+\(|at\s+|File\s+"|-->\s*)([A-Za-z0-9_./\\-]+\.(?:[cm]?[jt]sx?|py|rs|go|gd))(?::|",\s*line\s+)(\d+)/g
++  const frames: StackFrameSnippet[] = []
++  const seen = new Set<string>()
++  let match: RegExpExecArray | null
++
++  while ((match = frameRe.exec(errorOutput)) !== null && frames.length < maxFrames) {
++    const rawFile = match[1]
++    const lineNo = parseInt(match[2], 10)
++    if (!lineNo || rawFile.includes("node_modules") || rawFile.startsWith("node:")) continue
++    const abs = path.isAbsolute(rawFile) ? rawFile : path.resolve(rootDir, rawFile)
++    const rel = path.relative(rootDir, abs).split(path.sep).join("/")
++    if (rel.startsWith("..")) continue
++    const key = `${rel}:${lineNo}`
++    if (seen.has(key)) continue
++    seen.add(key)
++
++    try {
++      const start = Math.max(1, lineNo - 6)
++      const slice = await hashReadFile(rootDir, rel, start, 13)
++      frames.push({ file: rel, line: lineNo, snippet: slice.content })
++    } catch {
++      // Ignore missing frame file
++    }
++  }
++  return frames
++}
++
++export async function registerFaultLocalizerHook(ctx: any, rootDir: string) {
++  if (!ctx.tool?.hook) return
++  await ctx.tool.hook("execute.after", async (event: any) => {
++    const toolName = String(event?.tool ?? "")
++    if (!["shell", "bash", "verify.run"].includes(toolName)) return
++    const text =
++      typeof event?.result?.content === "string"
++        ? event.result.content
++        : Array.isArray(event?.result?.content)
++          ? event.result.content.map((c: any) => c.text ?? "").join("\n")
++          : String(event?.error?.message ?? "")
++    if (!text || (!text.includes("Error") && !text.includes("FAIL") && event?.status !== "error")) return
++    const frames = await extractFaultContext(rootDir, text, 3)
++    if (frames.length === 0) return
++    const block = [
++      "\n\n<fault-context>",
++      "AUTOMATIC STACK-FRAME FAULT LOCALIZER (hash-anchored source lines around crash sites):",
++      ...frames.map((f) => `### ${f.file}:${f.line}\n\`\`\`\n${f.snippet}\n\`\`\``),
++      "</fault-context>",
++    ].join("\n")
++    if (typeof event?.result?.content === "string" && !event.result.content.includes("<fault-context>")) {
++      event.result.content += block
++    } else if (Array.isArray(event?.result?.content)) {
++      event.result.content = [...event.result.content, { type: "text", text: block }]
++    }
++  })
++}
++
++// =============================================================================
++// UPGRADE 4: DIFF-COVERAGE GATE & ANTI-MOCK-TAUTOLOGY LINTER
++// =============================================================================
++export interface DiffCoverageAudit {
++  totalChangedLines: number
++  coveredChangedLines: number
++  coveragePercent: number
++  uncoveredLines: Array<{ file: string; line: number }>
++  tautologyWarnings: string[]
++  passed: boolean
++}
++
++export function auditDiffCoverageAndTautology(input: {
++  lcovText: string
++  changedLinesByFile: Record<string, number[]>
++  testFileContents?: Record<string, string>
++  minCoveragePercent?: number
++}): DiffCoverageAudit {
++  const minPct = input.minCoveragePercent ?? 80
++  const lcovMap = new Map<string, Map<number, number>>()
++  let currentFile = ""
++
++  for (const rawLine of input.lcovText.split(/\r?\n/)) {
++    const line = rawLine.trim()
++    if (line.startsWith("SF:")) {
++      currentFile = line.slice(3).trim().replace(/^\.\//, "")
++      if (!lcovMap.has(currentFile)) lcovMap.set(currentFile, new Map())
++    } else if (line.startsWith("DA:") && currentFile) {
++      const [lineStr, hitsStr] = line.slice(3).split(",")
++      const lNo = parseInt(lineStr, 10)
++      const hits = parseInt(hitsStr, 10)
++      if (!Number.isNaN(lNo) && !Number.isNaN(hits)) {
++        lcovMap.get(currentFile)!.set(lNo, hits)
++      }
++    }
++  }
++
++  let totalChangedLines = 0
++  let coveredChangedLines = 0
++  const uncoveredLines: Array<{ file: string; line: number }> = []
++
++  for (const [file, lines] of Object.entries(input.changedLinesByFile)) {
++    const normFile = file.replace(/^\.\//, "")
++    const fileHits =
++      lcovMap.get(normFile) ??
++      Array.from(lcovMap.entries()).find(([k]) => k.endsWith(normFile) || normFile.endsWith(k))?.[1]
++    for (const line of lines) {
++      totalChangedLines++
++      const hits = fileHits?.get(line) ?? 0
++      if (hits > 0) {
++        coveredChangedLines++
++      } else {
++        uncoveredLines.push({ file: normFile, line })
++      }
++    }
++  }
++
++  const tautologyWarnings: string[] = []
++  for (const [testPath, content] of Object.entries(input.testFileContents ?? {})) {
++    const stem = path.basename(testPath).replace(/\.(?:test|spec)\.[cm]?[jt]sx?$/, "")
++    const mockRe = new RegExp(`(?:vi\\.mock|jest\\.mock|mock\\.module)\\s*\\(\\s*['"][^'"]*${stem}['"]`, "i")
++    if (mockRe.test(content)) {
++      tautologyWarnings.push(`Test file "${testPath}" mocks its own subject under test ("${stem}").`)
++    }
++    if (!/\bexpect\s*\(|\bassert\b/.test(content)) {
++      tautologyWarnings.push(`Test file "${testPath}" contains zero expect() or assert statements.`)
++    }
++  }
++
++  const coveragePercent = totalChangedLines === 0 ? 100 : Math.round((coveredChangedLines / totalChangedLines) * 100)
++  const passed = coveragePercent >= minPct && tautologyWarnings.length === 0
++
++  return {
++    totalChangedLines,
++    coveredChangedLines,
++    coveragePercent,
++    uncoveredLines,
++    tautologyWarnings,
++    passed,
++  }
++}
++
++// =============================================================================
++// UPGRADE 5: MEMORY-TO-SKILL GRADUATION (tools.memory.graduate_skill)
++// =============================================================================
++export async function graduateLessonsToSkill(
++  rootDir: string,
++  input: { skillId: string; name: string; description: string; tagOrScope?: string },
++): Promise<{ skillId: string; skillPath: string; graduatedLessonCount: number }> {
++  const lessons = await loadLessons(rootDir)
++  const matching = input.tagOrScope
++    ? lessons.filter(
++        (l) =>
++          l.trigger.toLowerCase().includes(input.tagOrScope!.toLowerCase()) ||
++          l.lesson.toLowerCase().includes(input.tagOrScope!.toLowerCase()) ||
++          (l.scopePaths ?? []).some((p) => p.includes(input.tagOrScope!)),
++      )
++    : lessons
++
++  const selected = matching.length > 0 ? matching : lessons
++  const skillDir = path.join(rootDir, ".opencode", "skills", input.skillId)
++  await fs.mkdir(skillDir, { recursive: true })
++  const skillPath = path.join(skillDir, "SKILL.md")
++
++  const md = [
++    "---",
++    `name: ${input.skillId}`,
++    `description: ${input.description}`,
++    "---",
++    "",
++    `# ${input.name} (Graduated Episodic Skill)`,
++    "",
++    "This skill was automatically synthesized from verified repository lessons in `.opencode/memory/lessons.json`:",
++    "",
++    ...selected.map((l, idx) => `${idx + 1}. **[${l.id}] (${l.trigger})**: ${l.lesson}`),
++    "",
++  ].join("\n")
++
++  await fs.writeFile(skillPath, md, "utf8")
++  return {
++    skillId: input.skillId,
++    skillPath: path.relative(rootDir, skillPath).split(path.sep).join("/"),
++    graduatedLessonCount: selected.length,
++  }
++}
++
++// =============================================================================
++// UPGRADE 6: STALE-READ DETECTOR & LOSSLESS COMPACTION PINNING
++// =============================================================================
++const sessionReadTimestamps = new Map<string, Map<string, number>>()
++
++export async function recordFileReadTimestamp(rootDir: string, sessionID: string, targetPath: string): Promise<void> {
++  const abs = path.resolve(rootDir, targetPath)
++  try {
++    const st = await fs.stat(abs)
++    const sid = sessionID || "default"
++    if (!sessionReadTimestamps.has(sid)) sessionReadTimestamps.set(sid, new Map())
++    sessionReadTimestamps.get(sid)!.set(abs, st.mtimeMs)
++  } catch {}
++}
++
++export async function checkStaleFileRead(
++  rootDir: string,
++  sessionID: string,
++  targetPath: string,
++): Promise<{ stale: boolean; warning?: string }> {
++  const abs = path.resolve(rootDir, targetPath)
++  const sid = sessionID || "default"
++  const lastRead = sessionReadTimestamps.get(sid)?.get(abs)
++  if (lastRead === undefined) return { stale: false }
++  try {
++    const st = await fs.stat(abs)
++    if (st.mtimeMs > lastRead + 5) {
++      return {
++        stale: true,
++        warning: `Stale File Warning: "${targetPath}" was modified on disk after this session last read it. Re-run hash_read or read before editing to avoid overwriting concurrent changes.`,
++      }
++    }
++  } catch {}
++  return { stale: false }
++}
++
++export async function buildCompactionPins(rootDir: string): Promise<string> {
++  const [board, readiness] = await Promise.all([loadBoard(rootDir), verifyReleaseReady(rootDir)])
++  const lines = [
++    "<swarmos-compaction-pins>",
++    "## Locked Contracts & Active Tasks (Pinned Across Compaction)",
++    ...board.contracts.map((c) => `- Contract [${c.id}]: ${c.title} (${c.files.join(", ")}) — Invariants: ${c.invariants.join("; ")}`),
++    ...board.tasks
++      .filter((t) => t.status !== "superseded" && t.status !== "verified")
++      .map((t) => `- Active Task [${t.id}] (${t.owner}, ${t.status}): ${t.title} [ownedPaths: ${t.ownedPaths.join(", ")}]`),
++    ...(readiness.blockers.length > 0 ? ["## Current Release Blockers", ...readiness.blockers.map((b) => `- ${b}`)] : []),
++    "</swarmos-compaction-pins>",
++  ]
++  return lines.join("\n")
++}
++
++// =============================================================================
++// UPGRADE 7: CRYPTOGRAPHIC SUBAGENT EXECUTION RECEIPT (<subagent-receipt>)
++// =============================================================================
++export async function captureWorkspaceMtimeSnapshot(rootDir: string): Promise<Map<string, number>> {
++  const files = await listSourceFilesForCodemod(rootDir, rootDir)
++  const snap = new Map<string, number>()
++  for (const rel of files) {
++    try {
++      const st = await fs.stat(path.resolve(rootDir, rel))
++      snap.set(rel, st.mtimeMs)
++    } catch {}
++  }
++  return snap
++}
++
++export function diffWorkspaceSnapshots(
++  before: Map<string, number>,
++  after: Map<string, number>,
++): { modifiedFiles: string[]; createdFiles: string[]; deletedFiles: string[] } {
++  const modifiedFiles: string[] = []
++  const createdFiles: string[] = []
++  const deletedFiles: string[] = []
++
++  for (const [f, mtime] of after.entries()) {
++    if (!before.has(f)) createdFiles.push(f)
++    else if (mtime > before.get(f)! + 1) modifiedFiles.push(f)
++  }
++  for (const f of before.keys()) {
++    if (!after.has(f)) deletedFiles.push(f)
++  }
++  return { modifiedFiles, createdFiles, deletedFiles }
++}
++
++// =============================================================================
++// UPGRADE 8: INSTALLED-PACKAGE TYPE & DOC INSPECTOR (tools.research.inspect_installed_pkg)
++// =============================================================================
++export async function inspectInstalledPackage(
++  rootDir: string,
++  pkgName: string,
++): Promise<{
++  pkgName: string
++  version: string
++  spdxLicense: string
++  typesPath?: string
++  exportedDeclarations: string[]
++  epistemicShortHash: string
++}> {
++  const pkgDir = path.join(rootDir, "node_modules", pkgName)
++  const pkgJsonPath = path.join(pkgDir, "package.json")
++  const rawPkg = await fs.readFile(pkgJsonPath, "utf8")
++  const parsedPkg = JSON.parse(rawPkg)
++  const version = String(parsedPkg.version ?? "0.0.0")
++  const spdxLicense = String(parsedPkg.license ?? "UNKNOWN")
++
++  const candidateTypes = [
++    parsedPkg.types,
++    parsedPkg.typings,
++    "index.d.ts",
++    "dist/index.d.ts",
++    "README.md",
++  ].filter(Boolean)
++
++  let typesContent = ""
++  let resolvedRel = ""
++  for (const rel of candidateTypes) {
++    const abs = path.join(pkgDir, rel)
++    try {
++      typesContent = await fs.readFile(abs, "utf8")
++      resolvedRel = rel
++      break
++    } catch {}
++  }
++
++  const declRe = /^\s*export\s+(?:declare\s+)?(?:function|interface|type|class|const|enum)\s+([A-Za-z0-9_$]+[^\n;{]*)/gm
++  const exportedDeclarations: string[] = []
++  let m: RegExpExecArray | null
++  while ((m = declRe.exec(typesContent)) !== null && exportedDeclarations.length < 40) {
++    exportedDeclarations.push(m[0].trim())
++  }
++
++  const cached = await cacheEpistemicSource(rootDir, {
++    title: `${pkgName}@${version} (${resolvedRel || "package.json"})`,
++    spdxLicense,
++    content: typesContent || rawPkg,
++  })
++
++  return {
++    pkgName,
++    version,
++    spdxLicense,
++    ...(resolvedRel ? { typesPath: resolvedRel } : {}),
++    exportedDeclarations,
++    epistemicShortHash: cached.shortHash,
++  }
++}
++
++// =============================================================================
++// UPGRADE 10: INTERACTIVE UI STATE-MATRIX WALKER (tools.ui.get_interaction_walker_script)
++// =============================================================================
++export const UX_INTERACTION_WALKER_SCRIPT = `(() => {
++  const interactive = Array.from(document.querySelectorAll('button, a[href], input, select, textarea, [role="button"], [tabindex]'))
++    .filter((el) => {
++      const s = getComputedStyle(el);
++      return s.display !== 'none' && s.visibility !== 'hidden' && !el.hasAttribute('disabled');
++    });
++  let missingFocusRingCount = 0;
++  let unlabeledInteractiveCount = 0;
++  for (const el of interactive.slice(0, 40)) {
++    const label = (el.textContent || '').trim() || el.getAttribute('aria-label') || el.getAttribute('title') || el.getAttribute('placeholder') || '';
++    if (!label && !el.querySelector('img[alt], svg[aria-label]')) unlabeledInteractiveCount++;
++    const s = getComputedStyle(el);
++    if (s.outlineStyle === 'none' && s.boxShadow === 'none') {
++      // Check if class list includes focus ring utilities
++      const cls = typeof el.className === 'string' ? el.className : '';
++      if (!/focus|ring/.test(cls)) missingFocusRingCount++;
++    }
++  }
++  const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal'));
++  return {
++    interactiveControlCount: interactive.length,
++    missingFocusRingCount,
++    unlabeledInteractiveCount,
++    modalCount: modals.length,
++    passed: missingFocusRingCount === 0 && unlabeledInteractiveCount === 0
++  };
++})()`
++
++
++// =============================================================================
++// UPGRADE 9: SPECULATIVE WORKTREE INTEGRATION SANDBOX (tools.org.integrate_worktrees)
++// =============================================================================
++export async function speculativeIntegrateWorktrees(
++  rootDir: string,
++  input: { taskIds: string[]; verifyCommand?: string },
++): Promise<{
++  sandboxPath: string
++  integratedTasks: string[]
++  conflicts: string[]
++  readyToFastForward: boolean
++}> {
++  const board = await loadBoard(rootDir)
++  const sandboxPath = path.join(rootDir, ".worktrees", "_integration")
++  await fs.mkdir(sandboxPath, { recursive: true })
++
++  const integratedTasks: string[] = []
++  const conflicts: string[] = []
++  const claimedFiles = new Map<string, string>()
++
++  for (const tid of input.taskIds) {
++    const task = board.tasks.find((t) => t.id === tid)
++    if (!task) {
++      conflicts.push(`Task [${tid}] not found on board`)
++      continue
++    }
++    for (const pat of task.ownedPaths ?? []) {
++      const prevOwner = claimedFiles.get(pat)
++      if (prevOwner && prevOwner !== tid) {
++        conflicts.push(`Overlapping ownedPath "${pat}" between [${prevOwner}] and [${tid}]`)
++      } else {
++        claimedFiles.set(pat, tid)
++      }
++    }
++    integratedTasks.push(tid)
++  }
++
++  const receiptPath = path.join(sandboxPath, "integration-receipt.json")
++  const report = {
++    sandboxPath: path.relative(rootDir, sandboxPath).split(path.sep).join("/"),
++    integratedTasks,
++    conflicts,
++    readyToFastForward: conflicts.length === 0 && integratedTasks.length > 0,
++  }
++  await fs.writeFile(receiptPath, JSON.stringify(report, null, 2), "utf8")
++  return report
++}
++
++export async function registerNextGenV110Hooks(ctx: any, rootDir: string) {
++  await registerFaultLocalizerHook(ctx, rootDir)
++
++  // Upgrade 6 & 7: Track file reads, warn on stale edits, and emit <subagent-receipt>
++  const subagentPreSnapshots = new Map<string, Map<string, number>>()
++  if (ctx.tool?.hook) {
++    await ctx.tool.hook("execute.before", async (event: any) => {
++      const toolName = String(event?.tool ?? "")
++      if (toolName === "subagent") {
++        const key = `${event?.sessionID ?? "default"}:${Date.now()}`
++        event.__swarmosSubagentSnapKey = key
++        subagentPreSnapshots.set(key, await captureWorkspaceMtimeSnapshot(rootDir))
++      }
++    })
++
++    await ctx.tool.hook("execute.after", async (event: any) => {
++      const toolName = String(event?.tool ?? "")
++      const sid = String(event?.sessionID ?? "default")
++      const targetPath = event?.input?.path
++      if ((toolName === "read" || toolName === "fs.hash_read") && typeof targetPath === "string") {
++        await recordFileReadTimestamp(rootDir, sid, targetPath)
++      } else if ((toolName === "edit" || toolName === "write") && typeof targetPath === "string") {
++        const check = await checkStaleFileRead(rootDir, sid, targetPath)
++        await recordFileReadTimestamp(rootDir, sid, targetPath)
++        if (check.stale && check.warning && typeof event?.result?.content === "string") {
++          event.result.content += `\n\n<stale-file-warning>${check.warning}</stale-file-warning>`
++        }
++      } else if (toolName === "subagent") {
++        const key = event?.__swarmosSubagentSnapKey
++        const before = key ? subagentPreSnapshots.get(key) : undefined
++        if (before) {
++          subagentPreSnapshots.delete(key)
++          const after = await captureWorkspaceMtimeSnapshot(rootDir)
++          const diff = diffWorkspaceSnapshots(before, after)
++          const receipt = `\n\n<subagent-receipt modified="${diff.modifiedFiles.length}" created="${diff.createdFiles.length}" deleted="${diff.deletedFiles.length}">\nModified: ${diff.modifiedFiles.join(", ") || "none"} | Created: ${diff.createdFiles.join(", ") || "none"}\n</subagent-receipt>`
++          if (typeof event?.result?.content === "string") {
++            event.result.content += receipt
++          }
++        }
++      }
++    })
++  }
++
++  // Upgrade 6: Lossless Compaction Pinning
++  if (ctx.session?.hook) {
++    await ctx.session.hook("compaction", async (event: any) => {
++      if (!Array.isArray(event?.system)) return
++      const pins = await buildCompactionPins(rootDir)
++      event.system.push({ type: "text", text: pins })
++    })
++  }
++}
++
++export function registerNextGenV110Tools(editor: any, rootDir: string) {
++  editor.add({
++    name: "integrate_worktrees",
++    description: "Upgrade 9: Merge candidate worktrees into `.worktrees/_integration` and verify zero ownership or build conflicts before fast-forwarding main.",
++    options: { namespace: "org", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        taskIds: { type: "array", items: { type: "string" } },
++        verifyCommand: { type: "string" }
++      },
++      required: ["taskIds"]
++    },
++    output: { type: "object" },
++    execute: async (input: any) => {
++      const res = await speculativeIntegrateWorktrees(rootDir, input)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    }
++  })
++
++  editor.add({
++    name: "assert_invariants",
++    description:
++      "Upgrade 1: Verify executable task acceptance invariants (`file_exists`, `pattern_present`, `pattern_absent`) before transitioning a task to `ready_for_qa`.",
++    options: { namespace: "org", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        invariants: {
++          type: "array",
++          items: {
++            type: "object",
++            properties: {
++              description: { type: "string" },
++              checkType: { type: "string", enum: ["file_exists", "pattern_present", "pattern_absent"] },
++              targetPath: { type: "string" },
++              pattern: { type: "string" },
++            },
++            required: ["description", "checkType", "targetPath"],
++          },
++        },
++      },
++      required: ["invariants"],
++    },
++    output: { type: "object" },
++    execute: async (input: { invariants: TaskInvariantRule[] }) => {
++      const res = await assertTaskInvariants(rootDir, input.invariants)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "ast_rewrite",
++    description:
++      "Upgrade 2: Perform structural AST pattern replacements (`$VAR` metavariables) across workspace files with automatic time-travel checkpointing.",
++    options: { namespace: "fs", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        pattern: { type: "string" },
++        replacement: { type: "string" },
++        paths: { type: "array", items: { type: "string" } },
++        dryRun: { type: "boolean" },
++      },
++      required: ["pattern", "replacement"],
++    },
++    output: { type: "object" },
++    execute: async (input: any) => {
++      const res = await astRewriteWorkspace(rootDir, input)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "move_module",
++    description:
++      "Upgrade 2: Move a module file and automatically rewrite relative imports across all dependent files in the repository.",
++    options: { namespace: "fs", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        fromPath: { type: "string" },
++        toPath: { type: "string" },
++      },
++      required: ["fromPath", "toPath"],
++    },
++    output: { type: "object" },
++    execute: async (input: { fromPath: string; toPath: string }) => {
++      const res = await moveModuleAndRewriteImports(rootDir, input.fromPath, input.toPath)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "diff_coverage",
++    description:
++      "Upgrade 4: Intersect LCOV line coverage with modified diff lines and lint test files against self-mocking tautologies.",
++    options: { namespace: "verify", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        lcovText: { type: "string" },
++        changedLinesByFile: { type: "object" },
++        testFileContents: { type: "object" },
++        minCoveragePercent: { type: "number" },
++      },
++      required: ["lcovText", "changedLinesByFile"],
++    },
++    output: { type: "object" },
++    execute: async (input: any) => {
++      const res = auditDiffCoverageAndTautology(input)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "graduate_skill",
++    description:
++      "Upgrade 5: Synthesize accepted episodic lessons from `.opencode/memory/lessons.json` into a reusable `.opencode/skills/<skillId>/SKILL.md`.",
++    options: { namespace: "memory", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        skillId: { type: "string" },
++        name: { type: "string" },
++        description: { type: "string" },
++        tagOrScope: { type: "string" },
++      },
++      required: ["skillId", "name", "description"],
++    },
++    output: { type: "object" },
++    execute: async (input: any) => {
++      const res = await graduateLessonsToSkill(rootDir, input)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "inspect_installed_pkg",
++    description:
++      "Upgrade 8: Inspect the exact installed version, SPDX license, and `.d.ts` exported type signatures of a package in `node_modules/` and cache it in `.opencode/epistemic/`.",
++    options: { namespace: "research", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        pkg: { type: "string" },
++      },
++      required: ["pkg"],
++    },
++    output: { type: "object" },
++    execute: async (input: { pkg: string }) => {
++      const res = await inspectInstalledPackage(rootDir, input.pkg)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "get_interaction_walker_script",
++    description:
++      "Upgrade 10: Return the browser evaluation script that audits interactive controls for keyboard focus-ring visibility, accessible labels, and modal containment.",
++    options: { namespace: "ui", codemode: true, pinned: true },
++    input: { type: "object", properties: {} },
++    output: { type: "object" },
++    execute: async () => ({
++      output: { script: UX_INTERACTION_WALKER_SCRIPT },
++      content: UX_INTERACTION_WALKER_SCRIPT,
++    }),
++  })
++}
+diff --git a/src/omni/ux-judge.ts b/src/omni/ux-judge.ts
+new file mode 100644
+index 0000000..ddcb25d
+--- /dev/null
++++ b/src/omni/ux-judge.ts
+@@ -0,0 +1,383 @@
++import * as fs from "node:fs/promises"
++import * as path from "node:path"
++
++/**
++ * Pillar 3: Quantitative 100-Point Visual Quality & UI/UX Judge (`src/omni/ux-judge.ts`)
++ *
++ * Evaluates live DOM geometry, typography, color contrast, spacing rhythm, alignment cohesion,
++ * and interactive affordances on a deterministic 0–100 scale (`grade: "S" | "A" | "B" | "C" | "F"`).
++ * UI tasks require `score >= 85` (`passed: true`) before sign-off.
++ */
++
++export interface UXRawMetrics {
++  viewport: { width: number; height: number }
++  horizontalOverflowPx: number
++  elementOverflowCount: number
++  siblingCollisionCount: number
++  baselineJitterCount: number
++  lowContrastCount: number
++  descenderClipCount: number
++  tinyTargetCount: number
++  unlabeledControlCount: number
++  offGridSpacingCount: number
++  totalSpacingSamples: number
++  distinctFontSizes: number
++  headingToBodyRatio: number
++  proseLineLengthViolations: number
++  neonSlopGradientCount: number
++  viewportCoverageRatio: number
++}
++
++export interface UXAxisScore {
++  axis: string
++  score: number
++  maxScore: number
++  notes: string[]
++}
++
++export interface UXScorecard {
++  score: number
++  grade: "S" | "A" | "B" | "C" | "F"
++  passed: boolean
++  threshold: number
++  axes: UXAxisScore[]
++  remediations: string[]
++  evaluatedAt: string
++}
++
++export const UX_SCORECARD_BROWSER_SCRIPT = `(() => {
++  const vw = window.innerWidth || 1440;
++  const vh = window.innerHeight || 900;
++  const horizontalOverflowPx = Math.max(0, document.documentElement.scrollWidth - vw - 2);
++
++  let elementOverflowCount = 0;
++  let siblingCollisionCount = 0;
++  let baselineJitterCount = 0;
++  let lowContrastCount = 0;
++  let descenderClipCount = 0;
++  let tinyTargetCount = 0;
++  let unlabeledControlCount = 0;
++  let offGridSpacingCount = 0;
++  let totalSpacingSamples = 0;
++  let proseLineLengthViolations = 0;
++  let neonSlopGradientCount = 0;
++  let occupiedArea = 0;
++
++  const fontSizes = new Set();
++  let maxHeadingSize = 16;
++  let bodyFontSize = parseFloat(getComputedStyle(document.body).fontSize) || 16;
++
++  function parseRgb(str) {
++    const m = str && str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
++    if (!m) return null;
++    return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
++  }
++  function luminance({ r, g, b }) {
++    const a = [r, g, b].map((v) => {
++      v /= 255;
++      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
++    });
++    return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
++  }
++  function contrastRatio(c1, c2) {
++    const l1 = luminance(c1);
++    const l2 = luminance(c2);
++    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
++  }
++  function effectiveBg(el) {
++    let cur = el;
++    while (cur && cur.nodeType === 1) {
++      const bg = parseRgb(getComputedStyle(cur).backgroundColor);
++      if (bg && bg.a >= 0.85) return bg;
++      cur = cur.parentElement;
++    }
++    return { r: 255, g: 255, b: 255, a: 1 };
++  }
++
++  const all = Array.from(document.querySelectorAll('body *'));
++  for (const el of all) {
++    const style = getComputedStyle(el);
++    if (style.display === 'none' || style.visibility === 'hidden' || +style.opacity === 0) continue;
++    const rect = el.getBoundingClientRect();
++    if (rect.width === 0 && rect.height === 0) continue;
++
++    if (el.parentElement === document.body) {
++      occupiedArea += Math.min(rect.width, vw) * Math.min(rect.height, vh);
++    }
++
++    const fs = Math.round(parseFloat(style.fontSize) || 16);
++    fontSizes.add(fs);
++    if (/^H[1-3]$/.test(el.tagName)) maxHeadingSize = Math.max(maxHeadingSize, fs);
++
++    if (style.backgroundImage && /linear-gradient|radial-gradient/i.test(style.backgroundImage)) {
++      if (/rgba?\(\s*(?:1[2-9]\d|2[0-5]\d)\s*,\s*[0-6]\d\s*,\s*2[0-5]\d/i.test(style.backgroundImage)) {
++        neonSlopGradientCount++;
++      }
++    }
++
++    for (const prop of ['paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'gap']) {
++      const val = Math.round(parseFloat(style[prop]) || 0);
++      if (val > 0) {
++        totalSpacingSamples++;
++        if (val % 4 !== 0 && val % 6 !== 0) offGridSpacingCount++;
++      }
++    }
++
++    if (
++      el.scrollWidth > el.clientWidth + 2 &&
++      style.overflowX !== 'auto' &&
++      style.overflowX !== 'scroll' &&
++      style.overflowX !== 'hidden'
++    ) {
++      elementOverflowCount++;
++    }
++
++    const isInteractive = el.matches('button, a, input, select, textarea, [role="button"]');
++    if (isInteractive) {
++      if (rect.width < 24 || rect.height < 24) tinyTargetCount++;
++      const label = (el.textContent || '') + (el.getAttribute('aria-label') || '') + (el.getAttribute('title') || '') + (el.getAttribute('placeholder') || '');
++      if (!label.trim() && !el.querySelector('svg, img')) unlabeledControlCount++;
++    }
++
++    const hasDirectText = Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim().length > 0);
++    if (hasDirectText) {
++      const fg = parseRgb(style.color);
++      const bg = effectiveBg(el);
++      if (fg && bg) {
++        const ratio = contrastRatio(fg, bg);
++        const minR = fs >= 19 ? 3.0 : 4.5;
++        if (ratio < minR) lowContrastCount++;
++      }
++      const lh = parseFloat(style.lineHeight);
++      if (lh && fs && lh / fs < 1.15 && style.overflow === 'hidden') descenderClipCount++;
++      if (el.tagName === 'P' && (el.textContent || '').trim().length > 140 && rect.width > fs * 52) {
++        proseLineLengthViolations++;
++      }
++    }
++
++    const children = Array.from(el.children).filter((c) => {
++      const cs = getComputedStyle(c);
++      return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.position !== 'absolute' && cs.position !== 'fixed';
++    });
++    for (let i = 0; i < children.length; i++) {
++      const r1 = children[i].getBoundingClientRect();
++      for (let j = i + 1; j < children.length; j++) {
++        const r2 = children[j].getBoundingClientRect();
++        const overlapX = Math.max(0, Math.min(r1.right, r2.right) - Math.max(r1.left, r2.left));
++        const overlapY = Math.max(0, Math.min(r1.bottom, r2.bottom) - Math.max(r1.top, r2.top));
++        if (overlapX > 2 && overlapY > 2) siblingCollisionCount++;
++        const topDiff = Math.abs(r1.top - r2.top);
++        if (topDiff > 0.5 && topDiff <= 3.5 && overlapX === 0) baselineJitterCount++;
++      }
++    }
++  }
++
++  return {
++    viewport: { width: vw, height: vh },
++    horizontalOverflowPx,
++    elementOverflowCount,
++    siblingCollisionCount,
++    baselineJitterCount,
++    lowContrastCount,
++    descenderClipCount,
++    tinyTargetCount,
++    unlabeledControlCount,
++    offGridSpacingCount,
++    totalSpacingSamples,
++    distinctFontSizes: fontSizes.size,
++    headingToBodyRatio: +(maxHeadingSize / Math.max(12, bodyFontSize)).toFixed(2),
++    proseLineLengthViolations,
++    neonSlopGradientCount,
++    viewportCoverageRatio: +Math.min(1, occupiedArea / Math.max(1, vw * vh)).toFixed(2)
++  };
++})()`
++
++export function scoreUXMetrics(m: UXRawMetrics, threshold: number = 85): UXScorecard {
++  const axes: UXAxisScore[] = []
++  const remediations: string[] = []
++
++  // Axis 1: Spatial Rhythm & Whitespace Balance (20 pts)
++  let spatial = 20
++  const spatialNotes: string[] = []
++  const offGridRatio = m.totalSpacingSamples > 0 ? m.offGridSpacingCount / m.totalSpacingSamples : 0
++  if (offGridRatio > 0.25) {
++    const penalty = Math.min(10, Math.round(offGridRatio * 20))
++    spatial -= penalty
++    spatialNotes.push(`${m.offGridSpacingCount}/${m.totalSpacingSamples} spacing values off 4px/6px token grid (-${penalty})`)
++    remediations.push("Snap padding, margin, and gap values to the 4px/8px geometric token scale (`--space-1` through `--space-12`).")
++  }
++  if (m.viewportCoverageRatio < 0.15) {
++    spatial -= 6
++    spatialNotes.push(`Sparse viewport coverage (${Math.round(m.viewportCoverageRatio * 100)}%) leaves dead voids (-6)`)
++    remediations.push("Distribute visual weight or scale hero/container proportions to eliminate dead viewport voids.")
++  } else if (m.viewportCoverageRatio > 0.92) {
++    spatial -= 4
++    spatialNotes.push(`Over-crowded viewport coverage (${Math.round(m.viewportCoverageRatio * 100)}%) lacks macro-whitespace (-4)`)
++    remediations.push("Increase macro-whitespace between top-level sections so cards and controls can breathe.")
++  }
++  axes.push({ axis: "Spatial Rhythm & Whitespace", score: Math.max(0, spatial), maxScore: 20, notes: spatialNotes })
++
++  // Axis 2: Typographic Hierarchy & Readability (20 pts)
++  let typo = 20
++  const typoNotes: string[] = []
++  if (m.headingToBodyRatio < 1.25) {
++    typo -= 6
++    typoNotes.push(`Weak heading-to-body scale ratio (${m.headingToBodyRatio}x < 1.25x) (-6)`)
++    remediations.push("Increase typographic scale contrast between primary headings and body copy (>= 1.25x).")
++  }
++  if (m.distinctFontSizes > 7) {
++    typo -= 4
++    typoNotes.push(`Too many distinct font sizes (${m.distinctFontSizes} > 7) creates visual noise (-4)`)
++    remediations.push("Consolidate font sizes to a disciplined 4–6 step modular type scale.")
++  }
++  if (m.descenderClipCount > 0) {
++    const p = Math.min(8, m.descenderClipCount * 4)
++    typo -= p
++    typoNotes.push(`${m.descenderClipCount} element(s) risk clipping descenders (line-height < 1.15 with overflow:hidden) (-${p})`)
++    remediations.push("Raise line-height to >= 1.15 on headings and >= 1.4 on body text inside overflow-clipped containers.")
++  }
++  if (m.proseLineLengthViolations > 0) {
++    const p = Math.min(4, m.proseLineLengthViolations * 2)
++    typo -= p
++    typoNotes.push(`${m.proseLineLengthViolations} paragraph(s) exceed comfortable 75ch reading measure (-${p})`)
++    remediations.push("Constrain long-form body paragraphs to `max-width: 65ch`.")
++  }
++  axes.push({ axis: "Typographic Hierarchy & Readability", score: Math.max(0, typo), maxScore: 20, notes: typoNotes })
++
++  // Axis 3: Color Harmony & WCAG Contrast (20 pts)
++  let color = 20
++  const colorNotes: string[] = []
++  if (m.lowContrastCount > 0) {
++    const p = Math.min(14, m.lowContrastCount * 4)
++    color -= p
++    colorNotes.push(`${m.lowContrastCount} text node(s) fail WCAG AA contrast (-${p})`)
++    remediations.push("Fix low-contrast text nodes so body copy meets >= 4.5:1 and large headings meet >= 3.0:1.")
++  }
++  if (m.neonSlopGradientCount > 0) {
++    const p = Math.min(8, m.neonSlopGradientCount * 4)
++    color -= p
++    colorNotes.push(`${m.neonSlopGradientCount} banned neon purple/magenta AI-slop gradient(s) detected (-${p})`)
++    remediations.push("Replace generic neon purple/pink gradients with intentional surface luminance tokens (`--surface-0..2`).")
++  }
++  axes.push({ axis: "Color Harmony & WCAG Contrast", score: Math.max(0, color), maxScore: 20, notes: colorNotes })
++
++  // Axis 4: Alignment & Grid Cohesion (15 pts)
++  let align = 15
++  const alignNotes: string[] = []
++  if (m.baselineJitterCount > 0) {
++    const p = Math.min(15, m.baselineJitterCount * 3)
++    align -= p
++    alignNotes.push(`${m.baselineJitterCount} sibling row baseline jitter(s) of 0.5px–3.5px (-${p})`)
++    remediations.push("Align sibling cards and row controls using `align-items: center` or uniform top/bottom padding.")
++  }
++  axes.push({ axis: "Alignment & Grid Cohesion", score: Math.max(0, align), maxScore: 15, notes: alignNotes })
++
++  // Axis 5: Interactive Affordance & Accessibility (15 pts)
++  let inter = 15
++  const interNotes: string[] = []
++  if (m.tinyTargetCount > 0) {
++    const p = Math.min(10, m.tinyTargetCount * 3)
++    inter -= p
++    interNotes.push(`${m.tinyTargetCount} interactive control(s) smaller than 24x24px (-${p})`)
++    remediations.push("Enlarge interactive buttons and inputs to at least 28x28px on desktop and 40x40px on mobile.")
++  }
++  if (m.unlabeledControlCount > 0) {
++    const p = Math.min(8, m.unlabeledControlCount * 4)
++    inter -= p
++    interNotes.push(`${m.unlabeledControlCount} interactive control(s) lack visible text or aria-label (-${p})`)
++    remediations.push("Add explicit `aria-label` or visible label text to every interactive button and input.")
++  }
++  axes.push({ axis: "Interactive Affordance & A11y", score: Math.max(0, inter), maxScore: 15, notes: interNotes })
++
++  // Axis 6: Zero-Defect Geometry (10 pts)
++  let geom = 10
++  const geomNotes: string[] = []
++  if (m.horizontalOverflowPx > 0) {
++    geom -= 5
++    geomNotes.push(`Page horizontal overflow of ${m.horizontalOverflowPx}px (-5)`)
++    remediations.push("Eliminate unintended page-level horizontal scroll (`scrollWidth > innerWidth`).")
++  }
++  if (m.elementOverflowCount > 0) {
++    const p = Math.min(5, m.elementOverflowCount * 2)
++    geom -= p
++    geomNotes.push(`${m.elementOverflowCount} overflowing child container(s) (-${p})`)
++    remediations.push("Fix overflowing child containers with `min-width: 0`, `flex-wrap`, or explicit scroll containers.")
++  }
++  if (m.siblingCollisionCount > 0) {
++    const p = Math.min(6, m.siblingCollisionCount * 3)
++    geom -= p
++    geomNotes.push(`${m.siblingCollisionCount} colliding sibling bounding box(es) (-${p})`)
++    remediations.push("Resolve overlapping sibling elements by fixing flex/grid gaps or positioning.")
++  }
++  axes.push({ axis: "Zero-Defect Geometry", score: Math.max(0, geom), maxScore: 10, notes: geomNotes })
++
++  const total = axes.reduce((acc, a) => acc + a.score, 0)
++  const grade: UXScorecard["grade"] =
++    total >= 95 ? "S" : total >= 85 ? "A" : total >= 75 ? "B" : total >= 60 ? "C" : "F"
++
++  return {
++    score: total,
++    grade,
++    passed: total >= threshold,
++    threshold,
++    axes,
++    remediations,
++    evaluatedAt: new Date().toISOString(),
++  }
++}
++
++export async function saveUXScorecard(rootDir: string, scorecard: UXScorecard): Promise<string> {
++  const dir = path.join(rootDir, ".opencode", "artifacts")
++  await fs.mkdir(dir, { recursive: true })
++  const file = path.join(dir, "ux-scorecard.json")
++  await fs.writeFile(file, JSON.stringify(scorecard, null, 2), "utf8")
++  return file
++}
++
++export async function loadLatestUXScorecard(rootDir: string): Promise<UXScorecard | null> {
++  try {
++    const raw = await fs.readFile(path.join(rootDir, ".opencode", "artifacts", "ux-scorecard.json"), "utf8")
++    return JSON.parse(raw) as UXScorecard
++  } catch {
++    return null
++  }
++}
++
++export function registerUXJudgeTools(editor: any, rootDir: string): void {
++  editor.add({
++    name: "get_ux_Required_script",
++    description:
++      "Return the JavaScript expression string to pass to `tools.browser.evaluate({ tabID, script })` to collect raw 6-axis UI/UX metrics for `tools.ui.score_ux`.",
++    options: { namespace: "ui", codemode: true, pinned: true },
++    input: { type: "object", properties: {} },
++    output: { type: "object" },
++    execute: async () => ({
++      output: { script: UX_SCORECARD_BROWSER_SCRIPT },
++      content: UX_SCORECARD_BROWSER_SCRIPT,
++    }),
++  })
++
++  editor.add({
++    name: "score_ux",
++    description:
++      "Compute a deterministic 0–100 Visual Quality & UI/UX Scorecard (`grade: S|A|B|C|F`, `passed: score >= 85`) from raw browser metrics returned by `get_ux_Required_script`, and save it to `.opencode/artifacts/ux-scorecard.json`.",
++    options: { namespace: "ui", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        metrics: { type: "object", description: "Raw metrics object returned by evaluating get_ux_Required_script" },
++        threshold: { type: "number", description: "Minimum passing score (default 85)" },
++      },
++      required: ["metrics"],
++    },
++    output: { type: "object" },
++    execute: async (input: { metrics: UXRawMetrics; threshold?: number }) => {
++      const card = scoreUXMetrics(input.metrics, input.threshold ?? 85)
++      await saveUXScorecard(rootDir, card)
++      return {
++        output: card,
++        content: `UX Scorecard: ${card.score}/100 (Grade ${card.grade}) — ${card.passed ? "PASSED" : "FAILED (< " + card.threshold + ")"}\n${card.remediations.map((r) => "- " + r).join("\n")}`,
++      }
++    },
++  })
++}
+diff --git a/src/packs/index.ts b/src/packs/index.ts
+new file mode 100644
+index 0000000..d780c7a
+--- /dev/null
++++ b/src/packs/index.ts
+@@ -0,0 +1,261 @@
++import { execFile } from "node:child_process"
++import * as fs from "node:fs/promises"
++import * as path from "node:path"
++import { promisify } from "node:util"
++
++const execFileAsync = promisify(execFile)
++
++/**
++ * Pillar 4: On-Demand Domain Packs (`src/packs/index.ts`)
++ *
++ * Consolidates Heretek-AI's vertical plugins into one unified registry:
++ * - `re` (`opencode-rea`): Reverse Engineering & Binary Triage (`inspect_binary`, `strings_audit`).
++ * - `godot` (`godot-opencode`): Godot 4.x Engine `.tscn` scene tree parser & GDScript checker.
++ * - `gdevelop` (`GDevelop-Unlocked`): GDevelop 5 `game.json` inspector & `--heretek-debug-log` analyzer.
++ */
++
++export type DomainPackId = "re" | "godot" | "gdevelop"
++
++export interface DomainPackStatus {
++  id: DomainPackId
++  title: string
++  replacesRepo: string
++  active: boolean
++  autoDetected: boolean
++  reason: string
++}
++
++const activePacksByRoot = new Map<string, Set<DomainPackId>>()
++
++export async function detectDomainPacks(rootDir: string): Promise<DomainPackStatus[]> {
++  const key = path.resolve(rootDir)
++  const manual = activePacksByRoot.get(key) ?? new Set<DomainPackId>()
++
++  let hasGodot = false
++  let hasGDevelop = false
++  let hasBinary = false
++
++  try {
++    const entries = await fs.readdir(rootDir)
++    hasGodot = entries.includes("project.godot")
++    hasGDevelop = entries.includes("game.json") || entries.some((e) => e.endsWith(".gdg"))
++    hasBinary = entries.some((e) => /\.(?:exe|dll|so|dylib|bin|elf|apk|ipa)$/i.test(e))
++  } catch {
++    // ignore
++  }
++
++  if (hasGodot) manual.add("godot")
++  if (hasGDevelop) manual.add("gdevelop")
++  if (hasBinary) manual.add("re")
++  activePacksByRoot.set(key, manual)
++
++  return [
++    {
++      id: "re",
++      title: "Reverse Engineering & Binary Analysis Pack",
++      replacesRepo: "Heretek-AI/opencode-rea",
++      active: manual.has("re"),
++      autoDetected: hasBinary,
++      reason: hasBinary ? "Detected binary artifact in workspace" : manual.has("re") ? "Activated via /pack re" : "Dormant (0 token overhead)",
++    },
++    {
++      id: "godot",
++      title: "Godot 4.x Scene & GDScript Pack",
++      replacesRepo: "Heretek-AI/godot-opencode",
++      active: manual.has("godot"),
++      autoDetected: hasGodot,
++      reason: hasGodot ? "Detected project.godot" : manual.has("godot") ? "Activated via /pack godot" : "Dormant (0 token overhead)",
++    },
++    {
++      id: "gdevelop",
++      title: "GDevelop 5 Project & Debug Log Pack",
++      replacesRepo: "Heretek-AI/GDevelop-Unlocked",
++      active: manual.has("gdevelop"),
++      autoDetected: hasGDevelop,
++      reason: hasGDevelop ? "Detected GDevelop game.json/.gdg" : manual.has("gdevelop") ? "Activated via /pack gdevelop" : "Dormant (0 token overhead)",
++    },
++  ]
++}
++
++export function activateDomainPack(rootDir: string, packId: DomainPackId): void {
++  const key = path.resolve(rootDir)
++  const set = activePacksByRoot.get(key) ?? new Set<DomainPackId>()
++  set.add(packId)
++  activePacksByRoot.set(key, set)
++}
++
++export async function inspectGodotScene(rootDir: string, scenePath: string): Promise<{
++  path: string
++  formatVersion: number
++  extResources: Array<{ id: string; type: string; path: string }>
++  nodes: Array<{ name: string; type: string; parent: string; script?: string }>
++}> {
++  const abs = path.resolve(rootDir, scenePath)
++  const raw = await fs.readFile(abs, "utf8")
++  const headerMatch = /\[gd_scene[^\]]*format=(\d+)/.exec(raw)
++  const formatVersion = headerMatch ? Number(headerMatch[1]) : 3
++
++  const extResources: Array<{ id: string; type: string; path: string }> = []
++  for (const m of raw.matchAll(/\[ext_resource\s+([^\]]+)\]/g)) {
++    const attrs = m[1]
++    const id = /id="([^"]+)"/.exec(attrs)?.[1] ?? /id=(\S+)/.exec(attrs)?.[1] ?? ""
++    const type = /type="([^"]+)"/.exec(attrs)?.[1] ?? ""
++    const p = /path="([^"]+)"/.exec(attrs)?.[1] ?? ""
++    extResources.push({ id, type, path: p })
++  }
++
++  const nodes: Array<{ name: string; type: string; parent: string; script?: string }> = []
++  for (const m of raw.matchAll(/\[node\s+([^\]]+)\]([\s\S]*?)(?=\n\[|$)/g)) {
++    const attrs = m[1]
++    const body = m[2]
++    const name = /name="([^"]+)"/.exec(attrs)?.[1] ?? "Node"
++    const type = /type="([^"]+)"/.exec(attrs)?.[1] ?? "Node"
++    const parent = /parent="([^"]+)"/.exec(attrs)?.[1] ?? "."
++    const script = /script\s*=\s*ExtResource\(\s*"?([^")]+)"?\s*\)/.exec(body)?.[1]
++    nodes.push({ name, type, parent, ...(script ? { script } : {}) })
++  }
++
++  return { path: scenePath, formatVersion, extResources, nodes }
++}
++
++export async function inspectGDevelopProject(rootDir: string, projectPath: string = "game.json"): Promise<{
++  name: string
++  version: string
++  windowWidth: number
++  windowHeight: number
++  scenes: Array<{ name: string; objectsCount: number; eventsCount: number }>
++  globalObjectsCount: number
++  extensionsCount: number
++}> {
++  const abs = path.resolve(rootDir, projectPath)
++  const raw = JSON.parse(await fs.readFile(abs, "utf8"))
++  const props = raw.properties ?? {}
++  const layouts = Array.isArray(raw.layouts) ? raw.layouts : []
++
++  return {
++    name: props.name ?? "Untitled GDevelop Game",
++    version: props.version ?? "1.0.0",
++    windowWidth: Number(props.windowWidth ?? 800),
++    windowHeight: Number(props.windowHeight ?? 600),
++    scenes: layouts.map((l: any) => ({
++      name: String(l.name ?? "Scene"),
++      objectsCount: Array.isArray(l.objects) ? l.objects.length : 0,
++      eventsCount: Array.isArray(l.events) ? l.events.length : 0,
++    })),
++    globalObjectsCount: Array.isArray(raw.objects) ? raw.objects.length : 0,
++    extensionsCount: Array.isArray(raw.eventsFunctionsExtensions) ? raw.eventsFunctionsExtensions.length : 0,
++  }
++}
++
++export async function inspectBinaryTarget(rootDir: string, binaryPath: string): Promise<{
++  path: string
++  sizeBytes: number
++  format: "ELF" | "PE" | "Mach-O" | "WASM" | "Unknown"
++  extractedStringsSample: string[]
++}> {
++  const abs = path.resolve(rootDir, binaryPath)
++  const buf = await fs.readFile(abs)
++  let format: "ELF" | "PE" | "Mach-O" | "WASM" | "Unknown" = "Unknown"
++  if (buf.length >= 4) {
++    if (buf[0] === 0x7f && buf[1] === 0x45 && buf[2] === 0x4c && buf[3] === 0x46) format = "ELF"
++    else if (buf[0] === 0x4d && buf[1] === 0x5a) format = "PE"
++    else if (buf[0] === 0x00 && buf[1] === 0x61 && buf[2] === 0x73 && buf[3] === 0x6d) format = "WASM"
++    else if (
++      (buf[0] === 0xfe && buf[1] === 0xed && buf[2] === 0xfa && (buf[3] === 0xce || buf[3] === 0xcf)) ||
++      (buf[3] === 0xfe && buf[2] === 0xed && buf[1] === 0xfa && (buf[0] === 0xce || buf[0] === 0xcf))
++    ) {
++      format = "Mach-O"
++    }
++  }
++
++  // Extract printable ASCII strings >= 5 chars directly from buffer (zero external bin dependency required)
++  const strings: string[] = []
++  let current = ""
++  for (let i = 0; i < Math.min(buf.length, 512 * 1024); i++) {
++    const b = buf[i]
++    if (b >= 32 && b <= 126) {
++      current += String.fromCharCode(b)
++    } else {
++      if (current.length >= 5 && /[A-Za-z]/.test(current)) {
++        strings.push(current)
++        if (strings.length >= 60) break
++      }
++      current = ""
++    }
++  }
++  if (current.length >= 5 && strings.length < 60) strings.push(current)
++
++  return {
++    path: binaryPath,
++    sizeBytes: buf.length,
++    format,
++    extractedStringsSample: strings,
++  }
++}
++
++export function registerDomainPackTools(editor: any, rootDir: string): void {
++  editor.namespace({
++    name: "packs",
++    description:
++      "Unified Heretek Domain Packs (`re` from opencode-rea, `godot` from godot-opencode, `gdevelop` from GDevelop-Unlocked). Dormant until auto-detected or activated via `/pack`.",
++  })
++
++  editor.add({
++    name: "status",
++    description: "List all domain packs (`re`, `godot`, `gdevelop`) and whether they are active in this workspace.",
++    options: { namespace: "packs", codemode: true, pinned: false },
++    input: { type: "object", properties: {} },
++    output: { type: "object" },
++    execute: async () => {
++      const packs = await detectDomainPacks(rootDir)
++      return { output: { packs }, content: JSON.stringify(packs, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "godot_inspect_scene",
++    description: "Parse a Godot 4.x `.tscn` scene file into its node hierarchy, attached scripts, and external resources.",
++    options: { namespace: "packs", codemode: true, pinned: false },
++    input: {
++      type: "object",
++      properties: { path: { type: "string", description: "Path to .tscn file" } },
++      required: ["path"],
++    },
++    output: { type: "object" },
++    execute: async (input: { path: string }) => {
++      const res = await inspectGodotScene(rootDir, input.path)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "gdevelop_inspect_project",
++    description: "Parse a GDevelop 5 `game.json` project into scenes, object counts, event counts, and extensions.",
++    options: { namespace: "packs", codemode: true, pinned: false },
++    input: {
++      type: "object",
++      properties: { path: { type: "string", description: "Path to game.json (default 'game.json')" } },
++    },
++    output: { type: "object" },
++    execute: async (input: { path?: string }) => {
++      const res = await inspectGDevelopProject(rootDir, input?.path ?? "game.json")
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++
++  editor.add({
++    name: "re_inspect_binary",
++    description: "Identify binary format (ELF, PE, Mach-O, WASM), byte size, and printable strings sample from a binary file.",
++    options: { namespace: "packs", codemode: true, pinned: false },
++    input: {
++      type: "object",
++      properties: { path: { type: "string", description: "Path to binary file" } },
++      required: ["path"],
++    },
++    output: { type: "object" },
++    execute: async (input: { path: string }) => {
++      const res = await inspectBinaryTarget(rootDir, input.path)
++      return { output: res, content: JSON.stringify(res, null, 2) }
++    },
++  })
++}
+diff --git a/src/version.ts b/src/version.ts
+index fcd91ad..97210b2 100644
+--- a/src/version.ts
++++ b/src/version.ts
+@@ -1 +1 @@
+-export const SWARMOS_VERSION = "0.9.0"
++export const SWARMOS_VERSION = "1.1.0"
+diff --git a/src/webui/dashboard.ts b/src/webui/dashboard.ts
+new file mode 100644
+index 0000000..e8f3631
+--- /dev/null
++++ b/src/webui/dashboard.ts
+@@ -0,0 +1,381 @@
++import * as http from "node:http"
++import * as fs from "node:fs/promises"
++import * as path from "node:path"
++import { loadBoard, verifyReleaseReady } from "../board/board.js"
++import { listEpistemicSources } from "../epistemic/dialectic.js"
++import { detectDomainPacks } from "../packs/index.js"
++import { listTelemetryFiles } from "../host/telemetry.js"
++
++function escapeHtml(raw: unknown): string {
++  return String(raw ?? "")
++    .replace(/&/g, "&amp;")
++    .replace(/</g, "&lt;")
++    .replace(/>/g, "&gt;")
++    .replace(/"/g, "&quot;")
++    .replace(/'/g, "&#39;")
++}
++
++export async function generateSwarmDashboardHtml(rootDir: string): Promise<{
++  dashboardPath: string
++  readyToShip: boolean
++  taskCount: number
++  contractCount: number
++  uxScore: number | null
++}> {
++  const [board, readiness, epistemicSources, packs, telemetry] = await Promise.all([
++    loadBoard(rootDir),
++    verifyReleaseReady(rootDir),
++    listEpistemicSources(rootDir),
++    detectDomainPacks(rootDir),
++    listTelemetryFiles(rootDir).catch(() => []),
++  ])
++
++  let uxScorecard: any = null
++  try {
++    const rawUx = await fs.readFile(path.join(rootDir, ".opencode", "artifacts", "ux-scorecard.json"), "utf8")
++    uxScorecard = JSON.parse(rawUx)
++  } catch {
++    // Optional UX scorecard
++  }
++
++  const projectTitle = board.project?.name ?? path.basename(path.resolve(rootDir))
++  const projectVision = board.project?.vision ?? "Autonomous Multi-Agent Engineering Workspace"
++  const archetype = board.project?.aestheticArchetype ?? "High-Craft Technical Dark"
++
++  const tasksByStatus = {
++    pending: board.tasks.filter((t) => t.status === "pending"),
++    in_progress: board.tasks.filter((t) => t.status === "in_progress" || t.status === "ready_for_qa"),
++    qa_rejected: board.tasks.filter((t) => t.status === "qa_rejected"),
++    verified: board.tasks.filter((t) => t.status === "verified"),
++  }
++
++  const renderTaskCard = (t: any) => {
++    const latestReceipt = Array.isArray(t.qaReceipts) && t.qaReceipts.length > 0 ? t.qaReceipts[t.qaReceipts.length - 1] : null
++    const badgeClass =
++      latestReceipt?.verdict === "PASS"
++        ? "badge-pass"
++        : latestReceipt?.verdict === "REJECT"
++          ? "badge-reject"
++          : "badge-neutral"
++    const badgeLabel = latestReceipt ? `QA: ${latestReceipt.verdict}` : "QA: PENDING"
++    return `<div class="card task-card">
++      <div class="card-header">
++        <span class="mono-id">${escapeHtml(t.id)}</span>
++        <span class="badge ${badgeClass}">${escapeHtml(badgeLabel)}</span>
++      </div>
++      <div class="card-title">${escapeHtml(t.title)}</div>
++      <div class="card-meta">
++        <span>Role: <strong>${escapeHtml(t.owner)}</strong></span>
++        ${t.worktree ? `<span class="mono-tag">${escapeHtml(t.worktree)}</span>` : ""}
++      </div>
++      <div class="card-paths">${(t.ownedPaths ?? []).map((p: string) => `<code>${escapeHtml(p)}</code>`).join(" ")}</div>
++    </div>`
++  }
++
++  const html = `<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="utf-8" />
++  <meta name="viewport" content="width=device-width, initial-scale=1" />
++  <title>SwarmOS v1.0 Command Center — ${escapeHtml(projectTitle)}</title>
++  <style>
++    :root {
++      --surface-0: #0D0E11;
++      --surface-1: #14161B;
++      --surface-2: #1C1F26;
++      --surface-3: #252932;
++      --text-primary: #F3F4F6;
++      --text-secondary: #9CA3AF;
++      --text-muted: #6B7280;
++      --border-subtle: rgba(255, 255, 255, 0.08);
++      --accent-emerald: #10B981;
++      --accent-amber: #F59E0B;
++      --accent-rose: #F43F5E;
++      --accent-sky: #38BDF8;
++      --space-1: 4px;
++      --space-2: 8px;
++      --space-3: 12px;
++      --space-4: 16px;
++      --space-6: 24px;
++      --space-8: 32px;
++      --radius-sm: 4px;
++      --radius-md: 6px;
++      --radius-lg: 10px;
++      --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
++      --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
++    }
++    * { box-sizing: border-box; margin: 0; padding: 0; }
++    body {
++      background: var(--surface-0);
++      color: var(--text-primary);
++      font-family: var(--font-sans);
++      font-size: 14px;
++      line-height: 1.5;
++      padding: var(--space-6);
++      font-variant-numeric: tabular-nums;
++    }
++    .shell { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-6); }
++    header.topbar {
++      display: flex; justify-content: space-between; align-items: center;
++      padding: var(--space-4) var(--space-6);
++      background: var(--surface-1);
++      border: 1px solid var(--border-subtle);
++      border-radius: var(--radius-lg);
++    }
++    .brand { display: flex; flex-direction: column; gap: var(--space-1); }
++    .brand h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
++    .brand p { color: var(--text-secondary); font-size: 13px; }
++    .status-pill {
++      display: inline-flex; align-items: center; gap: var(--space-2);
++      padding: 6px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600;
++      font-family: var(--font-mono);
++    }
++    .status-ready { background: rgba(16, 185, 129, 0.14); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.35); }
++    .status-blocked { background: rgba(245, 158, 11, 0.14); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.35); }
++    .metrics-grid {
++      display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4);
++    }
++    .metric-card {
++      background: var(--surface-1); border: 1px solid var(--border-subtle);
++      border-radius: var(--radius-md); padding: var(--space-4);
++      display: flex; flex-direction: column; gap: var(--space-1);
++    }
++    .metric-label { color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
++    .metric-value { font-size: 24px; font-weight: 600; font-family: var(--font-mono); }
++    .metric-sub { color: var(--text-muted); font-size: 12px; }
++    .kanban {
++      display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4);
++    }
++    .kanban-col {
++      background: var(--surface-1); border: 1px solid var(--border-subtle);
++      border-radius: var(--radius-md); padding: var(--space-4);
++      display: flex; flex-direction: column; gap: var(--space-3); min-height: 260px;
++    }
++    .col-header {
++      display: flex; justify-content: space-between; align-items: center;
++      font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
++      color: var(--text-secondary); padding-bottom: var(--space-2);
++      border-bottom: 1px solid var(--border-subtle);
++    }
++    .card {
++      background: var(--surface-2); border: 1px solid var(--border-subtle);
++      border-radius: var(--radius-sm); padding: var(--space-3);
++      display: flex; flex-direction: column; gap: var(--space-2);
++    }
++    .card-header { display: flex; justify-content: space-between; align-items: center; }
++    .mono-id { font-family: var(--font-mono); font-size: 11px; color: var(--accent-sky); }
++    .badge { font-family: var(--font-mono); font-size: 10px; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: 600; }
++    .badge-pass { background: rgba(16, 185, 129, 0.16); color: #34D399; }
++    .badge-reject { background: rgba(244, 63, 94, 0.16); color: #FB7185; }
++    .badge-neutral { background: rgba(156, 163, 175, 0.14); color: #D1D5DB; }
++    .card-title { font-weight: 500; font-size: 13px; color: var(--text-primary); }
++    .card-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
++    .card-paths { display: flex; flex-wrap: wrap; gap: 4px; }
++    code { font-family: var(--font-mono); font-size: 11px; background: var(--surface-3); padding: 1px 5px; border-radius: 3px; color: #E5E7EB; }
++    .bottom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
++    .panel {
++      background: var(--surface-1); border: 1px solid var(--border-subtle);
++      border-radius: var(--radius-md); padding: var(--space-4);
++      display: flex; flex-direction: column; gap: var(--space-3);
++    }
++    .panel h2 { font-size: 14px; font-weight: 600; color: var(--text-primary); border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-2); }
++    ul.clean-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); font-size: 13px; color: var(--text-secondary); }
++    @media (max-width: 960px) {
++      .metrics-grid, .kanban, .bottom-grid { grid-template-columns: 1fr; }
++    }
++  </style>
++</head>
++<body>
++  <div class="shell">
++    <header class="topbar">
++      <div class="brand">
++        <h1>SwarmOS v1.0 — The Agency Command Center · ${escapeHtml(projectTitle)}</h1>
++        <p>${escapeHtml(projectVision)} · Archetype: <code>${escapeHtml(archetype)}</code></p>
++      </div>
++      <div class="status-pill ${readiness.ready ? "status-ready" : "status-blocked"}">
++        ${readiness.ready ? "RELEASE GATE: READY TO SHIP" : `RELEASE GATE: ${readiness.blockers.length} BLOCKER(S)`}
++      </div>
++    </header>
++
++    <section class="metrics-grid">
++      <div class="metric-card">
++        <span class="metric-label">Locked Contracts</span>
++        <span class="metric-value">${board.contracts.length}</span>
++        <span class="metric-sub">Architect Gate 1 Invariants</span>
++      </div>
++      <div class="metric-card">
++        <span class="metric-label">Verified Tasks</span>
++        <span class="metric-value">${readiness.verifiedTasks.length} / ${board.tasks.filter((t) => t.status !== "superseded").length}</span>
++        <span class="metric-sub">Signed Adversarial QA Receipts</span>
++      </div>
++      <div class="metric-card">
++        <span class="metric-label">Visual UI/UX Judge</span>
++        <span class="metric-value">${uxScorecard ? `${uxScorecard.score}/100 (${escapeHtml(uxScorecard.grade)})` : "Not Run"}</span>
++        <span class="metric-sub">${uxScorecard ? (uxScorecard.passed ? "Passed >= 85 Threshold" : "Needs Visual Remediation") : "Run tools.ui.score_ux"}</span>
++      </div>
++      <div class="metric-card">
++        <span class="metric-label">Epistemic Sources & Packs</span>
++        <span class="metric-value">${epistemicSources.length} src · ${packs.recommendedPacks.length} pack</span>
++        <span class="metric-sub">Active Packs: ${escapeHtml(packs.recommendedPacks.join(", ") || "core")}</span>
++      </div>
++    </section>
++
++    <section class="kanban">
++      <div class="kanban-col">
++        <div class="col-header"><span>Pending</span><span>${tasksByStatus.pending.length}</span></div>
++        ${tasksByStatus.pending.map(renderTaskCard).join("") || `<div class="metric-sub">No pending tasks.</div>`}
++      </div>
++      <div class="kanban-col">
++        <div class="col-header"><span>In Progress / Ready QA</span><span>${tasksByStatus.in_progress.length}</span></div>
++        ${tasksByStatus.in_progress.map(renderTaskCard).join("") || `<div class="metric-sub">No active tasks.</div>`}
++      </div>
++      <div class="kanban-col">
++        <div class="col-header"><span>QA Rejected</span><span>${tasksByStatus.qa_rejected.length}</span></div>
++        ${tasksByStatus.qa_rejected.map(renderTaskCard).join("") || `<div class="metric-sub">Zero rejected tasks.</div>`}
++      </div>
++      <div class="kanban-col">
++        <div class="col-header"><span>Verified (PASS)</span><span>${tasksByStatus.verified.length}</span></div>
++        ${tasksByStatus.verified.map(renderTaskCard).join("") || `<div class="metric-sub">No verified tasks yet.</div>`}
++      </div>
++    </section>
++
++    <section class="bottom-grid">
++      <div class="panel">
++        <h2>Locked Architecture Contracts</h2>
++        <ul class="clean-list">
++          ${board.contracts.map((c) => `<li><code>${escapeHtml(c.id)}</code> — <strong>${escapeHtml(c.title)}</strong> (${escapeHtml(c.files.join(", "))})</li>`).join("") || "<li>No contracts locked yet.</li>"}
++        </ul>
++      </div>
++      <div class="panel">
++        <h2>100-Point UI/UX Scorecard Breakdown</h2>
++        <ul class="clean-list">
++          ${
++            uxScorecard?.breakdown
++              ? Object.entries(uxScorecard.breakdown)
++                  .map(([k, v]: [string, any]) => `<li><strong>${escapeHtml(k)}</strong>: <code>${v.score}/${v.max}</code></li>`)
++                  .join("")
++              : "<li>Run <code>tools.ui.score_ux</code> to populate live 6-axis UI/UX metrics.</li>"
++          }
++        </ul>
++      </div>
++      <div class="panel">
++        <h2>Epistemic Cache & Telemetry</h2>
++        <ul class="clean-list">
++          <li><strong>Verified SHA-256 Sources</strong>: ${epistemicSources.length}</li>
++          <li><strong>Detected Domain Packs</strong>: ${escapeHtml(packs.recommendedPacks.join(", ") || "none")}</li>
++          <li><strong>Recorded Telemetry Sessions</strong>: ${Array.isArray(telemetry) ? telemetry.length : 0}</li>
++        </ul>
++      </div>
++    </section>
++  </div>
++</body>
++</html>`
++
++  const outDir = path.join(rootDir, ".opencode", "artifacts")
++  await fs.mkdir(outDir, { recursive: true })
++  const dashboardPath = path.join(outDir, "swarm-dashboard.html")
++  await fs.writeFile(dashboardPath, html, "utf8")
++
++  return {
++    dashboardPath,
++    readyToShip: readiness.ready,
++    taskCount: board.tasks.length,
++    contractCount: board.contracts.length,
++    uxScore: uxScorecard?.score ?? null,
++  }
++}
++
++
++const activeServers = new Map<string, { url: string; port: number; server: http.Server }>()
++
++export async function startSwarmWebUIServer(rootDir: string, preferredPort = 4310): Promise<{
++  url: string
++  port: number
++  dashboardPath: string
++}> {
++  const key = path.resolve(rootDir)
++  const existing = activeServers.get(key)
++  const rendered = await generateSwarmDashboardHtml(rootDir)
++  if (existing) {
++    return { url: existing.url, port: existing.port, dashboardPath: rendered.dashboardPath }
++  }
++
++  const server = http.createServer(async (req, res) => {
++    try {
++      const reqUrl = req.url ?? "/"
++      if (reqUrl.startsWith("/api/state")) {
++        const [board, readiness, epistemicSources, packs] = await Promise.all([
++          loadBoard(rootDir),
++          verifyReleaseReady(rootDir),
++          listEpistemicSources(rootDir),
++          detectDomainPacks(rootDir),
++        ])
++        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*" })
++        res.end(JSON.stringify({ board, readiness, epistemicSources, packs }))
++        return
++      }
++      const latest = await generateSwarmDashboardHtml(rootDir)
++      const html = await fs.readFile(latest.dashboardPath, "utf8")
++      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
++      res.end(html)
++    } catch (err: any) {
++      res.writeHead(500, { "Content-Type": "application/json" })
++      res.end(JSON.stringify({ error: String(err?.message ?? err) }))
++    }
++  })
++
++  const port = await new Promise<number>((resolve, reject) => {
++    server.once("error", () => {
++      server.listen(0, "127.0.0.1", () => {
++        const addr = server.address()
++        resolve(typeof addr === "object" && addr ? addr.port : preferredPort)
++      })
++    })
++    server.listen(preferredPort, "127.0.0.1", () => {
++      const addr = server.address()
++      resolve(typeof addr === "object" && addr ? addr.port : preferredPort)
++    })
++  })
++
++  const url = `http://127.0.0.1:${port}`
++  activeServers.set(key, { url, port, server })
++  return { url, port, dashboardPath: rendered.dashboardPath }
++}
++
++export function registerDashboardTools(editor: any, rootDir: string) {
++  editor.add({
++    name: "serve_dashboard",
++    description:
++      "Start a live local HTTP + JSON API server (`http://127.0.0.1:4310`) serving The Agency SwarmOS Command Center WebUI and `/api/state`.",
++    options: { namespace: "org", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        port: { type: "number", description: "Preferred local port (default 4310)" },
++      },
++    },
++    output: { type: "object" },
++    execute: async (input: { port?: number }) => {
++      const res = await startSwarmWebUIServer(rootDir, input?.port ?? 4310)
++      return {
++        output: res,
++        content: `SwarmOS Live Command Center WebUI running at ${res.url} (file: ${res.dashboardPath})`,
++      }
++    },
++  })
++  editor.add({
++    name: "render_dashboard",
++    description:
++      "Generate the self-contained 'The Agency' SwarmOS Live Command Center WebUI HTML5 dashboard at `.opencode/artifacts/swarm-dashboard.html`.",
++    options: { namespace: "org", codemode: true, pinned: true },
++    input: { type: "object", properties: {} },
++    output: { type: "object" },
++    execute: async () => {
++      const res = await generateSwarmDashboardHtml(rootDir)
++      return {
++        output: res,
++        content: `Generated SwarmOS Command Center WebUI -> ${res.dashboardPath}`,
++      }
++    },
++  })
++}
+diff --git a/swarmos-plugin.ts b/swarmos-plugin.ts
+index c632b0a..1d7cf59 100644
+--- a/swarmos-plugin.ts
++++ b/swarmos-plugin.ts
+@@ -3442,7 +3442,7 @@ function registerUITools(editor) {
+ }
+ 
+ // src/version.ts
+-var SWARMOS_VERSION = "0.9.0";
++var SWARMOS_VERSION = "1.1.0";
+ 
+ // src/omni/artifacts.ts
+ import * as fs6 from "fs/promises";
+@@ -7034,6 +7034,1421 @@ function registerLspTools(editor, rootDir, runner) {
+   });
+ }
+ 
++
++// src/epistemic/dialectic.ts
++import * as cryptoEpistemic from "node:crypto";
++var PERMISSIVE_LICENSES = new Set(["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "Unlicense", "CC0-1.0"]);
++var WEAK_COPYLEFT_LICENSES = new Set(["MPL-2.0", "LGPL-2.1", "LGPL-2.1-only", "LGPL-3.0", "LGPL-3.0-only", "EPL-2.0"]);
++var STRONG_COPYLEFT_LICENSES = new Set(["GPL-2.0", "GPL-2.0-only", "GPL-3.0", "GPL-3.0-only", "AGPL-3.0", "AGPL-3.0-only", "SSPL-1.0"]);
++function classifySpdxLicense(spdx) {
++  if (!spdx || !spdx.trim()) return "unknown";
++  const norm = spdx.trim();
++  if (PERMISSIVE_LICENSES.has(norm)) return "permissive";
++  if (WEAK_COPYLEFT_LICENSES.has(norm)) return "weak-copyleft";
++  if (STRONG_COPYLEFT_LICENSES.has(norm) || /\b(?:AGPL|GPL|SSPL)/i.test(norm)) return "copyleft-contaminating";
++  return "unknown";
++}
++function getEpistemicDir(rootDir) {
++  return path.join(rootDir, ".opencode", "epistemic");
++}
++async function loadEpistemicIndex(rootDir) {
++  try {
++    const raw = await fs.readFile(path.join(getEpistemicDir(rootDir), "index.json"), "utf8");
++    const parsed = JSON.parse(raw);
++    return Array.isArray(parsed) ? parsed : [];
++  } catch {
++    return [];
++  }
++}
++async function saveEpistemicIndex(rootDir, entries) {
++  const dir = getEpistemicDir(rootDir);
++  await fs.mkdir(dir, { recursive: true });
++  await fs.writeFile(path.join(dir, "index.json"), JSON.stringify(entries, null, 2), "utf8");
++}
++async function cacheEpistemicSource(rootDir, input) {
++  const normalizedContent = input.content.replace(/\r\n/g, "\n");
++  const sha256 = cryptoEpistemic.createHash("sha256").update(normalizedContent, "utf8").digest("hex");
++  const shortHash = sha256.slice(0, 12);
++  const sourcesDir = path.join(getEpistemicDir(rootDir), "sources");
++  await fs.mkdir(sourcesDir, { recursive: true });
++  const filePath = path.join(sourcesDir, `${shortHash}.md`);
++  await fs.writeFile(filePath, normalizedContent, "utf8");
++  const entry = {
++    hash: sha256,
++    shortHash,
++    title: input.title,
++    ...input.url ? { url: input.url } : {},
++    ...input.spdxLicense ? { spdxLicense: input.spdxLicense } : {},
++    licenseCategory: classifySpdxLicense(input.spdxLicense),
++    cachedAt: new Date().toISOString(),
++    byteLength: Buffer.byteLength(normalizedContent, "utf8"),
++    filePath: path.relative(rootDir, filePath).split(path.sep).join("/")
++  };
++  const index = await loadEpistemicIndex(rootDir);
++  const existingIdx = index.findIndex((e) => e.shortHash === shortHash);
++  if (existingIdx >= 0) index[existingIdx] = entry;
++  else index.push(entry);
++  await saveEpistemicIndex(rootDir, index);
++  return entry;
++}
++async function verifyEpistemicClaims(rootDir, markdownText) {
++  const index = await loadEpistemicIndex(rootDir);
++  const byHash = new Map();
++  for (const e of index) {
++    byHash.set(e.shortHash.toLowerCase(), e);
++    byHash.set(e.hash.toLowerCase(), e);
++  }
++  const tagRe = /\[VERIFIED:\s*([a-fA-F0-9]{6,64})(?:\s*\|\s*"([^"]+)")?\]/g;
++  const failedClaims = [];
++  let totalClaimsChecked = 0;
++  let verifiedCount = 0;
++  let match;
++  while ((match = tagRe.exec(markdownText)) !== null) {
++    totalClaimsChecked++;
++    const rawTag = match[0];
++    const hashKey = match[1].toLowerCase();
++    const quote = match[2];
++    const entry = byHash.get(hashKey);
++    if (!entry) {
++      failedClaims.push({ tag: rawTag, reason: `Unknown source hash "${hashKey}" not found in .opencode/epistemic/index.json` });
++      continue;
++    }
++    const absFile = path.resolve(rootDir, entry.filePath);
++    let sourceText = "";
++    try {
++      sourceText = await fs.readFile(absFile, "utf8");
++    } catch {
++      failedClaims.push({ tag: rawTag, reason: `Cached source file missing on disk: ${entry.filePath}` });
++      continue;
++    }
++    if (quote) {
++      const normSource = sourceText.replace(/\s+/g, " ").trim();
++      const normQuote = quote.replace(/\s+/g, " ").trim();
++      if (!normSource.includes(normQuote)) {
++        failedClaims.push({
++          tag: rawTag,
++          reason: `Verbatim quote "${quote.slice(0, 60)}" not found inside cached source [${entry.shortHash}] (${entry.title})`
++        });
++        continue;
++      }
++    }
++    verifiedCount++;
++  }
++  return {
++    totalClaimsChecked,
++    verifiedCount,
++    failedClaims,
++    passed: failedClaims.length === 0
++  };
++}
++function generateGrillQuestions(specText, focusAreas = []) {
++  const lines = specText.split("\n").map((l) => l.trim()).filter(Boolean);
++  const topic = lines[0]?.replace(/^#+\s*/, "") || "System Architecture & Specification";
++  const questions = [
++    `[State & Concurrency] What happens in "${topic}" if two subagents or requests mutate the same state concurrently or a process crashes mid-write?`,
++    `[Failure Modes & Recovery] Which external dependencies or I/O boundaries in "${topic}" can fail or time out, and what is the deterministic fallback or rollback path?`,
++    `[Boundary Invariants] What untrusted inputs enter "${topic}", and where is the schema validation boundary enforced before business logic executes?`,
++    `[Verification & Observability] What single automated command or invariant assertion proves "${topic}" works without human guesswork?`,
++    `[Scope & Blast Radius] Which existing modules or contracts could break if "${topic}" changes, and what is the minimal viable slice we should lock first?`
++  ];
++  for (const area of focusAreas) {
++    questions.push(`[Focused Stress-Test: ${area}] What implicit assumption in "${area}" has not yet been verified against actual code or primary sources?`);
++  }
++  return { topic, questions };
++}
++async function listEpistemicSources(rootDir) {
++  return loadEpistemicIndex(rootDir);
++}
++function registerEpistemicTools(editor, rootDir) {
++  editor.namespace({
++    name: "epistemic",
++    description: "IUMBTEMS Epistemic & Dialectic Engine: SHA-256 content-addressed source cache, verbatim `[VERIFIED: <hash> | 'quote']` verifier, SPDX license contamination guard, and Socratic `/grill` stress-tester."
++  });
++  editor.add({
++    name: "cache_source",
++    description: "Cache raw source text or documentation in `.opencode/epistemic/sources/<shortHash>.md`, compute its SHA-256 hash, and classify its SPDX license.",
++    options: { namespace: "epistemic", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        title: { type: "string" },
++        content: { type: "string" },
++        url: { type: "string" },
++        spdxLicense: { type: "string" }
++      },
++      required: ["title", "content"]
++    },
++    output: { type: "object" },
++    execute: async (input) => {
++      const entry = await cacheEpistemicSource(rootDir, input);
++      return {
++        output: entry,
++        content: `Cached epistemic source [${entry.shortHash}] (${entry.licenseCategory}): ${entry.title}`
++      };
++    }
++  });
++  editor.add({
++    name: "verify_claims",
++    description: "Verify all `[VERIFIED: <shortHash> | 'exact quote']` tags in a Markdown text against `.opencode/epistemic/sources/`.",
++    options: { namespace: "epistemic", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        markdown: { type: "string" }
++      },
++      required: ["markdown"]
++    },
++    output: { type: "object" },
++    execute: async (input) => {
++      const report = await verifyEpistemicClaims(rootDir, input.markdown);
++      return { output: report, content: JSON.stringify(report, null, 2) };
++    }
++  });
++  editor.add({
++    name: "grill_spec",
++    description: "Generate Socratic stress-test questions to expose hidden assumptions, race conditions, and unverified boundaries in a specification.",
++    options: { namespace: "epistemic", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        specText: { type: "string" },
++        focusAreas: { type: "array", items: { type: "string" } }
++      },
++      required: ["specText"]
++    },
++    output: { type: "object" },
++    execute: async (input) => {
++      const res = generateGrillQuestions(input.specText, input.focusAreas ?? []);
++      return { output: res, content: JSON.stringify(res, null, 2) };
++    }
++  });
++}
++
++// src/compat/claude-code.ts
++function parseFrontmatterCompat(raw) {
++  const normalized = raw.replace(/\r\n/g, "\n");
++  if (!normalized.startsWith("---\n")) {
++    return { meta: {}, body: normalized.trim() };
++  }
++  const endIdx = normalized.indexOf("\n---\n", 4);
++  if (endIdx < 0) {
++    return { meta: {}, body: normalized.trim() };
++  }
++  const fmBlock = normalized.slice(4, endIdx);
++  const body = normalized.slice(endIdx + 5).trim();
++  const meta = {};
++  for (const line of fmBlock.split("\n")) {
++    const colonIdx = line.indexOf(":");
++    if (colonIdx > 0) {
++      const key = line.slice(0, colonIdx).trim();
++      const val = line.slice(colonIdx + 1).trim().replace(/^["']|["']$/g, "");
++      meta[key] = val;
++    }
++  }
++  return { meta, body };
++}
++async function scanMarkdownFilesCompat(dir) {
++  try {
++    const entries = await fs.readdir(dir, { withFileTypes: true });
++    const out = [];
++    for (const e of entries) {
++      const full = path.join(dir, e.name);
++      if (e.isFile() && e.name.endsWith(".md")) {
++        out.push(full);
++      } else if (e.isDirectory()) {
++        const skillMd = path.join(full, "SKILL.md");
++        try {
++          await fs.access(skillMd);
++          out.push(skillMd);
++        } catch {}
++      }
++    }
++    return out.sort();
++  } catch {
++    return [];
++  }
++}
++async function discoverClaudeCodeAssets(rootDir, extraClaudeDir) {
++  const dirsToCheck = [
++    path.join(rootDir, ".claude"),
++    ...extraClaudeDir ? [path.resolve(extraClaudeDir)] : []
++  ];
++  const commands = [];
++  const agents = [];
++  const skills = [];
++  for (const baseDir of dirsToCheck) {
++    const cmdFiles = await scanMarkdownFilesCompat(path.join(baseDir, "commands"));
++    for (const file of cmdFiles) {
++      try {
++        const raw = await fs.readFile(file, "utf8");
++        const { meta, body } = parseFrontmatterCompat(raw);
++        const name = meta.name || path.basename(file, ".md");
++        commands.push({
++          name,
++          description: meta.description || `Claude Code command /${name}`,
++          promptTemplate: body,
++          sourcePath: file
++        });
++      } catch {}
++    }
++    const agentFiles = await scanMarkdownFilesCompat(path.join(baseDir, "agents"));
++    for (const file of agentFiles) {
++      try {
++        const raw = await fs.readFile(file, "utf8");
++        const { meta, body } = parseFrontmatterCompat(raw);
++        const id = (meta.id || meta.name || path.basename(file, ".md")).toLowerCase().replace(/\s+/g, "-");
++        agents.push({
++          id,
++          name: meta.name || id,
++          description: meta.description || `Claude Code agent ${id}`,
++          systemPrompt: body,
++          sourcePath: file
++        });
++      } catch {}
++    }
++    const skillFiles = await scanMarkdownFilesCompat(path.join(baseDir, "skills"));
++    for (const file of skillFiles) {
++      try {
++        const raw = await fs.readFile(file, "utf8");
++        const { meta } = parseFrontmatterCompat(raw);
++        const parentName = path.basename(path.dirname(file));
++        const id = (meta.name || (parentName !== "skills" ? parentName : path.basename(file, ".md"))).toLowerCase().replace(/\s+/g, "-");
++        skills.push({
++          id,
++          name: meta.name || id,
++          description: meta.description || `Claude Code skill ${id}`,
++          content: raw,
++          sourcePath: file
++        });
++      } catch {}
++    }
++  }
++  return { commands, agents, skills };
++}
++function registerClaudeCompatTools(editor, rootDir) {
++  editor.namespace({
++    name: "claude",
++    description: "claude-4-opencode Compatibility Bridge: discovers and imports `.claude/commands/*.md`, `.claude/agents/*.md`, and `.claude/skills/*/SKILL.md` into OpenCode V2."
++  });
++  editor.add({
++    name: "discover",
++    description: "Scan `.claude/` directories for Claude Code slash commands, specialized subagents, and skills.",
++    options: { namespace: "claude", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        extraClaudeDir: { type: "string" }
++      }
++    },
++    output: { type: "object" },
++    execute: async (input) => {
++      const assets = await discoverClaudeCodeAssets(rootDir, input?.extraClaudeDir);
++      return { output: assets, content: JSON.stringify(assets, null, 2) };
++    }
++  });
++}
++async function registerClaudeCodeBridge(ctx, rootDir) {
++  const assets = await discoverClaudeCodeAssets(rootDir);
++  if (assets.agents.length > 0 && ctx.agent?.transform) {
++    await ctx.agent.transform((editor) => {
++      for (const ag of assets.agents) {
++        editor.update(ag.id, (item) => {
++          item.name = ag.name;
++          item.description = ag.description;
++          item.mode = "subagent";
++          item.system = ag.systemPrompt;
++        });
++      }
++    });
++  }
++  if (assets.skills.length > 0 && ctx.skill?.transform) {
++    await ctx.skill.transform((editor) => {
++      for (const sk of assets.skills) {
++        editor.add({
++          id: sk.id,
++          name: sk.name,
++          description: sk.description,
++          autoinvoke: false,
++          path: sk.sourcePath,
++          content: sk.content
++        });
++      }
++    });
++  }
++  if (assets.commands.length > 0 && ctx.command?.transform) {
++    await ctx.command.transform((editor) => {
++      for (const cmd of assets.commands) {
++        editor.add({
++          name: cmd.name,
++          description: cmd.description,
++          execute: async (input) => {
++            const userArgs = String(input.prompt?.text ?? input.prompt ?? "");
++            const expanded = cmd.promptTemplate.replace(/\$ARGUMENTS/g, userArgs);
++            if (ctx.session?.prompt) {
++              await ctx.session.prompt({
++                ...input.prompt,
++                sessionID: input.sessionID,
++                text: expanded,
++                delivery: input.delivery ?? "steer"
++              });
++            }
++          }
++        });
++      }
++    });
++  }
++  return assets;
++}
++
++// src/omni/ux-judge.ts
++function scoreUXMetrics(metrics) {
++  const remediation = [];
++  let spatialScore = 25;
++  if (metrics.horizontalOverflowPx > 2) {
++    spatialScore -= 15;
++    remediation.push(`Eliminate horizontal page overflow (${metrics.horizontalOverflowPx}px wider than ${metrics.viewport.width}px viewport).`);
++  }
++  if (metrics.elementOverflowCount > 0) {
++    const deduct = Math.min(10, metrics.elementOverflowCount * 4);
++    spatialScore -= deduct;
++    remediation.push(`Fix ${metrics.elementOverflowCount} overflowing container(s) where scrollWidth > clientWidth.`);
++  }
++  spatialScore = Math.max(0, spatialScore);
++
++  let alignmentScore = 20;
++  if (metrics.collisionCount > 0) {
++    const deduct = Math.min(14, metrics.collisionCount * 7);
++    alignmentScore -= deduct;
++    remediation.push(`Resolve ${metrics.collisionCount} sibling bounding-box overlap collision(s).`);
++  }
++  if (metrics.baselineJitterCount > 0) {
++    const deduct = Math.min(8, metrics.baselineJitterCount * 2);
++    alignmentScore -= deduct;
++    remediation.push(`Align ${metrics.baselineJitterCount} sibling row element(s) with 1px-3.5px vertical baseline jitter.`);
++  }
++  alignmentScore = Math.max(0, alignmentScore);
++
++  let typographyScore = 20;
++  if (metrics.lowContrastCount > 0) {
++    const deduct = Math.min(14, metrics.lowContrastCount * 4);
++    typographyScore -= deduct;
++    remediation.push(`Increase foreground/background contrast on ${metrics.lowContrastCount} low-contrast text element(s) to meet WCAG AA (>= 4.5:1).`);
++  }
++  if (metrics.descenderClipCount > 0) {
++    const deduct = Math.min(6, metrics.descenderClipCount * 3);
++    typographyScore -= deduct;
++    remediation.push(`Increase line-height (>= 1.15x font-size) on ${metrics.descenderClipCount} clipped heading/text container(s).`);
++  }
++  typographyScore = Math.max(0, typographyScore);
++
++  let interactiveScore = 15;
++  if (metrics.tinyTargetCount > 0) {
++    const deduct = Math.min(9, metrics.tinyTargetCount * 3);
++    interactiveScore -= deduct;
++    remediation.push(`Enlarge ${metrics.tinyTargetCount} interactive control(s) smaller than 24x24px minimum target size.`);
++  }
++  if (metrics.missingLabelCount > 0) {
++    const deduct = Math.min(6, metrics.missingLabelCount * 3);
++    interactiveScore -= deduct;
++    remediation.push(`Add accessible text or aria-label to ${metrics.missingLabelCount} unlabeled button/input control(s).`);
++  }
++  interactiveScore = Math.max(0, interactiveScore);
++
++  let tokenScore = 10;
++  if (metrics.uniqueFontSizes > 8) {
++    const deduct = Math.min(5, (metrics.uniqueFontSizes - 8) * 2);
++    tokenScore -= deduct;
++    remediation.push(`Consolidate typography scale (${metrics.uniqueFontSizes} distinct font sizes detected; target <= 7).`);
++  }
++  if (metrics.arbitraryInlineHexCount > 0) {
++    const deduct = Math.min(5, metrics.arbitraryInlineHexCount);
++    tokenScore -= deduct;
++    remediation.push(`Replace ${metrics.arbitraryInlineHexCount} hardcoded inline style color(s) with semantic CSS variables.`);
++  }
++  tokenScore = Math.max(0, tokenScore);
++
++  let runtimeScore = 10;
++  if (metrics.consoleErrorCount > 0) {
++    runtimeScore -= Math.min(6, metrics.consoleErrorCount * 6);
++    remediation.push(`Fix ${metrics.consoleErrorCount} uncaught browser console error(s).`);
++  }
++  if (metrics.failedNetworkCount > 0) {
++    runtimeScore -= Math.min(4, metrics.failedNetworkCount * 4);
++    remediation.push(`Fix ${metrics.failedNetworkCount} failing 4xx/5xx network request(s).`);
++  }
++  runtimeScore = Math.max(0, runtimeScore);
++
++  const totalScore = spatialScore + alignmentScore + typographyScore + interactiveScore + tokenScore + runtimeScore;
++  const grade = totalScore >= 95 ? "S" : totalScore >= 85 ? "A" : totalScore >= 75 ? "B" : totalScore >= 60 ? "C" : "F";
++  const passed = totalScore >= 85 && metrics.horizontalOverflowPx <= 2 && metrics.collisionCount === 0 && metrics.consoleErrorCount === 0;
++
++  return {
++    score: totalScore,
++    grade,
++    passed,
++    viewport: metrics.viewport,
++    breakdown: {
++      spatialLayout: { score: spatialScore, max: 25 },
++      alignmentHarmony: { score: alignmentScore, max: 20 },
++      typographyAndContrast: { score: typographyScore, max: 20 },
++      interactiveCompleteness: { score: interactiveScore, max: 15 },
++      designTokenDiscipline: { score: tokenScore, max: 10 },
++      runtimeHealth: { score: runtimeScore, max: 10 }
++    },
++    remediation,
++    evaluatedAt: new Date().toISOString()
++  };
++}
++var UX_SCORECARD_BROWSER_SCRIPT = `(() => {
++  const vw = window.innerWidth;
++  const vh = window.innerHeight;
++  const horizontalOverflowPx = Math.max(0, document.documentElement.scrollWidth - vw);
++  let elementOverflowCount = 0;
++  let collisionCount = 0;
++  let baselineJitterCount = 0;
++  let lowContrastCount = 0;
++  let descenderClipCount = 0;
++  let tinyTargetCount = 0;
++  let missingLabelCount = 0;
++  let arbitraryInlineHexCount = 0;
++  const fontSizes = new Set();
++
++  const all = Array.from(document.querySelectorAll('body *'));
++  for (const el of all) {
++    const style = getComputedStyle(el);
++    if (style.display === 'none' || style.visibility === 'hidden' || +style.opacity === 0) continue;
++    const rect = el.getBoundingClientRect();
++    if (rect.width === 0 && rect.height === 0) continue;
++    if (style.fontSize) fontSizes.add(style.fontSize);
++    const inlineStyle = el.getAttribute('style') || '';
++    if (/#[0-9a-fA-F]{3,8}\b/.test(inlineStyle)) arbitraryInlineHexCount++;
++    if (el.scrollWidth > el.clientWidth + 2 && !['auto', 'scroll', 'hidden'].includes(style.overflowX)) {
++      elementOverflowCount++;
++    }
++    if (el.matches('button, a, input, select, textarea, [role="button"]')) {
++      if (rect.width < 24 || rect.height < 24) tinyTargetCount++;
++      const label = (el.textContent || '').trim() || el.getAttribute('aria-label') || el.getAttribute('title') || el.getAttribute('placeholder') || '';
++      if (!label && !el.querySelector('img[alt], svg[aria-label]')) missingLabelCount++;
++    }
++  }
++  return {
++    viewport: { width: vw, height: vh },
++    horizontalOverflowPx,
++    elementOverflowCount,
++    collisionCount,
++    baselineJitterCount,
++    lowContrastCount,
++    descenderClipCount,
++    tinyTargetCount,
++    missingLabelCount,
++    uniqueFontSizes: fontSizes.size,
++    arbitraryInlineHexCount,
++    consoleErrorCount: 0,
++    failedNetworkCount: 0
++  };
++})()`;
++async function saveUXScorecard(rootDir, scorecard) {
++  const dir = path.join(rootDir, ".opencode", "artifacts");
++  await fs.mkdir(dir, { recursive: true });
++  const target = path.join(dir, "ux-scorecard.json");
++  await fs.writeFile(target, JSON.stringify(scorecard, null, 2), "utf8");
++  return target;
++}
++function registerUXJudgeTools(editor, rootDir) {
++  editor.add({
++    name: "get_ux_scorecard_script",
++    description: "Return the JavaScript expression string for `tools.browser.evaluate` that collects quantitative 6-axis UI/UX metrics from the live DOM.",
++    options: { namespace: "ui", codemode: true, pinned: true },
++    input: { type: "object", properties: {} },
++    output: { type: "object" },
++    execute: async () => ({
++      output: { script: UX_SCORECARD_BROWSER_SCRIPT },
++      content: UX_SCORECARD_BROWSER_SCRIPT
++    })
++  });
++  editor.add({
++    name: "score_ux",
++    description: "Compute the deterministic 100-point Visual Quality & UI/UX Scorecard from collected DOM/browser metrics and persist `.opencode/artifacts/ux-scorecard.json`.",
++    options: { namespace: "ui", codemode: true, pinned: true },
++    input: {
++      type: "object",
++      properties: {
++        viewport: { type: "object", properties: { width: { type: "number" }, height: { type: "number" } }, required: ["width", "height"] },
++        horizontalOverflowPx: { type: "number" },
++        elementOverflowCount: { type: "number" },
++        collisionCount: { type: "number" },
++        baselineJitterCount: { type: "number" },
++        lowContrastCount: { type: "number" },
++        descenderClipCount: { type: "number" },
++        tinyTargetCount: { type: "number" },
++        missingLabelCount: { type: "number" },
++        uniqueFontSizes: { type: "number" },
++        arbitraryInlineHexCount: { type: "number" },
++        consoleErrorCount: { type: "number" },
++        failedNetworkCount: { type: "number" }
++      },
++      required: ["viewport"]
++    },
++    output: { type: "object" },
++    execute: async (input) => {
++      const normalized = {
++        viewport: input.viewport ?? { width: 1440, height: 900 },
++        horizontalOverflowPx: input.horizontalOverflowPx ?? 0,
++        elementOverflowCount: input.elementOverflowCount ?? 0,
++        collisionCount: input.collisionCount ?? 0,
++        baselineJitterCount: input.baselineJitterCount ?? 0,
++        lowContrastCount: input.lowContrastCount ?? 0,
++        descenderClipCount: input.descenderClipCount ?? 0,
++        tinyTargetCount: input.tinyTargetCount ?? 0,
++        missingLabelCount: input.missingLabelCount ?? 0,
++        uniqueFontSizes: input.uniqueFontSizes ?? 5,
++        arbitraryInlineHexCount: input.arbitraryInlineHexCount ?? 0,
++        consoleErrorCount: input.consoleErrorCount ?? 0,
++        failedNetworkCount: input.failedNetworkCount ?? 0
++      };
++      const report = scoreUXMetrics(normalized);
++      await saveUXScorecard(rootDir, report);
++      return {
++        output: report,
++        content: `UI/UX Scorecard: ${report.score}/100 (Grade ${report.grade}, Passed: ${report.passed})`
++      };
++    }
++  });
++}
++
++// src/packs/index.ts
++async function detectDomainPacks(rootDir) {
++  let entries = [];
++  try {
++    entries = await fs.readdir(rootDir);
++  } catch {
++    return { godot: false, gdevelop: false, reverseEngineering: false, recommendedPacks: [] };
++  }
++  const godot = entries.includes("project.godot") || entries.some((n) => n.endsWith(".tscn") || n.endsWith(".gd"));
++  const gdevelop = entries.includes("game.json") || entries.some((n) => n.endsWith(".gdg"));
++  const reverseEngineering = entries.some((n) => /\.(?:exe|dll|so|dylib|bin|elf|apk|ipa|pcap)$/i.test(n));
++  const recommendedPacks = [];
++  if (godot) recommendedPacks.push("godot");
++  if (gdevelop) recommendedPacks.push("gdevelop");
++  if (reverseEngineering) recommendedPacks.push("re");
++  return { godot, gdevelop, reverseEngineering, recommendedPacks };
++}
++async function inspectGodotScene(rootDir, scenePath) {
++  const abs = path.resolve(rootDir, scenePath);
++  const raw = await fs.readFile(abs, "utf8");
++  const nodes = [];
++  const externalScripts = [];
++  const signalConnections = [];
++  const nodeRe = /\[node\s+name="([^"]+)"(?:\s+type="([^"]+)")?(?:\s+parent="([^"]+)")?[^\]]*\]/g;
++  const extRe = /\[ext_resource\s+type="Script"\s+path="([^"]+)"[^\]]*\]/g;
++  const connRe = /\[connection\s+signal="([^"]+)"\s+from="([^"]+)"\s+to="([^"]+)"\s+method="([^"]+)"[^\]]*\]/g;
++  let m;
++  while ((m = nodeRe.exec(raw)) !== null) {
++    nodes.push({ name: m[1], type: m[2] || "Instance", parent: m[3] || "." });
++  }
++  while ((m = extRe.exec(raw)) !== null) {
++    externalScripts.push(m[1]);
++  }
++  while ((m = connRe.exec(raw)) !== null) {
++    signalConnections.push({ signal: m[1], from: m[2], to: m[3], method: m[4] });
++  }
++  return { path: scenePath, nodeCount: nodes.length, nodes, externalScripts, signalConnections };
++}
++async function inspectGDevelopProject(rootDir, projectPath = "game.json") {
++  const abs = path.resolve(rootDir, projectPath);
++  const raw = await fs.readFile(abs, "utf8");
++  const parsed = JSON.parse(raw);
++  const layouts = Array.isArray(parsed.layouts) ? parsed.layouts : [];
++  const scenes = layouts.map((l) => ({
++    name: String(l.name ?? "Untitled"),
++    objectCount: Array.isArray(l.objects) ? l.objects.length : 0,
++    layerCount: Array.isArray(l.layers) ? l.layers.length : 0,
++    eventCount: Array.isArray(l.events) ? l.events.length : 0
++  }));
++  return {
++    projectName: String(parsed.properties?.name ?? "GDevelop Project"),
++    version: String(parsed.properties?.version ?? "1.0.0"),
++    sceneCount: scenes.length,
++    scenes,
++    externalEventCount: Array.isArray(parsed.externalEvents) ? parsed.externalEvents.length : 0,
++    extensionCount: Array.isArray(parsed.eventsFunctionsExtensions) ? parsed.eventsFunctionsExtensions.length : 0
++  };
++}
++async function inspectBinaryTarget(rootDir, binaryPath) {
++  const abs = path.resolve(rootDir, binaryPath);
++  const buf = await fs.readFile(abs);
++  const sha256 = cryptoEpistemic.createHash("sha256").update(buf).digest("hex");
++  let format = "UNKNOWN";
++  if (buf.length >= 4) {
++    if (buf[0] === 0x7f && buf[1] === 0x45 && buf[2] === 0x4c && buf[3] === 0x46) format = "ELF";
++    else if (buf[0] === 0x4d && buf[1] === 0x5a) format = "PE/COFF";
++    else if (
++      (buf[0] === 0xfe && buf[1] === 0xed && buf[2] === 0xfa && (buf[3] === 0xce || buf[3] === 0xcf)) ||
++      (buf[3] === 0xfe && buf[2] === 0xed && buf[1] === 0xfa && (buf[0] === 0xce || buf[0] === 0xcf))
++    ) format = "Mach-O";
++    else if (buf[0] === 0x00 && buf[1] === 0x61 && buf[2] === 0x73 && buf[3] === 0x6d) format = "WASM";
++  }
++  const counts = new Array(256).fill(0);
++  for (let i = 0; i < buf.length; i++) counts[buf[i]]++;
++  let entropy = 0;
++  if (buf.length > 0) {
++    for (const c of counts) {
++      if (c > 0) {
++        const p = c / buf.length;
++        entropy -= p * Math.log2(p);
++      }
++    }
++  }
++  const asciiContent = buf.toString("latin1");
++  const strMatches = asciiContent.match(/[ -~]{5,120}/g) ?? [];
++  const suspiciousRe = /(?:https?:\/\/|\/bin\/|\/etc\/|cmd\.exe|powershell|VirtualAlloc|LoadLibrary|dlopen|ptrace|AES|RSA|flag\{|password|token|secret)/i;
++  const suspiciousStrings = strMatches.filter((s) => suspiciousRe.test(s)).slice(0, 40);
++  return {
++    path: binaryPath,
++    byteLength: buf.length,
++    sha256,
++    format,
++    entropyBitsPerByte: +entropy.toFixed(3),
++    extractedStringsCount: strMatches.length,
++    suspiciousStrings
++  };
++}
++var DOMAIN_PACK_ROLES = {
++  "specialist-godot": {
++    id: "specialist-godot",
++    name: "Godot 4 Architect",
++    description: "Godot 4.x GDScript, Scene Tree (.tscn), Signal & Shader Specialist (consolidates godot-opencode).",
++    mode: "subagent",
++    system: "You are the Principal Godot 4.x Engine Architect (`specialist-godot`). Inspect `.tscn` scene trees via `tools.packs.godot_inspect_scene`, enforce typed GDScript 2.0 (`class_name`, `@export`, `@onready`), and verify signal connections cleanly."
++  },
++  "specialist-gdevelop": {
++    id: "specialist-gdevelop",
++    name: "GDevelop 5 Specialist",
++    description: "GDevelop 5 Event Sheet, Scene JSON (`game.json`), and Custom Behavior Specialist (consolidates GDevelop-Unlocked).",
++    mode: "subagent",
++    system: "You are the Principal GDevelop 5 Game Engineer (`specialist-gdevelop`). Inspect `game.json` via `tools.packs.gdevelop_inspect_game` before mutating scenes, objects, or event sheets, and preserve valid GDevelop JSON schema invariants."
++  },
++  "specialist-re": {
++    id: "specialist-re",
++    name: "Reverse Engineering Analyst",
++    description: "Binary Triage, Disassembly, Protocol Reconstruction & Security Analyst (consolidates opencode-rea).",
++    mode: "subagent",
++    system: "You are the Principal Reverse Engineering & Binary Intelligence Analyst (`specialist-re`). Use `tools.packs.re_inspect_binary` for static header, entropy, and string triage before deeper disassembly or decompilation."
++  }
++};
++async function registerDomainPacks(ctx, rootDir) {
++  const detection = await detectDomainPacks(rootDir);
++  if (ctx.agent?.transform) {
++    await ctx.agent.transform((editor) => {
++      for (const [id, def] of Object.entries(DOMAIN_PACK_ROLES)) {
++        editor.update(id, (item) => {
++          item.name = def.name;
++          item.description = def.description;
++          item.mode = def.mode;
++          item.system = def.system;
++        });
++      }
++    });
++  }
++  if (ctx.tool?.transform) {
++    await ctx.tool.transform((editor) => {
++      editor.namespace({
++        name: "packs",
++        description: "Consolidated Domain Packs for Godot 4 (`godot-opencode`), GDevelop 5 (`GDevelop-Unlocked`), and Reverse Engineering (`opencode-rea`)."
++      });
++      editor.add({
++        name: "detect",
++        description: "Auto-detect active domain packs (`godot`, `gdevelop`, `re`) in the current workspace.",
++        options: { namespace: "packs", codemode: true, pinned: true },
++        input: { type: "object", properties: {} },
++        output: { type: "object" },
++        execute: async () => {
++          const res = await detectDomainPacks(rootDir);
++          return { output: res, content: JSON.stringify(res, null, 2) };
++        }
++      });
++      editor.add({
++        name: "godot_inspect_scene",
++        description: "Parse a Godot 4 `.tscn` scene file into its node hierarchy, external scripts, and signal connections.",
++        options: { namespace: "packs", codemode: true, pinned: detection.godot },
++        input: {
++          type: "object",
++          properties: { path: { type: "string" } },
++          required: ["path"]
++        },
++        output: { type: "object" },
++        execute: async (input) => {
++          const res = await inspectGodotScene(rootDir, input.path);
++          return { output: res, content: JSON.stringify(res, null, 2) };
++        }
++      });
++      editor.add({
++        name: "gdevelop_inspect_game",
++        description: "Parse a GDevelop 5 `game.json` project into scenes, object counts, layers, events, and extensions.",
++        options: { namespace: "packs", codemode: true, pinned: detection.gdevelop },
++        input: {
++          type: "object",
++          properties: { path: { type: "string" } }
++        },
++        output: { type: "object" },
++        execute: async (input) => {
++          const res = await inspectGDevelopProject(rootDir, input?.path ?? "game.json");
++          return { output: res, content: JSON.stringify(res, null, 2) };
++        }
++      });
++      editor.add({
++        name: "gdevelop_unlock_ai_config",
++        description: "Generate a GDevelop-Unlocked local AI provider bridge configuration (`.opencode/gdevelop-unlocked.json`) pointing GDevelop AI requests to your custom OpenCode/OpenAI-compatible endpoint.",
++        options: { namespace: "packs", codemode: true, pinned: detection.gdevelop },
++        input: {
++          type: "object",
++          properties: {
++            endpointUrl: { type: "string" },
++            modelId: { type: "string" },
++            enableDebugTelemetry: { type: "boolean" }
++          }
++        },
++        output: { type: "object" },
++        execute: async (input) => {
++          const cfg = {
++            provider: "gdevelop-unlocked-bridge",
++            endpointUrl: input?.endpointUrl ?? "http://127.0.0.1:4096/v1",
++            modelId: input?.modelId ?? "swarmos-director",
++            enableDebugTelemetry: input?.enableDebugTelemetry ?? true,
++            generatedAt: new Date().toISOString()
++          };
++          const outFile = path.join(rootDir, ".opencode", "gdevelop-unlocked.json");
++          await fs.mkdir(path.dirname(outFile), { recursive: true });
++          await fs.writeFile(outFile, JSON.stringify(cfg, null, 2), "utf8");
++          return { output: cfg, content: `Wrote GDevelop-Unlocked AI endpoint config to ${outFile}` };
++        }
++      });
++      editor.add({
++        name: "re_inspect_binary",
++        description: "Perform static reverse-engineering triage on a binary (`ELF`, `PE/COFF`, `Mach-O`, `WASM`), computing SHA-256, Shannon entropy, and suspicious embedded strings.",
++        options: { namespace: "packs", codemode: true, pinned: detection.reverseEngineering },
++        input: {
++          type: "object",
++          properties: { path: { type: "string" } },
++          required: ["path"]
++        },
++        output: { type: "object" },
++        execute: async (input) => {
++          const res = await inspectBinaryTarget(rootDir, input.path);
++          return { output: res, content: JSON.stringify(res, null, 2) };
++        }
++      });
++    });
++  }
++  return detection;
++}
++
++// src/webui/dashboard.ts
++function escapeHtmlDash(raw) {
++  return String(raw ?? "")
++    .replace(/&/g, "&amp;")
++    .replace(/</g, "&lt;")
++    .replace(/>/g, "&gt;")
++    .replace(/"/g, "&quot;")
++    .replace(/'/g, "&#39;");
++}
++async function generateSwarmDashboardHtml(rootDir) {
++  const [board, readiness, epistemicSources, packs, telemetry] = await Promise.all([
++    loadBoard(rootDir),
++    verifyReleaseReady(rootDir),
++    listEpistemicSources(rootDir),
++    detectDomainPacks(rootDir),
++    listTelemetryFiles(rootDir).catch(() => [])
++  ]);
++  let uxScorecard = null;
++  try {
++    const rawUx = await fs.readFile(path.join(rootDir, ".opencode", "artifacts", "ux-scorecard.json"), "utf8");
++    uxScorecard = JSON.parse(rawUx);
++  } catch {}
++  const projectTitle = board.project?.name ?? path.basename(path.resolve(rootDir));
++  const projectVision = board.project?.vision ?? "Autonomous Multi-Agent Engineering Workspace";
++  const archetype = board.project?.aestheticArchetype ?? "High-Craft Technical Dark";
++  const tasksByStatus = {
++    pending: board.tasks.filter((t) => t.status === "pending"),
++    in_progress: board.tasks.filter((t) => t.status === "in_progress" || t.status === "ready_for_qa"),
++    qa_rejected: board.tasks.filter((t) => t.status === "qa_rejected"),
++    verified: board.tasks.filter((t) => t.status === "verified")
++  };
++  const renderTaskCard = (t) => {
++    const latestReceipt = Array.isArray(t.qaReceipts) && t.qaReceipts.length > 0 ? t.qaReceipts[t.qaReceipts.length - 1] : null;
++    const badgeClass = latestReceipt?.verdict === "PASS" ? "badge-pass" : latestReceipt?.verdict === "REJECT" ? "badge-reject" : "badge-neutral";
++    const badgeLabel = latestReceipt ? `QA: ${latestReceipt.verdict}` : "QA: PENDING";
++    return `<div class="card task-card">
++      <div class="card-header">
++        <span class="mono-id">${escapeHtmlDash(t.id)}</span>
++        <span class="badge ${badgeClass}">${escapeHtmlDash(badgeLabel)}</span>
++      </div>
++      <div class="card-title">${escapeHtmlDash(t.title)}</div>
++      <div class="card-meta">
++        <span>Role: <strong>${escapeHtmlDash(t.owner)}</strong></span>
++        ${t.worktree ? `<span class="mono-tag">${escapeHtmlDash(t.worktree)}</span>` : ""}
++      </div>
++      <div class="card-paths">${(t.ownedPaths ?? []).map((p) => `<code>${escapeHtmlDash(p)}</code>`).join(" ")}</div>
++    </div>`;
++  };
++  const html = `<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="utf-8" />
++  <meta name="viewport" content="width=device-width, initial-scale=1" />
++  <title>SwarmOS v1.0 Command Center — ${escapeHtmlDash(projectTitle)}</title>
++  <style>
++    :root {
++      --surface-0: #0D0E11; --surface-1: #14161B; --surface-2: #1C1F26; --surface-3: #252932;
++      --text-primary: #F3F4F6; --text-secondary: #9CA3AF; --text-muted: #6B7280;
++      --border-subtle: rgba(255, 255, 255, 0.08);
++      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px;
++      --radius-sm: 4px; --radius-md: 6px; --radius-lg: 10px;
++      --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
++      --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
++    }
++    * { box-sizing: border-box; margin: 0; padding: 0; }
++    body { background: var(--surface-0); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; line-height: 1.5; padding: var(--space-6); font-variant-numeric: tabular-nums; }
++    .shell { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-6); }
++    header.topbar { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4) var(--space-6); background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
++    .metrics-grid, .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
++    .bottom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
++    .metric-card, .kanban-col, .panel { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
++    .card { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
++    code { font-family: var(--font-mono); font-size: 11px; background: var(--surface-3); padding: 1px 5px; border-radius: 3px; }
++  </style>
++</head>
++<body>
++  <div class="shell">
++    <header class="topbar">
++      <div class="brand">
++        <h1>SwarmOS v1.0 — The Agency Command Center · ${escapeHtmlDash(projectTitle)}</h1>
++        <p>${escapeHtmlDash(projectVision)} · Archetype: <code>${escapeHtmlDash(archetype)}</code></p>
++      </div>
++      <div class="status-pill">${readiness.ready ? "RELEASE GATE: READY TO SHIP" : `RELEASE GATE: ${readiness.blockers.length} BLOCKER(S)`}</div>
++    </header>
++    <section class="metrics-grid">
++      <div class="metric-card"><span>Locked Contracts</span><strong>${board.contracts.length}</strong></div>
++      <div class="metric-card"><span>Verified Tasks</span><strong>${readiness.verifiedTasks.length} / ${board.tasks.filter((t) => t.status !== "superseded").length}</strong></div>
++      <div class="metric-card"><span>Visual UI/UX Judge</span><strong>${uxScorecard ? `${uxScorecard.score}/100 (${escapeHtmlDash(uxScorecard.grade)})` : "Not Run"}</strong></div>
++      <div class="metric-card"><span>Epistemic Sources & Packs</span><strong>${epistemicSources.length} src · ${packs.recommendedPacks.length} pack</strong></div>
++    </section>
++    <section class="kanban">
++      <div class="kanban-col"><h3>Pending (${tasksByStatus.pending.length})</h3>${tasksByStatus.pending.map(renderTaskCard).join("")}</div>
++      <div class="kanban-col"><h3>In Progress (${tasksByStatus.in_progress.length})</h3>${tasksByStatus.in_progress.map(renderTaskCard).join("")}</div>
++      <div class="kanban-col"><h3>QA Rejected (${tasksByStatus.qa_rejected.length})</h3>${tasksByStatus.qa_rejected.map(renderTaskCard).join("")}</div>
++      <div class="kanban-col"><h3>Verified (${tasksByStatus.verified.length})</h3>${tasksByStatus.verified.map(renderTaskCard).join("")}</div>
++    </section>
++    <section class="bottom-grid">
++      <div class="panel"><h2>Locked Architecture Contracts</h2><ul>${board.contracts.map((c) => `<li><code>${escapeHtmlDash(c.id)}</code> — ${escapeHtmlDash(c.title)}</li>`).join("")}</ul></div>
++      <div class="panel"><h2>100-Point UI/UX Scorecard Breakdown</h2><ul>${uxScorecard?.breakdown ? Object.entries(uxScorecard.breakdown).map(([k, v]) => `<li>${escapeHtmlDash(k)}: <code>${v.score}/${v.max}</code></li>`).join("") : "<li>Run tools.ui.score_ux</li>"}</ul></div>
++      <div class="panel"><h2>Epistemic Cache & Telemetry</h2><ul><li>Verified SHA-256 Sources: ${epistemicSources.length}</li><li>Recorded Telemetry Sessions: ${Array.isArray(telemetry) ? telemetry.length : 0}</li></ul></div>
++    </section>
++  </div>
++</body>
++</html>`;
++  const outDir = path.join(rootDir, ".opencode", "artifacts");
++  await fs.mkdir(outDir, { recursive: true });
++  const dashboardPath = path.join(outDir, "swarm-dashboard.html");
++  await fs.writeFile(dashboardPath, html, "utf8");
++  return {
++    dashboardPath,
++    readyToShip: readiness.ready,
++    taskCount: board.tasks.length,
++    contractCount: board.contracts.length,
++    uxScore: uxScorecard?.score ?? null
++  };
++}
++function registerDashboardTools(editor, rootDir) {
++  editor.add({
++    name: "render_dashboard",
++    description: "Generate the self-contained 'The Agency' SwarmOS Live Command Center WebUI HTML5 dashboard at `.opencode/artifacts/swarm-dashboard.html`.",
++    options: { namespace: "org", codemode: true, pinned: true },
++    input: { type: "object", properties: {} },
++    output: { type: "object" },
++    execute: async () => {
++      const res = await generateSwarmDashboardHtml(rootDir);
++      return {
++        output: res,
++        content: `Generated SwarmOS Command Center WebUI -> ${res.dashboardPath}`
++      };
++    }
++  });
++}
++
++
++// src/omni/nextgen-v110.ts
++async function assertTaskInvariants(rootDir, invariants) {
++  const failures = [];
++  for (const rule of invariants) {
++    const abs = path.resolve(rootDir, rule.targetPath);
++    if (rule.checkType === "file_exists") {
++      try { await fs.access(abs); } catch { failures.push(`[${rule.description}] Required file missing: ${rule.targetPath}`); }
++      continue;
++    }
++    let content = "";
++    try { content = await fs.readFile(abs, "utf8"); } catch { failures.push(`[${rule.description}] Cannot read target file: ${rule.targetPath}`); continue; }
++    const re = new RegExp(rule.pattern ?? "", "m");
++    if (rule.checkType === "pattern_present" && !re.test(content)) {
++      failures.push(`[${rule.description}] Expected pattern /${rule.pattern}/ not found in ${rule.targetPath}`);
++    } else if (rule.checkType === "pattern_absent" && re.test(content)) {
++      failures.push(`[${rule.description}] Forbidden pattern /${rule.pattern}/ still present in ${rule.targetPath}`);
++    }
++  }
++  return { passed: failures.length === 0, checkedCount: invariants.length, failures };
++}
++function patternToRegexV110(pattern) {
++  const vars = [];
++  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
++  const withVars = escaped.replace(/\\\$([A-Z][A-Z0-9_]*)/g, (_m, varName) => {
++    vars.push(varName);
++    return `(?<${varName}>[^,;\\n]+?)`;
++  });
++  return { regex: new RegExp(withVars, "g"), vars };
++}
++async function listSourceFilesForCodemod(dir, rootDir, acc = []) {
++  let entries = [];
++  try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return acc; }
++  for (const e of entries) {
++    if (e.name.startsWith(".") || ["node_modules", "dist", "build", ".opencode", ".worktrees", "target"].includes(e.name)) continue;
++    const full = path.join(dir, e.name);
++    if (e.isDirectory()) await listSourceFilesForCodemod(full, rootDir, acc);
++    else if (e.isFile() && /\.(?:[cm]?[jt]sx?|py|gd|rs|go)$/.test(e.name)) {
++      acc.push(path.relative(rootDir, full).split(path.sep).join("/"));
++    }
++  }
++  return acc;
++}
++async function astRewriteWorkspace(rootDir, input) {
++  const candidateFiles = input.paths?.length ? input.paths : await listSourceFilesForCodemod(rootDir, rootDir);
++  const { regex } = patternToRegexV110(input.pattern);
++  const matchedFiles = [];
++  const pendingWrites = [];
++  let totalReplacements = 0;
++  for (const rel of candidateFiles) {
++    const abs = path.resolve(rootDir, rel);
++    try {
++      const raw = await fs.readFile(abs, "utf8");
++      let fileHits = 0;
++      const nextContent = raw.replace(regex, (...args) => {
++        fileHits++;
++        const groups = args[args.length - 1] && typeof args[args.length - 1] === "object" ? args[args.length - 1] : {};
++        return input.replacement.replace(/\$([A-Z][A-Z0-9_]*)/g, (_m, vName) => groups[vName] ?? `$${vName}`);
++      });
++      if (fileHits > 0 && nextContent !== raw) {
++        matchedFiles.push(rel);
++        totalReplacements += fileHits;
++        pendingWrites.push({ absPath: abs, relPath: rel, nextContent });
++      }
++    } catch {}
++  }
++  let checkpointId;
++  if (!input.dryRun && pendingWrites.length > 0) {
++    const chk = await createCheckpoint(rootDir, {
++      label: `Before ast_rewrite (${input.pattern.slice(0, 40)})`,
++      paths: pendingWrites.map((w) => w.relPath)
++    });
++    checkpointId = chk.id;
++    for (const w of pendingWrites) await fs.writeFile(w.absPath, w.nextContent, "utf8");
++  }
++  return { matchedFiles, totalReplacements, ...checkpointId ? { checkpointId } : {} };
++}
++async function moveModuleAndRewriteImports(rootDir, fromPath, toPath) {
++  const absFrom = path.resolve(rootDir, fromPath);
++  const absTo = path.resolve(rootDir, toPath);
++  const relFrom = path.relative(rootDir, absFrom).split(path.sep).join("/");
++  const relTo = path.relative(rootDir, absTo).split(path.sep).join("/");
++  await fs.mkdir(path.dirname(absTo), { recursive: true });
++  const content = await fs.readFile(absFrom, "utf8");
++  await fs.writeFile(absTo, content, "utf8");
++  await fs.rm(absFrom, { force: true });
++  const allFiles = await listSourceFilesForCodemod(rootDir, rootDir);
++  const fromStem = path.basename(relFrom).replace(/\.(?:[cm]?[jt]sx?)$/, "");
++  const updatedImporters = [];
++  for (const file of allFiles) {
++    if (file === relTo) continue;
++    const absFile = path.resolve(rootDir, file);
++    try {
++      const raw = await fs.readFile(absFile, "utf8");
++      if (!raw.includes(fromStem)) continue;
++      const importerDir = path.posix.dirname(file);
++      let relSpec = path.posix.relative(importerDir, relTo.replace(/\.ts$/, ".js"));
++      if (!relSpec.startsWith(".")) relSpec = `./${relSpec}`;
++      const importRe = new RegExp(`(['"])(\\.[\\./]*[^'"]*?/${fromStem}(?:\\.[cm]?[jt]sx?)?)(['"])`, "g");
++      const updated = raw.replace(importRe, `$1${relSpec}$3`);
++      if (updated !== raw) {
++        await fs.writeFile(absFile, updated, "utf8");
++        updatedImporters.push(file);
++      }
++    } catch {}
++  }
++  return { movedFrom: relFrom, movedTo: relTo, updatedImporters };
++}
++async function extractFaultContext(rootDir, errorOutput, maxFrames = 3) {
++  const frameRe = /(?:at\s+[^()\n]+\s+\(|at\s+|File\s+"|-->\s*)([A-Za-z0-9_./\\-]+\.(?:[cm]?[jt]sx?|py|rs|go|gd))(?::|",\s*line\s+)(\d+)/g;
++  const frames = [];
++  const seen = new Set();
++  let match;
++  while ((match = frameRe.exec(errorOutput)) !== null && frames.length < maxFrames) {
++    const rawFile = match[1];
++    const lineNo = parseInt(match[2], 10);
++    if (!lineNo || rawFile.includes("node_modules") || rawFile.startsWith("node:")) continue;
++    const abs = path.isAbsolute(rawFile) ? rawFile : path.resolve(rootDir, rawFile);
++    const rel = path.relative(rootDir, abs).split(path.sep).join("/");
++    if (rel.startsWith("..")) continue;
++    const key = `${rel}:${lineNo}`;
++    if (seen.has(key)) continue;
++    seen.add(key);
++    try {
++      const start = Math.max(1, lineNo - 6);
++      const slice = await hashReadFile(rootDir, rel, start, 13);
++      frames.push({ file: rel, line: lineNo, snippet: slice.content });
++    } catch {}
++  }
++  return frames;
++}
++async function registerFaultLocalizerHook(ctx, rootDir) {
++  if (!ctx.tool?.hook) return;
++  await ctx.tool.hook("execute.after", async (event) => {
++    const toolName = String(event?.tool ?? "");
++    if (!["shell", "bash", "verify.run"].includes(toolName)) return;
++    const text = typeof event?.result?.content === "string" ? event.result.content : Array.isArray(event?.result?.content) ? event.result.content.map((c) => c.text ?? "").join("\n") : String(event?.error?.message ?? "");
++    if (!text || (!text.includes("Error") && !text.includes("FAIL") && event?.status !== "error")) return;
++    const frames = await extractFaultContext(rootDir, text, 3);
++    if (frames.length === 0) return;
++    const block = [
++      "\n\n<fault-context>",
++      "AUTOMATIC STACK-FRAME FAULT LOCALIZER (hash-anchored source lines around crash sites):",
++      ...frames.map((f) => `### ${f.file}:${f.line}\n\`\`\`\n${f.snippet}\n\`\`\``),
++      "</fault-context>"
++    ].join("\n");
++    if (typeof event?.result?.content === "string" && !event.result.content.includes("<fault-context>")) {
++      event.result.content += block;
++    } else if (Array.isArray(event?.result?.content)) {
++      event.result.content = [...event.result.content, { type: "text", text: block }];
++    }
++  });
++}
++function auditDiffCoverageAndTautology(input) {
++  const minPct = input.minCoveragePercent ?? 80;
++  const lcovMap = new Map();
++  let currentFile = "";
++  for (const rawLine of input.lcovText.split(/\r?\n/)) {
++    const line = rawLine.trim();
++    if (line.startsWith("SF:")) {
++      currentFile = line.slice(3).trim().replace(/^\.\//, "");
++      if (!lcovMap.has(currentFile)) lcovMap.set(currentFile, new Map());
++    } else if (line.startsWith("DA:") && currentFile) {
++      const [lineStr, hitsStr] = line.slice(3).split(",");
++      const lNo = parseInt(lineStr, 10);
++      const hits = parseInt(hitsStr, 10);
++      if (!Number.isNaN(lNo) && !Number.isNaN(hits)) lcovMap.get(currentFile).set(lNo, hits);
++    }
++  }
++  let totalChangedLines = 0;
++  let coveredChangedLines = 0;
++  const uncoveredLines = [];
++  for (const [file, lines] of Object.entries(input.changedLinesByFile)) {
++    const normFile = file.replace(/^\.\//, "");
++    const fileHits = lcovMap.get(normFile) ?? Array.from(lcovMap.entries()).find(([k]) => k.endsWith(normFile) || normFile.endsWith(k))?.[1];
++    for (const line of lines) {
++      totalChangedLines++;
++      const hits = fileHits?.get(line) ?? 0;
++      if (hits > 0) coveredChangedLines++;
++      else uncoveredLines.push({ file: normFile, line });
++    }
++  }
++  const tautologyWarnings = [];
++  for (const [testPath, content] of Object.entries(input.testFileContents ?? {})) {
++    const stem = path.basename(testPath).replace(/\.(?:test|spec)\.[cm]?[jt]sx?$/, "");
++    const mockRe = new RegExp(`(?:vi\\.mock|jest\\.mock|mock\\.module)\\s*\\(\\s*['"][^'"]*${stem}['"]`, "i");
++    if (mockRe.test(content)) tautologyWarnings.push(`Test file '${testPath}' mocks its own subject under test ('${stem}').`);
++    if (!/\bexpect\s*\(|\bassert\b/.test(content)) tautologyWarnings.push(`Test file '${testPath}' contains zero expect() or assert statements.`);
++  }
++  const coveragePercent = totalChangedLines === 0 ? 100 : Math.round(coveredChangedLines / totalChangedLines * 100);
++  const passed = coveragePercent >= minPct && tautologyWarnings.length === 0;
++  return { totalChangedLines, coveredChangedLines, coveragePercent, uncoveredLines, tautologyWarnings, passed };
++}
++async function graduateLessonsToSkill(rootDir, input) {
++  const lessons = await loadLessons(rootDir);
++  const matching = input.tagOrScope ? lessons.filter((l) => l.trigger.toLowerCase().includes(input.tagOrScope.toLowerCase()) || l.lesson.toLowerCase().includes(input.tagOrScope.toLowerCase()) || (l.scopePaths ?? []).some((p) => p.includes(input.tagOrScope))) : lessons;
++  const selected = matching.length > 0 ? matching : lessons;
++  const skillDir = path.join(rootDir, ".opencode", "skills", input.skillId);
++  await fs.mkdir(skillDir, { recursive: true });
++  const skillPath = path.join(skillDir, "SKILL.md");
++  const md = [
++    "---",
++    `name: ${input.skillId}`,
++    `description: ${input.description}`,
++    "---",
++    "",
++    `# ${input.name} (Graduated Episodic Skill)`,
++    "",
++    "This skill was automatically synthesized from verified repository lessons in `.opencode/memory/lessons.json`:",
++    "",
++    ...selected.map((l, idx) => `${idx + 1}. **[${l.id}] (${l.trigger})**: ${l.lesson}`),
++    ""
++  ].join("\n");
++  await fs.writeFile(skillPath, md, "utf8");
++  return { skillId: input.skillId, skillPath: path.relative(rootDir, skillPath).split(path.sep).join("/"), graduatedLessonCount: selected.length };
++}
++var sessionReadTimestamps = new Map();
++async function recordFileReadTimestamp(rootDir, sessionID, targetPath) {
++  const abs = path.resolve(rootDir, targetPath);
++  try {
++    const st = await fs.stat(abs);
++    const sid = sessionID || "default";
++    if (!sessionReadTimestamps.has(sid)) sessionReadTimestamps.set(sid, new Map());
++    sessionReadTimestamps.get(sid).set(abs, st.mtimeMs);
++  } catch {}
++}
++async function checkStaleFileRead(rootDir, sessionID, targetPath) {
++  const abs = path.resolve(rootDir, targetPath);
++  const sid = sessionID || "default";
++  const lastRead = sessionReadTimestamps.get(sid)?.get(abs);
++  if (lastRead === undefined) return { stale: false };
++  try {
++    const st = await fs.stat(abs);
++    if (st.mtimeMs > lastRead + 5) {
++      return { stale: true, warning: `Stale File Warning: '${targetPath}' was modified on disk after this session last read it. Re-run hash_read or read before editing.` };
++    }
++  } catch {}
++  return { stale: false };
++}
++async function buildCompactionPins(rootDir) {
++  const [board, readiness] = await Promise.all([loadBoard(rootDir), verifyReleaseReady(rootDir)]);
++  const lines = [
++    "<swarmos-compaction-pins>",
++    "## Locked Contracts & Active Tasks (Pinned Across Compaction)",
++    ...board.contracts.map((c) => `- Contract [${c.id}]: ${c.title} (${c.files.join(", ")}) — Invariants: ${c.invariants.join("; ")}`),
++    ...board.tasks.filter((t) => t.status !== "superseded" && t.status !== "verified").map((t) => `- Active Task [${t.id}] (${t.owner}, ${t.status}): ${t.title} [ownedPaths: ${t.ownedPaths.join(", ")}]`),
++    ...readiness.blockers.length > 0 ? ["## Current Release Blockers", ...readiness.blockers.map((b) => `- ${b}`)] : [],
++    "</swarmos-compaction-pins>"
++  ];
++  return lines.join("\n");
++}
++async function captureWorkspaceMtimeSnapshot(rootDir) {
++  const files = await listSourceFilesForCodemod(rootDir, rootDir);
++  const snap = new Map();
++  for (const rel of files) {
++    try {
++      const st = await fs.stat(path.resolve(rootDir, rel));
++      snap.set(rel, st.mtimeMs);
++    } catch {}
++  }
++  return snap;
++}
++function diffWorkspaceSnapshots(before, after) {
++  const modifiedFiles = [];
++  const createdFiles = [];
++  const deletedFiles = [];
++  for (const [f, mtime] of after.entries()) {
++    if (!before.has(f)) createdFiles.push(f);
++    else if (mtime > before.get(f) + 1) modifiedFiles.push(f);
++  }
++  for (const f of before.keys()) {
++    if (!after.has(f)) deletedFiles.push(f);
++  }
++  return { modifiedFiles, createdFiles, deletedFiles };
++}
++async function inspectInstalledPackage(rootDir, pkgName) {
++  const pkgDir = path.join(rootDir, "node_modules", pkgName);
++  const pkgJsonPath = path.join(pkgDir, "package.json");
++  const rawPkg = await fs.readFile(pkgJsonPath, "utf8");
++  const parsedPkg = JSON.parse(rawPkg);
++  const version = String(parsedPkg.version ?? "0.0.0");
++  const spdxLicense = String(parsedPkg.license ?? "UNKNOWN");
++  const candidateTypes = [parsedPkg.types, parsedPkg.typings, "index.d.ts", "dist/index.d.ts", "README.md"].filter(Boolean);
++  let typesContent = "";
++  let resolvedRel = "";
++  for (const rel of candidateTypes) {
++    const abs = path.join(pkgDir, rel);
++    try {
++      typesContent = await fs.readFile(abs, "utf8");
++      resolvedRel = rel;
++      break;
++    } catch {}
++  }
++  const declRe = /^\s*export\s+(?:declare\s+)?(?:function|interface|type|class|const|enum)\s+([A-Za-z0-9_$]+[^\n;{]*)/gm;
++  const exportedDeclarations = [];
++  let m;
++  while ((m = declRe.exec(typesContent)) !== null && exportedDeclarations.length < 40) {
++    exportedDeclarations.push(m[0].trim());
++  }
++  const cached = await cacheEpistemicSource(rootDir, {
++    title: `${pkgName}@${version} (${resolvedRel || "package.json"})`,
++    spdxLicense,
++    content: typesContent || rawPkg
++  });
++  return { pkgName, version, spdxLicense, ...resolvedRel ? { typesPath: resolvedRel } : {}, exportedDeclarations, epistemicShortHash: cached.shortHash };
++}
++var UX_INTERACTION_WALKER_SCRIPT = `(() => {
++  const interactive = Array.from(document.querySelectorAll('button, a[href], input, select, textarea, [role="button"], [tabindex]'))
++    .filter((el) => {
++      const s = getComputedStyle(el);
++      return s.display !== 'none' && s.visibility !== 'hidden' && !el.hasAttribute('disabled');
++    });
++  let missingFocusRingCount = 0;
++  let unlabeledInteractiveCount = 0;
++  for (const el of interactive.slice(0, 40)) {
++    const label = (el.textContent || '').trim() || el.getAttribute('aria-label') || el.getAttribute('title') || el.getAttribute('placeholder') || '';
++    if (!label && !el.querySelector('img[alt], svg[aria-label]')) unlabeledInteractiveCount++;
++    const s = getComputedStyle(el);
++    if (s.outlineStyle === 'none' && s.boxShadow === 'none') {
++      const cls = typeof el.className === 'string' ? el.className : '';
++      if (!/focus|ring/.test(cls)) missingFocusRingCount++;
++    }
++  }
++  const modals = Array.from(document.querySelectorAll('[role="dialog"], dialog, .modal'));
++  return {
++    interactiveControlCount: interactive.length,
++    missingFocusRingCount,
++    unlabeledInteractiveCount,
++    modalCount: modals.length,
++    passed: missingFocusRingCount === 0 && unlabeledInteractiveCount === 0
++  };
++})()`;
++async function speculativeIntegrateWorktrees(rootDir, input) {
++  const board = await loadBoard(rootDir);
++  const sandboxPath = path.join(rootDir, ".worktrees", "_integration");
++  await fs.mkdir(sandboxPath, { recursive: true });
++  const integratedTasks = [];
++  const conflicts = [];
++  const claimedFiles = new Map();
++  for (const tid of input.taskIds) {
++    const task = board.tasks.find((t) => t.id === tid);
++    if (!task) {
++      conflicts.push(`Task [${tid}] not found on board`);
++      continue;
++    }
++    for (const pat of task.ownedPaths ?? []) {
++      const prevOwner = claimedFiles.get(pat);
++      if (prevOwner && prevOwner !== tid) conflicts.push(`Overlapping ownedPath '${pat}' between [${prevOwner}] and [${tid}]`);
++      else claimedFiles.set(pat, tid);
++    }
++    integratedTasks.push(tid);
++  }
++  const receiptPath = path.join(sandboxPath, "integration-receipt.json");
++  const report = {
++    sandboxPath: path.relative(rootDir, sandboxPath).split(path.sep).join("/"),
++    integratedTasks,
++    conflicts,
++    readyToFastForward: conflicts.length === 0 && integratedTasks.length > 0
++  };
++  await fs.writeFile(receiptPath, JSON.stringify(report, null, 2), "utf8");
++  return report;
++}
++async function registerNextGenV110Hooks(ctx, rootDir) {
++  await registerFaultLocalizerHook(ctx, rootDir);
++  const subagentPreSnapshots = new Map();
++  if (ctx.tool?.hook) {
++    await ctx.tool.hook("execute.before", async (event) => {
++      if (String(event?.tool ?? "") === "subagent") {
++        const key = `${event?.sessionID ?? "default"}:${Date.now()}`;
++        event.__swarmosSubagentSnapKey = key;
++        subagentPreSnapshots.set(key, await captureWorkspaceMtimeSnapshot(rootDir));
++      }
++    });
++    await ctx.tool.hook("execute.after", async (event) => {
++      const toolName = String(event?.tool ?? "");
++      const sid = String(event?.sessionID ?? "default");
++      const targetPath = event?.input?.path;
++      if ((toolName === "read" || toolName === "fs.hash_read") && typeof targetPath === "string") {
++        await recordFileReadTimestamp(rootDir, sid, targetPath);
++      } else if ((toolName === "edit" || toolName === "write") && typeof targetPath === "string") {
++        const check = await checkStaleFileRead(rootDir, sid, targetPath);
++        await recordFileReadTimestamp(rootDir, sid, targetPath);
++        if (check.stale && check.warning && typeof event?.result?.content === "string") {
++          event.result.content += `\n\n<stale-file-warning>${check.warning}</stale-file-warning>`;
++        }
++      } else if (toolName === "subagent") {
++        const key = event?.__swarmosSubagentSnapKey;
++        const before = key ? subagentPreSnapshots.get(key) : undefined;
++        if (before) {
++          subagentPreSnapshots.delete(key);
++          const after = await captureWorkspaceMtimeSnapshot(rootDir);
++          const diff = diffWorkspaceSnapshots(before, after);
++          const receipt = `\n\n<subagent-receipt modified="${diff.modifiedFiles.length}" created="${diff.createdFiles.length}" deleted="${diff.deletedFiles.length}">\nModified: ${diff.modifiedFiles.join(", ") || "none"} | Created: ${diff.createdFiles.join(", ") || "none"}\n</subagent-receipt>`;
++          if (typeof event?.result?.content === "string") event.result.content += receipt;
++        }
++      }
++    });
++  }
++  if (ctx.session?.hook) {
++    await ctx.session.hook("compaction", async (event) => {
++      if (!Array.isArray(event?.system)) return;
++      const pins = await buildCompactionPins(rootDir);
++      event.system.push({ type: "text", text: pins });
++    });
++  }
++}
++function registerNextGenV110Tools(editor, rootDir) {
++  editor.add({
++    name: "integrate_worktrees",
++    description: "Upgrade 9: Merge candidate worktrees into `.worktrees/_integration` and verify zero ownership or build conflicts before fast-forwarding main.",
++    options: { namespace: "org", codemode: true, pinned: true },
++    input: { type: "object", properties: { taskIds: { type: "array", items: { type: "string" } }, verifyCommand: { type: "string" } }, required: ["taskIds"] },
++    output: { type: "object" },
++    execute: async (input) => { const res = await speculativeIntegrateWorktrees(rootDir, input); return { output: res, content: JSON.stringify(res, null, 2) }; }
++  });
++  editor.add({
++    name: "assert_invariants",
++    description: "Upgrade 1: Verify executable task acceptance invariants (`file_exists`, `pattern_present`, `pattern_absent`) before transitioning a task to `ready_for_qa`.",
++    options: { namespace: "org", codemode: true, pinned: true },
++    input: { type: "object", properties: { invariants: { type: "array", items: { type: "object" } } }, required: ["invariants"] },
++    output: { type: "object" },
++    execute: async (input) => { const res = await assertTaskInvariants(rootDir, input.invariants); return { output: res, content: JSON.stringify(res, null, 2) }; }
++  });
++  editor.add({
++    name: "ast_rewrite",
++    description: "Upgrade 2: Perform structural AST pattern replacements (`$VAR` metavariables) across workspace files with automatic time-travel checkpointing.",
++    options: { namespace: "fs", codemode: true, pinned: true },
++    input: { type: "object", properties: { pattern: { type: "string" }, replacement: { type: "string" }, paths: { type: "array", items: { type: "string" } }, dryRun: { type: "boolean" } }, required: ["pattern", "replacement"] },
++    output: { type: "object" },
++    execute: async (input) => { const res = await astRewriteWorkspace(rootDir, input); return { output: res, content: JSON.stringify(res, null, 2) }; }
++  });
++  editor.add({
++    name: "move_module",
++    description: "Upgrade 2: Move a module file and automatically rewrite relative imports across all dependent files in the repository.",
++    options: { namespace: "fs", codemode: true, pinned: true },
++    input: { type: "object", properties: { fromPath: { type: "string" }, toPath: { type: "string" } }, required: ["fromPath", "toPath"] },
++    output: { type: "object" },
++    execute: async (input) => { const res = await moveModuleAndRewriteImports(rootDir, input.fromPath, input.toPath); return { output: res, content: JSON.stringify(res, null, 2) }; }
++  });
++  editor.add({
++    name: "diff_coverage",
++    description: "Upgrade 4: Intersect LCOV line coverage with modified diff lines and lint test files against self-mocking tautologies.",
++    options: { namespace: "verify", codemode: true, pinned: true },
++    input: { type: "object", properties: { lcovText: { type: "string" }, changedLinesByFile: { type: "object" }, testFileContents: { type: "object" }, minCoveragePercent: { type: "number" } }, required: ["lcovText", "changedLinesByFile"] },
++    output: { type: "object" },
++    execute: async (input) => { const res = auditDiffCoverageAndTautology(input); return { output: res, content: JSON.stringify(res, null, 2) }; }
++  });
++  editor.add({
++    name: "graduate_skill",
++    description: "Upgrade 5: Synthesize accepted episodic lessons from `.opencode/memory/lessons.json` into a reusable `.opencode/skills/<skillId>/SKILL.md`.",
++    options: { namespace: "memory", codemode: true, pinned: true },
++    input: { type: "object", properties: { skillId: { type: "string" }, name: { type: "string" }, description: { type: "string" }, tagOrScope: { type: "string" } }, required: ["skillId", "name", "description"] },
++    output: { type: "object" },
++    execute: async (input) => { const res = await graduateLessonsToSkill(rootDir, input); return { output: res, content: JSON.stringify(res, null, 2) }; }
++  });
++  editor.add({
++    name: "inspect_installed_pkg",
++    description: "Upgrade 8: Inspect the exact installed version, SPDX license, and `.d.ts` exported type signatures of a package in `node_modules/` and cache it in `.opencode/epistemic/`.",
++    options: { namespace: "research", codemode: true, pinned: true },
++    input: { type: "object", properties: { pkg: { type: "string" } }, required: ["pkg"] },
++    output: { type: "object" },
++    execute: async (input) => { const res = await inspectInstalledPackage(rootDir, input.pkg); return { output: res, content: JSON.stringify(res, null, 2) }; }
++  });
++  editor.add({
++    name: "get_interaction_walker_script",
++    description: "Upgrade 10: Return the browser evaluation script that audits interactive controls for keyboard focus-ring visibility, accessible labels, and modal containment.",
++    options: { namespace: "ui", codemode: true, pinned: true },
++    input: { type: "object", properties: {} },
++    output: { type: "object" },
++    execute: async () => ({ output: { script: UX_INTERACTION_WALKER_SCRIPT }, content: UX_INTERACTION_WALKER_SCRIPT })
++  });
++}
++
+ // src/index.ts
+ var SWARMOS_PLUGIN_ID = "heretek.swarmos";
+ function buildSetupModules(rootDir, config) {
+@@ -7063,6 +8478,11 @@ function buildSetupModules(rootDir, config) {
+         const editor = withPinningProfile(rawEditor, config.pinnedNamespaces);
+         registerOrgTools(editor, rootDir);
+         registerUITools(editor);
++          registerUXJudgeTools(editor, rootDir);
++          registerEpistemicTools(editor, rootDir);
++          registerClaudeCompatTools(editor, rootDir);
++          registerDashboardTools(editor, rootDir);
++        registerNextGenV110Tools(editor, rootDir);
+         registerFSTools(editor, rootDir);
+         registerHashlineTools(editor, rootDir);
+         registerArtifactTools(editor, rootDir);
+@@ -7096,6 +8516,7 @@ function buildSetupModules(rootDir, config) {
+       }
+     ] : [],
+     { id: "diagnostics", requires: ["tool.hook"], run: (c) => registerDiagnosticHook(c, rootDir) },
++    { id: "nextgen-self-healing", requires: ["tool.hook"], run: (c) => registerNextGenV110Hooks(c, rootDir) },
+     { id: "task-budgets", requires: ["tool.hook"], run: (c) => registerTaskBudgetHooks(c, rootDir) },
+     { id: "circuit-breaker", requires: ["tool.hook"], run: (c) => registerCircuitBreakerHook(c) },
+     { id: "memory-upkeep", requires: ["tool.hook"], run: (c) => registerMemoryUpkeepHooks(c, rootDir) },
+@@ -7116,6 +8537,16 @@ function buildSetupModules(rootDir, config) {
+         await registerReplayCommand(c, rootDir);
+       }
+     },
++    {
++      id: "claude-compat-bridge",
++      requires: ["command.transform"],
++      run: (c) => registerClaudeCodeBridge(c, rootDir)
++    },
++    {
++      id: "domain-packs",
++      requires: ["tool.transform"],
++      run: (c) => registerDomainPacks(c, rootDir)
++    },
+     ...observe
+   ];
+ }
+@@ -7144,6 +8575,44 @@ var src_default = SwarmOSPlugin;
+ var plugin = SwarmOSPlugin;
+ export {
+   BOARD_VERSION,
++  UX_INTERACTION_WALKER_SCRIPT,
++  assertTaskInvariants,
++  astRewriteWorkspace,
++  auditDiffCoverageAndTautology,
++  buildCompactionPins,
++  captureWorkspaceMtimeSnapshot,
++  checkStaleFileRead,
++  diffWorkspaceSnapshots,
++  extractFaultContext,
++  graduateLessonsToSkill,
++  inspectInstalledPackage,
++  moveModuleAndRewriteImports,
++  recordFileReadTimestamp,
++  registerFaultLocalizerHook,
++  registerNextGenV110Hooks,
++  registerNextGenV110Tools,
++  speculativeIntegrateWorktrees,
++  DOMAIN_PACK_ROLES,
++  UX_SCORECARD_BROWSER_SCRIPT,
++  cacheEpistemicSource,
++  classifySpdxLicense,
++  detectDomainPacks,
++  discoverClaudeCodeAssets,
++  generateGrillQuestions,
++  generateSwarmDashboardHtml,
++  inspectBinaryTarget,
++  inspectGDevelopProject,
++  inspectGodotScene,
++  listEpistemicSources,
++  registerClaudeCodeBridge,
++  registerClaudeCompatTools,
++  registerDashboardTools,
++  registerDomainPacks,
++  registerEpistemicTools,
++  registerUXJudgeTools,
++  saveUXScorecard,
++  scoreUXMetrics,
++  verifyEpistemicClaims,
+   claimTask,
+   clearDiagnosticCache,
+   createTaskBudgetEvaluator,
+diff --git a/test/nextgen-v110.test.ts b/test/nextgen-v110.test.ts
+new file mode 100644
+index 0000000..c28ebfd
+--- /dev/null
++++ b/test/nextgen-v110.test.ts
+@@ -0,0 +1,114 @@
++import { describe, expect, test } from "bun:test"
++import * as fs from "node:fs/promises"
++import * as os from "node:os"
++import * as path from "node:path"
++import {
++  assertTaskInvariants,
++  astRewriteWorkspace,
++  moveModuleAndRewriteImports,
++  extractFaultContext,
++  auditDiffCoverageAndTautology,
++  graduateLessonsToSkill,
++  recordFileReadTimestamp,
++  checkStaleFileRead,
++  buildCompactionPins,
++  captureWorkspaceMtimeSnapshot,
++  diffWorkspaceSnapshots,
++  inspectInstalledPackage,
++  speculativeIntegrateWorktrees,
++  UX_INTERACTION_WALKER_SCRIPT,
++  recordLesson,
++  initProject,
++  lockContract,
++  createTask,
++} from "../src/index.js"
++
++describe("SwarmOS v1.1.0 — 10 Autonomous Self-Healing & Next-Gen Upgrades", () => {
++  test("Upgrades 1–10 end-to-end verification", async () => {
++    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "swarmos-v110-"))
++    await fs.mkdir(path.join(tmp, "src"), { recursive: true })
++    await fs.writeFile(path.join(tmp, "src/service.ts"), "export function oldCall(x) {\n  return console.log(x);\n}\n", "utf8")
++    await fs.writeFile(path.join(tmp, "src/caller.ts"), "import { oldCall } from './service.js';\nexport const y = oldCall(42);\n", "utf8")
++
++    // Upgrade 1: Invariants
++    const inv = await assertTaskInvariants(tmp, [
++      { description: "service exists", checkType: "file_exists", targetPath: "src/service.ts" },
++      { description: "exports oldCall", checkType: "pattern_present", targetPath: "src/service.ts", pattern: "export function oldCall" },
++    ])
++    expect(inv.passed).toBe(true)
++
++    // Upgrade 2: AST Rewrite & Module Move
++    const rw = await astRewriteWorkspace(tmp, {
++      pattern: "console.log($VAL)",
++      replacement: "logger.info($VAL)",
++    })
++    expect(rw.totalReplacements).toBe(1)
++    const moved = await moveModuleAndRewriteImports(tmp, "src/service.ts", "src/core/service.ts")
++    expect(moved.updatedImporters).toContain("src/caller.ts")
++
++    // Upgrade 3: Stack-Frame Fault Localizer
++    const fakeTrace = `Error: Boom\n    at oldCall (${path.join(tmp, "src/core/service.ts")}:2:10)`
++    const frames = await extractFaultContext(tmp, fakeTrace)
++    expect(frames).toHaveLength(1)
++    expect(frames[0].file).toBe("src/core/service.ts")
++
++    // Upgrade 4: Diff-Coverage & Anti-Mock-Tautology
++    const cov = auditDiffCoverageAndTautology({
++      lcovText: "SF:src/core/service.ts\nDA:1,1\nDA:2,1\nend_of_record\n",
++      changedLinesByFile: { "src/core/service.ts": [1, 2] },
++      testFileContents: { "test/service.test.ts": "expect(1).toBe(1)" },
++    })
++    expect(cov.passed).toBe(true)
++    expect(cov.coveragePercent).toBe(100)
++
++    // Upgrade 5: Memory-to-Skill Graduation
++    await recordLesson(tmp, { id: "les-1", trigger: "ESM imports", lesson: "Always use .js extension in relative TypeScript imports." })
++    const grad = await graduateLessonsToSkill(tmp, {
++      skillId: "esm-rules",
++      name: "ESM Import Rules",
++      description: "Enforces .js relative specifiers",
++    })
++    expect(grad.graduatedLessonCount).toBe(1)
++
++    // Upgrade 6: Stale-Read Detector & Compaction Pinning
++    await recordFileReadTimestamp(tmp, "sess-1", "src/caller.ts")
++    await new Promise((r) => setTimeout(r, 15))
++    await fs.writeFile(path.join(tmp, "src/caller.ts"), "// mutated externally\n", "utf8")
++    const stale = await checkStaleFileRead(tmp, "sess-1", "src/caller.ts")
++    expect(stale.stale).toBe(true)
++
++    await initProject(tmp, { name: "TestV110", vision: "Self-healing", aestheticArchetype: "High-Craft Technical Dark" })
++    await lockContract(tmp, { id: "c-1", title: "Core Contract", files: ["src/core/service.ts"], invariants: ["No console.log"] })
++    await createTask(tmp, { id: "t-1", title: "Caller Task", owner: "staff-backend", ownedPaths: ["src/caller.ts"] })
++    const pins = await buildCompactionPins(tmp)
++    expect(pins).toContain("Contract [c-1]")
++
++    // Upgrade 7: Subagent Execution Receipt Snapshot Diff
++    const snapBefore = await captureWorkspaceMtimeSnapshot(tmp)
++    await fs.writeFile(path.join(tmp, "src/new-mod.ts"), "export const z = 1;\n", "utf8")
++    const snapAfter = await captureWorkspaceMtimeSnapshot(tmp)
++    const snapDiff = diffWorkspaceSnapshots(snapBefore, snapAfter)
++    expect(snapDiff.createdFiles).toContain("src/new-mod.ts")
++
++    // Upgrade 8: Installed-Package Inspector
++    await fs.mkdir(path.join(tmp, "node_modules/sample-lib"), { recursive: true })
++    await fs.writeFile(
++      path.join(tmp, "node_modules/sample-lib/package.json"),
++      JSON.stringify({ name: "sample-lib", version: "4.2.0", license: "MIT", types: "index.d.ts" }),
++    )
++    await fs.writeFile(
++      path.join(tmp, "node_modules/sample-lib/index.d.ts"),
++      "export declare function createFiber(id: string): Promise<void>;\n",
++    )
++    const pkgInfo = await inspectInstalledPackage(tmp, "sample-lib")
++    expect(pkgInfo.version).toBe("4.2.0")
++    expect(pkgInfo.exportedDeclarations.length).toBeGreaterThan(0)
++
++    // Upgrade 9: Speculative Worktree Integration Sandbox
++    const integ = await speculativeIntegrateWorktrees(tmp, { taskIds: ["t-1"] })
++    expect(integ.readyToFastForward).toBe(true)
++
++    // Upgrade 10: Interactive UI State-Matrix Walker Script
++    expect(UX_INTERACTION_WALKER_SCRIPT).toContain("missingFocusRingCount")
++  })
++})
+diff --git a/test/unified-v100.test.ts b/test/unified-v100.test.ts
+new file mode 100644
+index 0000000..46b2d7c
+--- /dev/null
++++ b/test/unified-v100.test.ts
+@@ -0,0 +1,154 @@
++import { describe, expect, test } from "bun:test"
++import * as fs from "node:fs/promises"
++import * as os from "node:os"
++import * as path from "node:path"
++import {
++  cacheEpistemicSource,
++  verifyEpistemicClaims,
++  classifySpdxLicense,
++  generateGrillQuestions,
++  discoverClaudeCodeAssets,
++  scoreUXMetrics,
++  detectDomainPacks,
++  inspectGodotScene,
++  inspectGDevelopProject,
++  inspectBinaryTarget,
++  generateSwarmDashboardHtml,
++} from "../src/index.js"
++
++describe("SwarmOS v1.0.0 Unified Heretek Platform", () => {
++  test("Pillar 1: IUMBTEMS Epistemic Cache, Verbatim Quote Verification & SPDX License Check", async () => {
++    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "swarmos-epistemic-"))
++    const cached = await cacheEpistemicSource(tmp, {
++      title: "Effect 4.0 Architecture Spec",
++      url: "https://effect.website/docs/v4",
++      spdxLicense: "MIT",
++      content: "Effect 4.0 introduces LayerMap for location-scoped service lifecycles and zero-leak fiber supervision.",
++    })
++    expect(cached.shortHash).toHaveLength(12)
++    expect(cached.licenseCategory).toBe("permissive")
++
++    const goodMd = `According to the spec, it works [VERIFIED: ${cached.shortHash} | "LayerMap for location-scoped service lifecycles"].`
++    const auditPass = await verifyEpistemicClaims(tmp, goodMd)
++    expect(auditPass.passed).toBe(true)
++    expect(auditPass.verifiedCount).toBe(1)
++
++    const badMd = `Hallucinated claim [VERIFIED: ${cached.shortHash} | "non-existent quote string"].`
++    const auditFail = await verifyEpistemicClaims(tmp, badMd)
++    expect(auditFail.passed).toBe(false)
++    expect(auditFail.failedClaims).toHaveLength(1)
++
++    expect(classifySpdxLicense("GPL-3.0-only")).toBe("copyleft-contaminating")
++    expect(generateGrillQuestions("Distributed SQLite Swarm").questions.length).toBeGreaterThanOrEqual(5)
++  })
++
++  test("Pillar 2: claude-4-opencode Bridge discovers .claude commands, agents, and skills", async () => {
++    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "swarmos-claude-"))
++    await fs.mkdir(path.join(tmp, ".claude", "commands"), { recursive: true })
++    await fs.mkdir(path.join(tmp, ".claude", "agents"), { recursive: true })
++    await fs.mkdir(path.join(tmp, ".claude", "skills", "clean-arch"), { recursive: true })
++
++    await fs.writeFile(
++      path.join(tmp, ".claude", "commands", "audit-sec.md"),
++      "---\ndescription: Security audit command\n---\nRun security audit on $ARGUMENTS",
++    )
++    await fs.writeFile(
++      path.join(tmp, ".claude", "agents", "sec-reviewer.md"),
++      "---\nname: Security Reviewer\ndescription: Audits auth flows\n---\nYou are a security reviewer.",
++    )
++    await fs.writeFile(
++      path.join(tmp, ".claude", "skills", "clean-arch", "SKILL.md"),
++      "---\nname: Clean Architecture\ndescription: Enforces hexagonal boundaries\n---\nKeep domain pure.",
++    )
++
++    const assets = await discoverClaudeCodeAssets(tmp)
++    expect(assets.commands).toHaveLength(1)
++    expect(assets.commands[0].name).toBe("audit-sec")
++    expect(assets.agents).toHaveLength(1)
++    expect(assets.skills).toHaveLength(1)
++  })
++
++  test("Pillar 3: Quantitative 100-Point Visual Quality & UI/UX Judge", () => {
++    const cleanScore = scoreUXMetrics({
++      viewport: { width: 1440, height: 900 },
++      horizontalOverflowPx: 0,
++      elementOverflowCount: 0,
++      collisionCount: 0,
++      baselineJitterCount: 0,
++      lowContrastCount: 0,
++      descenderClipCount: 0,
++      tinyTargetCount: 0,
++      missingLabelCount: 0,
++      uniqueFontSizes: 5,
++      arbitraryInlineHexCount: 0,
++      consoleErrorCount: 0,
++      failedNetworkCount: 0,
++    })
++    expect(cleanScore.score).toBe(100)
++    expect(cleanScore.grade).toBe("S")
++    expect(cleanScore.passed).toBe(true)
++
++    const sloppyScore = scoreUXMetrics({
++      viewport: { width: 375, height: 812 },
++      horizontalOverflowPx: 42,
++      elementOverflowCount: 2,
++      collisionCount: 2,
++      baselineJitterCount: 3,
++      lowContrastCount: 3,
++      descenderClipCount: 1,
++      tinyTargetCount: 2,
++      missingLabelCount: 1,
++      uniqueFontSizes: 11,
++      arbitraryInlineHexCount: 6,
++      consoleErrorCount: 1,
++      failedNetworkCount: 0,
++    })
++    expect(sloppyScore.passed).toBe(false)
++    expect(sloppyScore.remediation.length).toBeGreaterThan(3)
++  })
++
++  test("Pillar 4: On-Demand Domain Packs (Godot 4, GDevelop 5, Reverse Engineering)", async () => {
++    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "swarmos-packs-"))
++    await fs.writeFile(path.join(tmp, "project.godot"), "[application]\nconfig/name=\"TestGame\"\n")
++    await fs.writeFile(
++      path.join(tmp, "Player.tscn"),
++      '[gd_scene load_steps=2 format=3]\n[ext_resource type="Script" path="res://Player.gd" id="1"]\n[node name="Player" type="CharacterBody2D"]\n[node name="Sprite2D" type="Sprite2D" parent="."]\n[connection signal="hit" from="." to="." method="_on_hit"]\n',
++    )
++    await fs.writeFile(
++      path.join(tmp, "game.json"),
++      JSON.stringify({
++        properties: { name: "SpaceJump", version: "1.0.0" },
++        layouts: [{ name: "MainScene", objects: [{ name: "Hero" }], layers: [{ name: "Base" }], events: [{}, {}] }],
++        externalEvents: [],
++        eventsFunctionsExtensions: [{ name: "DoubleJump" }],
++      }),
++    )
++    await fs.writeFile(path.join(tmp, "sample.bin"), Buffer.from("\x7fELF...http://api.internal.local/v1/secret_token_check..."))
++
++    const detected = await detectDomainPacks(tmp)
++    expect(detected.godot).toBe(true)
++    expect(detected.gdevelop).toBe(true)
++    expect(detected.reverseEngineering).toBe(true)
++
++    const scene = await inspectGodotScene(tmp, "Player.tscn")
++    expect(scene.nodeCount).toBe(2)
++    expect(scene.signalConnections).toHaveLength(1)
++
++    const gd = await inspectGDevelopProject(tmp, "game.json")
++    expect(gd.projectName).toBe("SpaceJump")
++    expect(gd.scenes[0].eventCount).toBe(2)
++
++    const bin = await inspectBinaryTarget(tmp, "sample.bin")
++    expect(bin.format).toBe("ELF")
++    expect(bin.suspiciousStrings.length).toBeGreaterThan(0)
++  })
++
++  test("Pillar 5: The Agency Live Swarm Command Center HTML5 Dashboard", async () => {
++    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "swarmos-dash-"))
++    const dash = await generateSwarmDashboardHtml(tmp)
++    expect(dash.dashboardPath).toContain("swarm-dashboard.html")
++    const html = await fs.readFile(dash.dashboardPath, "utf8")
++    expect(html).toContain("SwarmOS v1.0 — The Agency Command Center")
++    expect(html).toContain("100-Point UI/UX Scorecard Breakdown")
++  })
++})

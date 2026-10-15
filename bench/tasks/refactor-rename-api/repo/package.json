@@ -1,0 +1,1 @@
+{ "name": "bench-rename", "type": "module", "scripts": { "test": "bun test" } }
